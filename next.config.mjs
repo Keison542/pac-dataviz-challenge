@@ -1,24 +1,28 @@
-const isGithubActions = process.env.GITHUB_ACTIONS || false;
+const isGithubActions = process.env.GITHUB_ACTIONS === "true";
 
-let assetPrefix = "";
 let basePath = "";
+let assetPrefix = "";
 
-if (isGithubActions) {
-  const repo = process.env.GITHUB_REPOSITORY.replace(/.*?\//, "");
-  assetPrefix = `/${repo}/`;
+if (isGithubActions && process.env.GITHUB_REPOSITORY) {
+  const repo = process.env.GITHUB_REPOSITORY.split("/")[1];
   basePath = `/${repo}`;
+  assetPrefix = `/${repo}/`;
 }
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "export",
-  assetPrefix: assetPrefix,
-  basePath: basePath,
+
+  basePath,
+  assetPrefix,
+
+  images: {
+    unoptimized: true,
+  },
+
+  trailingSlash: true,
+
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
     ignoreBuildErrors: true,
   },
 };
