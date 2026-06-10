@@ -1,0 +1,118 @@
+/* ─── KPI Cards ─────────────────────────────────────────────────────────── */
+
+.kpi-card {
+  background: #ffffff;
+  border: 0.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  border-top: 3px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.kpi-card__icon {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.kpi-card__label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-bottom: 0.4rem;
+}
+
+.kpi-card__value {
+  font-size: 1.65rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.kpi-card__delta {
+  font-size: 0.72rem;
+  margin-top: 0.45rem;
+  font-weight: 500;
+}
+
+.kpi-card__delta--up { color: #0f6e56; }
+.kpi-card__delta--dn { color: #993c1d; }
+
+/* Accent border colours per metric */
+.kpi--temp   { border-top-color: #d85a30; }
+.kpi--sea    { border-top-color: #185fa5; }
+.kpi--loss   { border-top-color: #ef9f27; }
+.kpi--people { border-top-color: #7f77dd; }
+
+/* ─── Chart panels ───────────────────────────────────────────────────────── */
+
+.chart-panel {
+  background: #ffffff;
+  border: 0.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: box-shadow 0.15s ease;
+}
+
+.chart-panel:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.chart-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+  border-bottom: 0.5px solid #f1f5f9;
+  padding-bottom: 0.75rem;
+}
+
+.chart-panel__icon {
+  font-size: 1rem;
+}
+
+.chart-panel__title {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #475569;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ─── Payload inspector ─────────────────────────────────────────────────── */
+
+.payload-inspector {
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.75rem;
+  border: 0.5px solid #1e293b;
+}
+
+.payload-inspector__label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.payload-inspector__code {
+  font-family: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 0.78rem;
+  color: #7dd3fc;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.6;
+  margin: 0;
+}
