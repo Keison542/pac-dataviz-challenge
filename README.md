@@ -1,1 +1,1 @@
-https://keison542.github.io/pacific-challenge-main
+https://keison542.github.io/pac-dataviz-challenge
