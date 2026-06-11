@@ -375,7 +375,7 @@ export const Barplot = ({
             </span>
           </div>
           <div className="text-lg font-bold text-slate-800 tabular-nums">
-            {formatTick(hovered.value || 0)}
+            {formatTick(Number(hovered.value) || 0)}
           </div>
         </div>
       )}

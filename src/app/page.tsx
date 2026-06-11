@@ -93,30 +93,6 @@ const CountryPill = ({ label, active, onClick }: { label: string; active: boolea
 };
 
 // ============================================================================
-// SELECT COUNTRY PROMPT COMPONENT
-// ============================================================================
-
-const SelectCountryPrompt = () => (
-  <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-    <div className="text-6xl mb-4">🌏</div>
-    <h3 className="text-xl font-semibold text-slate-800 mb-2">Select a Pacific Island Nation</h3>
-    <p className="text-slate-500 max-w-md">
-      Choose a country from the list above to explore its complete climate impact cascade — 
-      from rising temperatures to human consequences.
-    </p>
-    <div className="mt-6 flex gap-2 justify-center flex-wrap">
-      <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">🌡️ Climate Drivers</span>
-      <span className="text-xs text-slate-400">→</span>
-      <span className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded-full">🌿 Environmental</span>
-      <span className="text-xs text-slate-400">→</span>
-      <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">💰 Economic</span>
-      <span className="text-xs text-slate-400">→</span>
-      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">👥 Human</span>
-    </div>
-  </div>
-);
-
-// ============================================================================
 // LOADING SKELETON COMPONENT
 // ============================================================================
 
@@ -227,7 +203,7 @@ const DoughnutChart = ({ value, maxValue, color, size = 70, unit, label, isRever
 };
 
 // ============================================================================
-// DOUGHNUT CLIMATE IMPACT DASHBOARD (Depends on selected country)
+// DOUGHNUT CLIMATE IMPACT DASHBOARD
 // ============================================================================
 
 const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: any) => {
@@ -332,25 +308,45 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
 
   return (
     <div className="w-full max-w-6xl mx-auto">
+      {/* Header */}
       <div className="text-center mb-6">
         <span className="text-sm font-medium text-slate-600">📍 {selectedCountry} at a Glance: Climate Impact Cascade</span>
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-2 inline-block" />
       </div>
 
+      {/* Causal Flow Indicator */}
       <div className="flex items-center justify-center gap-1 mb-8 flex-wrap">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-100"><span className="text-sm">🌡️</span><span className="text-xs font-medium text-orange-700">Climate Drivers</span></div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-100">
+          <span className="text-sm">🌡️</span>
+          <span className="text-xs font-medium text-orange-700">Climate Drivers</span>
+        </div>
         <span className="text-slate-400 text-lg">→</span>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-100"><span className="text-sm">🌿</span><span className="text-xs font-medium text-teal-700">Environmental</span></div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-100">
+          <span className="text-sm">🌿</span>
+          <span className="text-xs font-medium text-teal-700">Environmental</span>
+        </div>
         <span className="text-slate-400 text-lg">→</span>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-100"><span className="text-sm">💰</span><span className="text-xs font-medium text-amber-700">Economic</span></div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-100">
+          <span className="text-sm">💰</span>
+          <span className="text-xs font-medium text-amber-700">Economic</span>
+        </div>
         <span className="text-slate-400 text-lg">→</span>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100"><span className="text-sm">👥</span><span className="text-xs font-medium text-purple-700">Human</span></div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100">
+          <span className="text-sm">👥</span>
+          <span className="text-xs font-medium text-purple-700">Human</span>
+        </div>
       </div>
 
+      {/* 4-Column Doughnut Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* COLUMN 1: CLIMATE DRIVERS */}
         <div className="bg-gradient-to-b from-orange-50 to-white rounded-xl border border-orange-200 overflow-hidden shadow-sm">
-          <div className="bg-orange-500 px-3 py-2"><div className="flex items-center justify-between"><span className="text-white text-sm font-semibold">🌡️ Climate Drivers</span><span className="text-white/70 text-[10px]">4 indicators</span></div></div>
+          <div className="bg-orange-500 px-3 py-2">
+            <div className="flex items-center justify-between">
+              <span className="text-white text-sm font-semibold">🌡️ Climate Drivers</span>
+              <span className="text-white/70 text-[10px]">4 indicators</span>
+            </div>
+          </div>
           <div className="p-3 space-y-4">
             {metrics.slice(0, 4).map((metric) => {
               const t = thresholds[metric.key as keyof typeof thresholds];
@@ -360,20 +356,44 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
               const doughnutColor = getDoughnutColor(metric.key, metric.value);
               
               return (
-                <div key={metric.key} className="relative group cursor-pointer" onMouseEnter={() => setActiveMetric(metric.key)} onMouseLeave={() => setActiveMetric(null)}>
+                <div 
+                  key={metric.key}
+                  className="relative group cursor-pointer"
+                  onMouseEnter={() => setActiveMetric(metric.key)}
+                  onMouseLeave={() => setActiveMetric(null)}
+                >
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <svg width="70" height="70" viewBox="0 0 70 70" className="transform -rotate-90">
                         <circle cx="35" cy="35" r="27" fill="none" stroke="#e2e8f0" strokeWidth="5" />
-                        <circle cx="35" cy="35" r="27" fill="none" stroke={doughnutColor} strokeWidth="5" strokeDasharray={2 * Math.PI * 27} strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)} strokeLinecap="round" className="transition-all duration-1000" />
+                        <circle
+                          cx="35"
+                          cy="35"
+                          r="27"
+                          fill="none"
+                          stroke={doughnutColor}
+                          strokeWidth="5"
+                          strokeDasharray={2 * Math.PI * 27}
+                          strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)}
+                          strokeLinecap="round"
+                          className="transition-all duration-1000"
+                        />
                       </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span><span className="text-[8px] text-slate-400">{unit}</span></div>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span>
+                        <span className="text-[8px] text-slate-400">{unit}</span>
+                      </div>
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-1"><span className="text-base">{t?.icon}</span><span className="text-xs font-medium text-slate-700">{t?.label}</span></div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-base">{t?.icon}</span>
+                        <span className="text-xs font-medium text-slate-700">{t?.label}</span>
+                      </div>
                       <div className="flex items-center justify-between mt-1">
                         <span className="text-[9px] text-slate-400">Threshold: {t?.max}{unit === "M" ? "M" : unit}</span>
-                        <span className={`text-[9px] ${metric.delta >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}</span>
+                        <span className={`text-[9px] ${metric.delta >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                          {metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -385,7 +405,12 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
 
         {/* COLUMN 2: ENVIRONMENTAL IMPACT */}
         <div className="bg-gradient-to-b from-teal-50 to-white rounded-xl border border-teal-200 overflow-hidden shadow-sm">
-          <div className="bg-teal-500 px-3 py-2"><div className="flex items-center justify-between"><span className="text-white text-sm font-semibold">🌿 Environmental</span><span className="text-white/70 text-[10px]">3 indicators</span></div></div>
+          <div className="bg-teal-500 px-3 py-2">
+            <div className="flex items-center justify-between">
+              <span className="text-white text-sm font-semibold">🌿 Environmental</span>
+              <span className="text-white/70 text-[10px]">3 indicators</span>
+            </div>
+          </div>
           <div className="p-3 space-y-4">
             {metrics.slice(4, 7).map((metric) => {
               const t = thresholds[metric.key as keyof typeof thresholds];
@@ -395,20 +420,44 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
               const doughnutColor = getDoughnutColor(metric.key, metric.value);
               
               return (
-                <div key={metric.key} className="relative group cursor-pointer" onMouseEnter={() => setActiveMetric(metric.key)} onMouseLeave={() => setActiveMetric(null)}>
+                <div 
+                  key={metric.key}
+                  className="relative group cursor-pointer"
+                  onMouseEnter={() => setActiveMetric(metric.key)}
+                  onMouseLeave={() => setActiveMetric(null)}
+                >
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <svg width="70" height="70" viewBox="0 0 70 70" className="transform -rotate-90">
                         <circle cx="35" cy="35" r="27" fill="none" stroke="#e2e8f0" strokeWidth="5" />
-                        <circle cx="35" cy="35" r="27" fill="none" stroke={doughnutColor} strokeWidth="5" strokeDasharray={2 * Math.PI * 27} strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)} strokeLinecap="round" className="transition-all duration-1000" />
+                        <circle
+                          cx="35"
+                          cy="35"
+                          r="27"
+                          fill="none"
+                          stroke={doughnutColor}
+                          strokeWidth="5"
+                          strokeDasharray={2 * Math.PI * 27}
+                          strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)}
+                          strokeLinecap="round"
+                          className="transition-all duration-1000"
+                        />
                       </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span><span className="text-[8px] text-slate-400">{unit}</span></div>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span>
+                        <span className="text-[8px] text-slate-400">{unit}</span>
+                      </div>
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-1"><span className="text-base">{t?.icon}</span><span className="text-xs font-medium text-slate-700">{t?.label}</span></div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-base">{t?.icon}</span>
+                        <span className="text-xs font-medium text-slate-700">{t?.label}</span>
+                      </div>
                       <div className="flex items-center justify-between mt-1">
                         <span className="text-[9px] text-slate-400">Target: {t?.max}{unit}</span>
-                        <span className={`text-[9px] ${metric.delta >= 0 ? (t?.isReversed ? 'text-red-500' : 'text-emerald-600') : (t?.isReversed ? 'text-emerald-600' : 'text-red-500')}`}>{metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}</span>
+                        <span className={`text-[9px] ${metric.delta >= 0 ? (t?.isReversed ? 'text-red-500' : 'text-emerald-600') : (t?.isReversed ? 'text-emerald-600' : 'text-red-500')}`}>
+                          {metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -420,7 +469,12 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
 
         {/* COLUMN 3: ECONOMIC CONSEQUENCE */}
         <div className="bg-gradient-to-b from-amber-50 to-white rounded-xl border border-amber-200 overflow-hidden shadow-sm">
-          <div className="bg-amber-500 px-3 py-2"><div className="flex items-center justify-between"><span className="text-white text-sm font-semibold">💰 Economic</span><span className="text-white/70 text-[10px]">2 indicators</span></div></div>
+          <div className="bg-amber-500 px-3 py-2">
+            <div className="flex items-center justify-between">
+              <span className="text-white text-sm font-semibold">💰 Economic</span>
+              <span className="text-white/70 text-[10px]">2 indicators</span>
+            </div>
+          </div>
           <div className="p-3 space-y-4">
             {metrics.slice(7, 9).map((metric) => {
               const t = thresholds[metric.key as keyof typeof thresholds];
@@ -430,33 +484,69 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
               const doughnutColor = getDoughnutColor(metric.key, metric.value);
               
               return (
-                <div key={metric.key} className="relative group cursor-pointer" onMouseEnter={() => setActiveMetric(metric.key)} onMouseLeave={() => setActiveMetric(null)}>
+                <div 
+                  key={metric.key}
+                  className="relative group cursor-pointer"
+                  onMouseEnter={() => setActiveMetric(metric.key)}
+                  onMouseLeave={() => setActiveMetric(null)}
+                >
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <svg width="70" height="70" viewBox="0 0 70 70" className="transform -rotate-90">
                         <circle cx="35" cy="35" r="27" fill="none" stroke="#e2e8f0" strokeWidth="5" />
-                        <circle cx="35" cy="35" r="27" fill="none" stroke={doughnutColor} strokeWidth="5" strokeDasharray={2 * Math.PI * 27} strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)} strokeLinecap="round" className="transition-all duration-1000" />
+                        <circle
+                          cx="35"
+                          cy="35"
+                          r="27"
+                          fill="none"
+                          stroke={doughnutColor}
+                          strokeWidth="5"
+                          strokeDasharray={2 * Math.PI * 27}
+                          strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)}
+                          strokeLinecap="round"
+                          className="transition-all duration-1000"
+                        />
                       </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span><span className="text-[8px] text-slate-400">{unit}</span></div>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span>
+                        <span className="text-[8px] text-slate-400">{unit}</span>
+                      </div>
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-1"><span className="text-base">{t?.icon}</span><span className="text-xs font-medium text-slate-700">{t?.label}</span></div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-base">{t?.icon}</span>
+                        <span className="text-xs font-medium text-slate-700">{t?.label}</span>
+                      </div>
                       <div className="flex items-center justify-between mt-1">
                         <span className="text-[9px] text-slate-400">Threshold: {t?.max}{unit === "M" ? "M" : unit === "K" ? "K" : unit}</span>
-                        <span className={`text-[9px] ${metric.delta >= 0 ? (t?.isReversed ? 'text-red-500' : 'text-emerald-600') : (t?.isReversed ? 'text-emerald-600' : 'text-red-500')}`}>{metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}</span>
+                        <span className={`text-[9px] ${metric.delta >= 0 ? (t?.isReversed ? 'text-red-500' : 'text-emerald-600') : (t?.isReversed ? 'text-emerald-600' : 'text-red-500')}`}>
+                          {metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
               );
             })}
-            <div className="mt-2 pt-2 border-t border-amber-100"><div className="text-center"><div className="text-lg font-bold text-amber-700">${(kpis.loss / 1e6).toFixed(0)}M</div><div className="text-[9px] text-slate-500">Total economic impact</div></div></div>
+            
+            {/* Economic Summary */}
+            <div className="mt-2 pt-2 border-t border-amber-100">
+              <div className="text-center">
+                <div className="text-lg font-bold text-amber-700">${(kpis.loss / 1e6).toFixed(0)}M</div>
+                <div className="text-[9px] text-slate-500">Total economic impact</div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* COLUMN 4: HUMAN CONSEQUENCE */}
         <div className="bg-gradient-to-b from-purple-50 to-white rounded-xl border border-purple-200 overflow-hidden shadow-sm">
-          <div className="bg-purple-500 px-3 py-2"><div className="flex items-center justify-between"><span className="text-white text-sm font-semibold">👥 Human</span><span className="text-white/70 text-[10px]">3 indicators</span></div></div>
+          <div className="bg-purple-500 px-3 py-2">
+            <div className="flex items-center justify-between">
+              <span className="text-white text-sm font-semibold">👥 Human</span>
+              <span className="text-white/70 text-[10px]">3 indicators</span>
+            </div>
+          </div>
           <div className="p-3 space-y-4">
             {metrics.slice(9, 12).map((metric) => {
               const t = thresholds[metric.key as keyof typeof thresholds];
@@ -466,20 +556,44 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
               const doughnutColor = getDoughnutColor(metric.key, metric.value);
               
               return (
-                <div key={metric.key} className="relative group cursor-pointer" onMouseEnter={() => setActiveMetric(metric.key)} onMouseLeave={() => setActiveMetric(null)}>
+                <div 
+                  key={metric.key}
+                  className="relative group cursor-pointer"
+                  onMouseEnter={() => setActiveMetric(metric.key)}
+                  onMouseLeave={() => setActiveMetric(null)}
+                >
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <svg width="70" height="70" viewBox="0 0 70 70" className="transform -rotate-90">
                         <circle cx="35" cy="35" r="27" fill="none" stroke="#e2e8f0" strokeWidth="5" />
-                        <circle cx="35" cy="35" r="27" fill="none" stroke={doughnutColor} strokeWidth="5" strokeDasharray={2 * Math.PI * 27} strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)} strokeLinecap="round" className="transition-all duration-1000" />
+                        <circle
+                          cx="35"
+                          cy="35"
+                          r="27"
+                          fill="none"
+                          stroke={doughnutColor}
+                          strokeWidth="5"
+                          strokeDasharray={2 * Math.PI * 27}
+                          strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)}
+                          strokeLinecap="round"
+                          className="transition-all duration-1000"
+                        />
                       </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span><span className="text-[8px] text-slate-400">{unit}</span></div>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span>
+                        <span className="text-[8px] text-slate-400">{unit}</span>
+                      </div>
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-1"><span className="text-base">{t?.icon}</span><span className="text-xs font-medium text-slate-700">{t?.label}</span></div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-base">{t?.icon}</span>
+                        <span className="text-xs font-medium text-slate-700">{t?.label}</span>
+                      </div>
                       <div className="flex items-center justify-between mt-1">
                         <span className="text-[9px] text-slate-400">Threshold: {t?.max}{unit === "/100k" ? "/100k" : unit}</span>
-                        <span className={`text-[9px] ${metric.delta >= 0 ? (t?.isReversed ? 'text-red-500' : 'text-emerald-600') : (t?.isReversed ? 'text-emerald-600' : 'text-red-500')}`}>{metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}</span>
+                        <span className={`text-[9px] ${metric.delta >= 0 ? (t?.isReversed ? 'text-red-500' : 'text-emerald-600') : (t?.isReversed ? 'text-emerald-600' : 'text-red-500')}`}>
+                          {metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -490,6 +604,7 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
         </div>
       </div>
 
+      {/* Floating Tooltip */}
       {activeMetric && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 text-white text-xs px-4 py-2 rounded-lg shadow-xl max-w-md text-center animate-fade-in">
           {activeMetric === "temp" && `🌡️ Surface Temperature: ${kpis.temp > 0 ? `+${kpis.temp.toFixed(2)}°C` : `${kpis.temp.toFixed(2)}°C`} above pre-industrial baseline. Paris Agreement target: 1.5°C`}
@@ -507,6 +622,7 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
         </div>
       )}
 
+      {/* Summary Narrative */}
       <div className="mt-6 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200">
         <div className="flex items-start gap-3">
           <div className="text-2xl">📖</div>
@@ -523,8 +639,13 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
       </div>
 
       <style jsx>{`
-        @keyframes fade-in { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-        .animate-fade-in { animation: fade-in 0.2s ease-out; }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
       `}</style>
     </div>
   );
@@ -535,9 +656,15 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
 // ============================================================================
 
 export default function Home() {
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState("Fiji");
   const [activeView, setActiveView] = useState<"alluvial" | "beeswarm">("alluvial");
   const [isClient, setIsClient] = useState(false);
+  const [hasSelectedCountry, setHasSelectedCountry] = useState(true);
+  
+  // Set isClient to true after mount to avoid hydration issues
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   const countries = useMemo(() => {
     const allCountries = new Set<string>();
@@ -556,34 +683,14 @@ export default function Home() {
     return Array.from(allCountries).sort();
   }, []);
   
-  useEffect(() => { setIsClient(true); }, []);
+  // Ensure selectedCountry is valid
+  useEffect(() => {
+    if (countries.length > 0 && !countries.includes(selectedCountry)) {
+      setSelectedCountry(countries[0]);
+    }
+  }, [countries, selectedCountry]);
   
-  // Regional data - loads immediately (does NOT depend on selected country)
-  const regionalLossData = useMemo(() => {
-    const latest = new Map<string, TimeSeriesPoint>();
-    disasterEconomicLoss.forEach(p => { 
-      const existing = latest.get(p.country); 
-      if (!existing || p.year > existing.year) latest.set(p.country, p); 
-    });
-    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
-  }, []);
-
-  const regionalAffectedData = useMemo(() => {
-    const latest = new Map<string, TimeSeriesPoint>();
-    affectedPersons.forEach(p => { 
-      const existing = latest.get(p.country); 
-      if (!existing || p.year > existing.year) latest.set(p.country, p); 
-    });
-    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
-  }, []);
-
-  const beeswarmData = useMemo(() => buildClimateRecords(), []);
-  
-  // Data that depends on selected country - only computed when country is selected
-  const mapTimeSeries = useCallback((data: TimeSeriesPoint[]) => {
-    if (!selectedCountry) return [];
-    return data.filter(d => d.country === selectedCountry);
-  }, [selectedCountry]);
+  const mapTimeSeries = useCallback((data: TimeSeriesPoint[]) => data.filter(d => d.country === selectedCountry), [selectedCountry]);
   
   const dataMap = useMemo(() => ({
     temp: mapTimeSeries(surfaceTempAnomalies),
@@ -631,14 +738,33 @@ export default function Home() {
   }), [kpis, dataMap]);
 
   const tempTrend = dataMap.temp.length > 1 && dataMap.temp[0].value !== 0 
-    ? ((dataMap.temp[dataMap.temp.length - 1].value - dataMap.temp[0].value) / Math.abs(dataMap.temp[0].value)) * 100 : 0;
+    ? ((dataMap.temp[dataMap.temp.length - 1].value - dataMap.temp[0].value) / Math.abs(dataMap.temp[0].value)) * 100 
+    : 0;
   const seaTrend = dataMap.sea.length > 1 && dataMap.sea[0].value !== 0
-    ? ((dataMap.sea[dataMap.sea.length - 1].value - dataMap.sea[0].value) / Math.abs(dataMap.sea[0].value)) * 100 : 0;
+    ? ((dataMap.sea[dataMap.sea.length - 1].value - dataMap.sea[0].value) / Math.abs(dataMap.sea[0].value)) * 100 
+    : 0;
   const lossTotal = dataMap.loss.reduce((sum, d) => sum + d.value, 0);
   const peopleTotal = dataMap.people.reduce((sum, d) => sum + d.value, 0);
 
+  const regionalLossData = useMemo(() => {
+    const latest = new Map<string, TimeSeriesPoint>();
+    disasterEconomicLoss.forEach(p => { 
+      const existing = latest.get(p.country); 
+      if (!existing || p.year > existing.year) latest.set(p.country, p); 
+    });
+    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
+  }, []);
+
+  const regionalAffectedData = useMemo(() => {
+    const latest = new Map<string, TimeSeriesPoint>();
+    affectedPersons.forEach(p => { 
+      const existing = latest.get(p.country); 
+      if (!existing || p.year > existing.year) latest.set(p.country, p); 
+    });
+    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
+  }, []);
+
   const climateFlowData = useMemo(() => {
-    if (!selectedCountry) return [];
     const years = new Set<number>();
     [...surfaceTempAnomalies, ...seaSurfaceTempAnomalies, ...seaLevelAnomalies, ...rainfallAnomalies, ...disasterEconomicLoss, ...affectedPersons, ...tourist_arrival]
       .filter(d => d.country === selectedCountry).forEach(d => years.add(d.year));
@@ -659,14 +785,12 @@ export default function Home() {
     }));
   }, [selectedCountry]);
 
-  const multiLineData = useMemo(() => {
-    if (!selectedCountry) return [];
-    return buildMultiLineData().filter(d => d.country === selectedCountry);
-  }, [selectedCountry]);
-  
+  const multiLineData = useMemo(() => buildMultiLineData().filter(d => d.country === selectedCountry), [selectedCountry]);
+  const beeswarmData = useMemo(() => buildClimateRecords(), []);
   const chartWidth = 520;
-  const hasData = selectedCountry && (dataMap.temp.length > 0 || dataMap.sea.length > 0 || dataMap.rainfall.length > 0);
+  const hasData = dataMap.temp.length > 0 || dataMap.sea.length > 0 || dataMap.rainfall.length > 0;
 
+  // Don't render data-dependent content on server
   if (!isClient) {
     return (
       <main style={S.page}>
@@ -675,6 +799,7 @@ export default function Home() {
             <div style={S.kicker}>Pacific Community · SPC NMDI Data Platform</div>
             <h1 style={S.h1}>The Pacific Climate Cascade</h1>
             <p style={S.subhead}>Loading climate data...</p>
+            <LoadingSkeleton />
           </div>
         </div>
       </main>
@@ -696,31 +821,98 @@ export default function Home() {
           <div style={S.pillRow}>
             {countries.map(c => <CountryPill key={c} label={c} active={c === selectedCountry} onClick={() => setSelectedCountry(c)} />)}
           </div>
+
           <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginTop: "1rem" }}>
             <div style={{ marginBottom: "0.4rem" }}>Data sources: 
             <div style={{ marginBottom: "0.6rem" }}>
-              <a href="#" style={{ marginRight: "8px" }}>🌊 Sea Surface Temperature Data</a>
-              <a href="#" style={{ marginRight: "8px" }}>☔ Rainfall Data</a>
-              <a href="#" style={{ marginRight: "8px" }}>📈 Sea Level Data</a>
-              <a href="#" style={{ marginRight: "8px" }}>🌡️ Surface Temperature Data</a>
-              <a href="#" style={{ marginRight: "8px" }}>👥 Affected Persons Data</a>
-              <a href="#">💰 Direct Disasters Economic Loss Data</a>
+            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.SST_ANOM.&pd=,&to[TIME_PERIOD]=false" target="_blank" rel="noopener noreferrer" style={{ marginRight: "8px" }}> Sea Surface Temperature Data</a>
+            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.RAIN_ANOM.&pd=,&to[TIME_PERIOD]=false" target="_blank" rel="noopener noreferrer" style={{ marginRight: "8px" }}>Rainfall Data</a>
+            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.SEA_LVL.&pd=,&to[TIME_PERIOD]=false" target="_blank" rel="noopener noreferrer" style={{ marginRight: "8px" }}>Sea Level Data</a>
+            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.ST_ANOM.&pd=,&to[TIME_PERIOD]=false" target="_blank" rel="noopener noreferrer" style={{ marginRight: "8px" }}>Surface Temperature Data</a>
+            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=ds%3ASPC2&df[id]=DF_SDG_11&df[ag]=SPC&df[vs]=3.0&dq=A.VC_DSR_AFFCT.........&pd=,&to[TIME_PERIOD]=false&lb=bt" target="_blank" rel="noopener noreferrer" style={{ marginRight: "8px" }}>Affected Persons Data</a>
+            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=ds%3ASPC2&df[id]=DF_SDG_11&df[ag]=SPC&df[vs]=3.0&dq=A.VC_DSR_AALT...._T.....&pd=,&to[TIME_PERIOD]=false" target="_blank" rel="noopener noreferrer">Direct Disasters Economic Loss Data</a>
             </div>
           </div>    
         </div>
       </div>
 
-        {!selectedCountry ? (
+        {!hasData ? (
+          <div style={{ textAlign: "center", padding: "3rem", background: "#f8fafc", borderRadius: "1rem", marginBottom: "2rem" }}>
+            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📭</div>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.5rem" }}>No Climate Data Available</h3>
+            <p style={{ color: "#64748b" }}>Please select another Pacific Island nation from the list above.</p>
+          </div>
+        ) : (
           <>
-            {/* ========== SELECT COUNTRY PROMPT ========== */}
-            <SelectCountryPrompt />
-            
-            {/* ========== REGIONAL PERSPECTIVE - Appears AFTER the prompt ========== */}
+            {/* ========== DOUGHNUT CLIMATE IMPACT DASHBOARD ========== */}
+            <div style={S.storySection}>
+              <DoughnutClimateDashboard 
+                kpis={kpis} 
+                deltas={deltas} 
+                selectedCountry={selectedCountry}
+                isLoading={false}
+              />
+            </div>
+
+            {/* ========== CHAPTER 2: The Drivers ========== */}
+            <div style={S.storySection}>
+              <div style={S.storyHeader}>
+                <div style={S.storyTitle}>🌡️ The Drivers of Change</div>
+                <div style={S.storySubtitle}>
+                  Surface temperatures in {selectedCountry} have <strong style={{ color: "#D85A30" }}>{tempTrend > 0 ? `risen ${tempTrend.toFixed(1)}%` : tempTrend < 0 ? `fallen ${Math.abs(tempTrend).toFixed(1)}%` : "remained stable"}</strong> over the recorded period. 
+                  This heat doesn't disappear — it warms oceans and fuels extreme rainfall.
+                </div>
+                <div style={S.storyInsight}>💡 Hotter air → warmer oceans → more energy for storms → heavier rain</div>
+              </div>
+              <div style={S.twoColumnGrid}>
+                <div style={S.chartPanel}>
+                  <div style={S.chartHead}><span style={S.chartIcon}>🌡️</span><span style={S.chartTitle}>Surface Temperature Anomaly</span><span style={S.chartInsight}>The starting point</span></div>
+                  <LineChart width={chartWidth} height={260} data={dataMap.temp} />
+                </div>
+                <div style={S.chartPanel}>
+                  <div style={S.chartHead}><span style={S.chartIcon}>🌊</span><span style={S.chartTitle}>Sea Level Anomaly</span><span style={S.chartInsight}>Thermal expansion + melting ice</span></div>
+                  <LineChart width={chartWidth} height={260} data={dataMap.sea} />
+                </div>
+                <div style={S.chartPanel}>
+                  <div style={S.chartHead}><span style={S.chartIcon}>🌊</span><span style={S.chartTitle}>Sea Surface Anomaly</span><span style={S.chartInsight}>Driver of marine heatwaves and ocean warming</span></div>
+                  <LineChart width={chartWidth} height={260} data={dataMap.sea_surface_temperature} />
+                </div>
+                <div style={S.chartPanel}>
+                  <div style={S.chartHead}><span style={S.chartIcon}>☔</span><span style={S.chartTitle}>Precipitation Anomaly</span><span style={S.chartInsight}>More extreme, less predictable</span></div>
+                  <LineChart width={chartWidth} height={260} data={dataMap.rainfall} />
+                </div>
+              </div>
+            </div>
+
+            {/* ========== CHAPTER 3: The Consequences ========== */}
+            <div style={S.storySection}>
+              <div style={S.storyHeader}>
+                <div style={S.storyTitle}>💔 The Human & Economic Toll</div>
+                <div style={S.storySubtitle}>
+                  Climate change is not an abstract concept. Over the recorded period, {selectedCountry} has suffered 
+                  <strong style={{ color: "#EF9F27" }}> ${(lossTotal / 1000000).toFixed(1)}M in disaster-related losses</strong> and 
+                  <strong style={{ color: "#7F77DD" }}> impacted over {Math.round(peopleTotal / 1000).toFixed(0)}K people</strong>.
+                </div>
+                <div style={S.storyInsight}>💡 Each disaster has a price tag — and a human face</div>
+              </div>
+              <div style={S.twoColumnGrid}>
+                <div style={S.chartPanel}>
+                  <div style={S.chartHead}><span style={S.chartIcon}>💰</span><span style={S.chartTitle}>Direct Disaster Economic Loss</span><span style={S.chartInsight}>The financial burden</span></div>
+                  <Barplot width={chartWidth} height={260} data={dataMap.loss} dataType="loss" setSelectedCountry={setSelectedCountry} />
+                </div>
+                <div style={S.chartPanel}>
+                  <div style={S.chartHead}><span style={S.chartIcon}>👥</span><span style={S.chartTitle}>Number of People Affected</span><span style={S.chartInsight}>Lives disrupted or destroyed</span></div>
+                  <BubbleChart width={chartWidth} height={260} data={dataMap.people} />
+                </div>
+              </div>
+            </div>
+
+            {/* ========== CHAPTER 4: The Big Picture ========== */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
                 <div style={S.storyTitle}>🌏 A Regional Perspective</div>
                 <div style={S.storySubtitle}>
-                  How do Pacific nations compare? Select a country from above to see detailed comparison with its neighbors.
+                  {selectedCountry} doesn't exist in isolation. How does its burden compare to the {countries.length} other Pacific nations?
                 </div>
               </div>
               <div style={S.comparisonGrid}>
@@ -734,56 +926,8 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </>
-        ) : !hasData ? (
-          <div style={{ textAlign: "center", padding: "3rem", background: "#f8fafc", borderRadius: "1rem", marginBottom: "2rem" }}>
-            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📭</div>
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.5rem" }}>No Climate Data Available</h3>
-            <p style={{ color: "#64748b" }}>We don't have sufficient climate indicator data for {selectedCountry} yet. Please select another Pacific Island nation from the list above.</p>
-          </div>
-        ) : (
-          <>
-            {/* ========== DOUGHNUT CLIMATE IMPACT DASHBOARD (Depends on selected country) ========== */}
-            <div style={S.storySection}>
-              <DoughnutClimateDashboard kpis={kpis} deltas={deltas} selectedCountry={selectedCountry} isLoading={false} />
-            </div>
 
-            {/* ========== CHAPTER 2: The Drivers (Depends on selected country) ========== */}
-            <div style={S.storySection}>
-              <div style={S.storyHeader}>
-                <div style={S.storyTitle}>🌡️ The Drivers of Change</div>
-                <div style={S.storySubtitle}>
-                  Surface temperatures in {selectedCountry} have <strong style={{ color: "#D85A30" }}>{tempTrend > 0 ? `risen ${tempTrend.toFixed(1)}%` : tempTrend < 0 ? `fallen ${Math.abs(tempTrend).toFixed(1)}%` : "remained stable"}</strong> over the recorded period. 
-                  This heat doesn't disappear — it warms oceans and fuels extreme rainfall.
-                </div>
-                <div style={S.storyInsight}>💡 Hotter air → warmer oceans → more energy for storms → heavier rain</div>
-              </div>
-              <div style={S.twoColumnGrid}>
-                <div style={S.chartPanel}><div style={S.chartHead}><span style={S.chartIcon}>🌡️</span><span style={S.chartTitle}>Surface Temperature Anomaly</span><span style={S.chartInsight}>The starting point</span></div><LineChart width={chartWidth} height={260} data={dataMap.temp} /></div>
-                <div style={S.chartPanel}><div style={S.chartHead}><span style={S.chartIcon}>🌊</span><span style={S.chartTitle}>Sea Level Anomaly</span><span style={S.chartInsight}>Thermal expansion + melting ice</span></div><LineChart width={chartWidth} height={260} data={dataMap.sea} /></div>
-                <div style={S.chartPanel}><div style={S.chartHead}><span style={S.chartIcon}>🌊</span><span style={S.chartTitle}>Sea Surface Anomaly</span><span style={S.chartInsight}>Driver of marine heatwaves and ocean warming</span></div><LineChart width={chartWidth} height={260} data={dataMap.sea_surface_temperature} /></div>
-                <div style={S.chartPanel}><div style={S.chartHead}><span style={S.chartIcon}>☔</span><span style={S.chartTitle}>Precipitation Anomaly</span><span style={S.chartInsight}>More extreme, less predictable</span></div><LineChart width={chartWidth} height={260} data={dataMap.rainfall} /></div>
-              </div>
-            </div>
-
-            {/* ========== CHAPTER 3: The Consequences (Depends on selected country) ========== */}
-            <div style={S.storySection}>
-              <div style={S.storyHeader}>
-                <div style={S.storyTitle}>💔 The Human & Economic Toll</div>
-                <div style={S.storySubtitle}>
-                  Climate change is not an abstract concept. Over the recorded period, {selectedCountry} has suffered 
-                  <strong style={{ color: "#EF9F27" }}> ${(lossTotal / 1000000).toFixed(1)}M in disaster-related losses</strong> and 
-                  <strong style={{ color: "#7F77DD" }}> impacted over {Math.round(peopleTotal / 1000).toFixed(0)}K people</strong>.
-                </div>
-                <div style={S.storyInsight}>💡 Each disaster has a price tag — and a human face</div>
-              </div>
-              <div style={S.twoColumnGrid}>
-                <div style={S.chartPanel}><div style={S.chartHead}><span style={S.chartIcon}>💰</span><span style={S.chartTitle}>Direct Disaster Economic Loss</span><span style={S.chartInsight}>The financial burden</span></div><Barplot width={chartWidth} height={260} data={dataMap.loss} dataType="loss" setSelectedCountry={setSelectedCountry} /></div>
-                <div style={S.chartPanel}><div style={S.chartHead}><span style={S.chartIcon}>👥</span><span style={S.chartTitle}>Number of People Affected</span><span style={S.chartInsight}>Lives disrupted or destroyed</span></div><BubbleChart width={chartWidth} height={260} data={dataMap.people} /></div>
-              </div>
-            </div>
-
-            {/* ========== CHAPTER 5: The System (Depends on selected country) ========== */}
+            {/* ========== CHAPTER 5: The System ========== */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
                 <div style={S.storyTitle}>🔗 Tracing the Causal Chain</div>
@@ -795,7 +939,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ========== CHAPTER 6: Explore Your Own Story (Partially depends on selected country) ========== */}
+            {/* ========== CHAPTER 6: Explore Your Own Story ========== */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
                 <div style={S.storyTitle}>🔬 Explore the Data Yourself</div>
@@ -811,7 +955,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ========== CHAPTER 7: Full Timeline (Depends on selected country) ========== */}
+            {/* ========== CHAPTER 7: Full Timeline ========== */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
                 <div style={S.storyTitle}>📈 A Complete Timeline</div>
@@ -832,7 +976,9 @@ export default function Home() {
                 <strong style={{ color: "#7F77DD" }}> affect human communities</strong>.
                 {seaTrend > 0 && ` Sea levels have risen ${seaTrend.toFixed(1)}% — and the trend is accelerating.`}
               </div>
-              <div style={{ ...S.conclusionText, marginTop: "1rem", fontWeight: 500, color: "#0f172a" }}>The question is no longer "Is climate change real?" but "How will we respond?"</div>
+              <div style={{ ...S.conclusionText, marginTop: "1rem", fontWeight: 500, color: "#0f172a" }}>
+                The question is no longer "Is climate change real?" but "How will we respond?"
+              </div>
               <div style={{ ...S.conclusionText, marginTop: "1rem", fontSize: "0.85rem", color: "#64748b" }}>
                 📊 Tracking: Climate Drivers → Environmental Impact → Economic Consequence → Human Consequence<br />
                 🌏 {countries.length} Pacific Island nations and territories<br />
