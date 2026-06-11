@@ -26,6 +26,7 @@ import { climate_altering_land } from "@/data/environmental_impact/climate_alter
 import { lifestock_yield } from "@/data/environmental_impact/lifestock_yield";
 import { population_growth } from "@/data/human_consequence/population_growth";
 import {tubercolosis_incidence} from "@/data/human_consequence/tubercolosis_incidence";
+import { TimeSeriesDashboard } from "@/dataviz/bubbleChart/TimeSeries";
 
 // ============================================================================
 // TYPES
@@ -792,6 +793,30 @@ export default function Home() {
     return Array.from(latest.values()).sort((a, b) => b.value - a.value);
   }, []);
 
+  // Prepare data for Time Series Dashboard
+  const timeSeriesData = useMemo(() => {
+    const yearSet = new Set<number>();
+    
+    crop_yield.filter(d => d.country === selectedCountry).forEach(d => yearSet.add(d.year));
+    lifestock_yield.filter(d => d.country === selectedCountry).forEach(d => yearSet.add(d.year));
+    tourist_arrival.filter(d => d.country === selectedCountry).forEach(d => yearSet.add(d.year));
+    
+    const years = Array.from(yearSet).sort();
+    
+    return years.map(year => {
+      const cropData = crop_yield.find(d => d.country === selectedCountry && d.year === year);
+      const livestockData = lifestock_yield.find(d => d.country === selectedCountry && d.year === year);
+      const touristData = tourist_arrival.find(d => d.country === selectedCountry && d.year === year);
+      
+      return {
+        year,
+        cropYield: cropData?.value || 0,
+        livestockYield: livestockData?.value || 0,
+        touristArrivals: touristData?.value || 0
+      };
+    });
+  }, [selectedCountry]);
+
   const climateFlowData = useMemo(() => {
     const years = new Set<number>();
     [...surfaceTempAnomalies, ...seaSurfaceTempAnomalies, ...seaLevelAnomalies, ...rainfallAnomalies, ...disasterEconomicLoss, ...affectedPersons, ...tourist_arrival]
@@ -913,30 +938,63 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ========== CHAPTER 3: The Consequences ========== */}
+            {/* ========== CHAPTERS 3, 4, 5: Combined Impact Dashboard ========== */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
-                <div style={S.storyTitle}>💔 The Human & Economic Toll</div>
+                <div style={S.storyTitle}>💔 The Human, Economic & Socioeconomic Toll by Country</div>
                 <div style={S.storySubtitle}>
-                  Climate change is not an abstract concept. Over the recorded period, {selectedCountry} has suffered 
-                  <strong style={{ color: "#EF9F27" }}> ${(lossTotal / 1000000).toFixed(1)}M in disaster-related losses</strong> and 
-                  <strong style={{ color: "#7F77DD" }}> impacted over {Math.round(peopleTotal / 1000).toFixed(0)}K people</strong>.
+                  Climate change cascades through every sector. Track economic losses, crop yields, livestock production, 
+                  and tourism across {selectedCountry}.
                 </div>
-                <div style={S.storyInsight}>💡 Each disaster has a price tag — and a human face</div>
+                <div style={S.storyInsight}>💡 Each disaster has a price tag — and a human face. Climate affects food security, livelihoods, and economic stability.</div>
               </div>
-              <div style={S.twoColumnGrid}>
-                <div style={S.chartPanel}>
-                  <div style={S.chartHead}><span style={S.chartIcon}>💰</span><span style={S.chartTitle}>Direct Disaster Economic Loss</span><span style={S.chartInsight}>The financial burden</span></div>
-                  <TrendLine width={chartWidth} height={260} data={dataMap.loss} dataType="loss" setSelectedCountry={setSelectedCountry} />
+              
+              {/* Combined Card Container */}
+              <div className="space-y-6">
+                {/* Economic Loss & People Affected Row */}
+                <div style={S.twoColumnGrid}>
+                  <div style={S.chartPanel}>
+                    <div style={S.chartHead}>
+                      <span style={S.chartIcon}>💰</span>
+                      <span style={S.chartTitle}>Direct Disaster Economic Loss</span>
+                      <span style={S.chartInsight}>The financial burden</span>
+                    </div>
+                    <TrendLine 
+                      width={chartWidth} 
+                      height={260} 
+                      data={dataMap.loss} 
+                      dataType="loss" 
+                      setSelectedCountry={setSelectedCountry} 
+                    />
+                  </div>
+                  <div style={S.chartPanel}>
+                    <div style={S.chartHead}>
+                      <span style={S.chartIcon}>👥</span>
+                      <span style={S.chartTitle}>Number of People Affected</span>
+                      <span style={S.chartInsight}>Lives disrupted or destroyed</span>
+                    </div>
+                    <BubbleChart width={chartWidth} height={260} data={dataMap.people} />
+                  </div>
                 </div>
+
+                {/* Time Series Dashboard - Crop Yield, Livestock, Tourism */}
                 <div style={S.chartPanel}>
-                  <div style={S.chartHead}><span style={S.chartIcon}>👥</span><span style={S.chartTitle}>Number of People Affected</span><span style={S.chartInsight}>Lives disrupted or destroyed</span></div>
-                  <BubbleChart width={chartWidth} height={260} data={dataMap.people} />
+                  <div style={S.chartHead}>
+                    <span style={S.chartIcon}>📊</span>
+                    <span style={S.chartTitle}>Impacts on Crop Yield, Livestock & Tourism Trends</span>
+                    <span style={S.chartInsight}>Socioeconomic indicators over time</span>
+                  </div>
+                  <TimeSeriesDashboard 
+                    width={chartWidth * 2 + 20} 
+                    height={480} 
+                    data={timeSeriesData}
+                    selectedCountry={selectedCountry}
+                  />
                 </div>
               </div>
             </div>
 
-            {/* ========== CHAPTER 4: The Big Picture ========== */}
+            {/* ========== CHAPTER 6: The Big Picture ========== */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
                 <div style={S.storyTitle}>🌏 A Regional Perspective</div>
@@ -956,7 +1014,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ========== CHAPTER 5: The System ========== */}
+            {/* ========== CHAPTER 7: The System ========== */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
                 <div style={S.storyTitle}>🔗 Tracing the Causal Chain</div>
@@ -968,7 +1026,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ========== CHAPTER 6: Explore Your Own Story ========== */}
+            {/* ========== CHAPTER 8: Explore Your Own Story ========== */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
                 <div style={S.storyTitle}>🔬 Explore the Data Yourself</div>
@@ -984,7 +1042,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ========== CHAPTER 7: Full Timeline ========== */}
+            {/* ========== CHAPTER 9: Full Timeline ========== */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
                 <div style={S.storyTitle}>📈 A Complete Timeline</div>
