@@ -21,22 +21,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
-      # ✅ FIX: clean install (more stable than npm install)
       - name: Install dependencies
         run: npm ci
 
-      # ✅ Build + verify output folder
       - name: Build Next.js app
         run: |
           npm run build
-          echo "Checking output folder..."
           ls -la
           ls -la out
 
-      # ⚠️ This MUST exist after build
       - name: Upload static files
         uses: actions/upload-pages-artifact@v3
         with:
