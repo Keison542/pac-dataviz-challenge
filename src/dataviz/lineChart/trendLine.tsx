@@ -1,7 +1,7 @@
 import { scaleLinear, scaleBand } from "d3-scale";
 import { useMemo, useState } from "react";
 import { line, curveCardinal } from "d3-shape";
-import type { InteractionData } from "@/dataviz/barplot/types/interaction";
+import type { InteractionData } from "@/dataviz/lineChart/types/interaction";
 
 const MARGIN = { top: 60, right: 60, bottom: 100, left: 120 }; // Increased left margin from 100 to 120
 
@@ -33,7 +33,7 @@ type Props = {
   insight?: string;
 };
 
-export const Barplot = ({
+export const TrendLine = ({
   width,
   height,
   data,

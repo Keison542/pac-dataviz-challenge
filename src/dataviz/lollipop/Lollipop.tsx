@@ -1,7 +1,7 @@
 // src/dataviz/lollipop/LollipopChart.tsx
 import { scaleBand, scaleLinear } from "d3-scale";
 import { useMemo, useState } from "react";
-import type { InteractionData } from "../barplot/types/interaction";
+import type { InteractionData } from "../lineChart/types/interaction";
 
 const MARGIN = { top: 50, right: 60, bottom: 80, left: 140 };
 

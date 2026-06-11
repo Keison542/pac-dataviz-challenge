@@ -20,7 +20,7 @@ type Props = {
 const MARGIN = {
   top: 50,
   right: 40,
-  bottom: 70,
+  bottom: 100, // Increased bottom margin for rotated labels
   left: 140,
 };
 
@@ -71,6 +71,13 @@ export function BubbleChart({
     return { year: maxYear, total: maxTotal };
   }, [data]);
 
+  // Optimize x-axis ticks - show fewer years to prevent crowding
+  const xAxisTicks = useMemo(() => {
+    const maxTicks = Math.max(5, Math.min(8, Math.floor(boundsWidth / 80)));
+    const step = Math.ceil(years.length / maxTicks);
+    return years.filter((_, i) => i % step === 0);
+  }, [years, boundsWidth]);
+
   const xScale = useMemo(
     () =>
       scaleBand<number>()
@@ -101,6 +108,12 @@ export function BubbleChart({
     return "#fda4af";
   };
 
+  const formatNumber = (value: number): string => {
+    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
+    return value.toString();
+  };
+
   if (!data.length) {
     return (
       <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white" style={{ width, height }}>
@@ -128,13 +141,13 @@ export function BubbleChart({
       <div className="mb-5 grid grid-cols-3 gap-2">
         <div className="text-center p-2 bg-rose-50 rounded-lg">
           <div className="text-lg font-bold text-rose-700">
-            {(totalAffected / 1000000).toFixed(1)}M
+            {formatNumber(totalAffected)}
           </div>
           <div className="text-xs text-slate-500">total people affected</div>
         </div>
         <div className="text-center p-2 bg-amber-50 rounded-lg">
           <div className="text-lg font-bold text-amber-700">
-            {(largestEvent?.value / 1000).toFixed(0)}K
+            {formatNumber(largestEvent?.value || 0)}
           </div>
           <div className="text-xs text-slate-500">largest single event</div>
           <div className="text-[10px] text-slate-400">{largestEvent?.country}, {largestEvent?.year}</div>
@@ -144,7 +157,7 @@ export function BubbleChart({
             {yearTotals.year || "—"}
           </div>
           <div className="text-xs text-slate-500">worst year</div>
-          <div className="text-[10px] text-slate-400">{(yearTotals.total / 1000).toFixed(0)}K affected</div>
+          <div className="text-[10px] text-slate-400">{formatNumber(yearTotals.total)} affected</div>
         </div>
       </div>
 
@@ -155,13 +168,13 @@ export function BubbleChart({
             The data reveals that <span className="font-bold text-slate-900">{largestEvent.country}</span> experienced the 
             single largest disaster impact in <span className="font-bold text-slate-900">{largestEvent.year}</span>, with{' '}
             <span className="font-bold text-rose-600">{largestEvent.value.toLocaleString()} people</span> affected.
-            {yearTotals.year && ` The most devastating year across all Pacific nations was ${yearTotals.year}, when ${(yearTotals.total / 1000).toFixed(0)}K people were displaced or impacted.`}
+            {yearTotals.year && ` The most devastating year across all Pacific nations was ${yearTotals.year}, when ${formatNumber(yearTotals.total)} people were displaced or impacted.`}
           </p>
         </div>
       )}
 
       {/* Legend */}
-      <div className="mb-3 flex items-center gap-4 text-xs">
+      <div className="mb-3 flex flex-wrap items-center gap-4 text-xs">
         <span className="text-slate-500">Bubble size = people affected</span>
         <div className="flex items-center gap-2">
           <span className="text-slate-500">Severity:</span>
@@ -178,19 +191,22 @@ export function BubbleChart({
 
       <svg width={width} height={height} className="overflow-visible">
         <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-          {/* Vertical Grid Lines */}
-          {years.map((year) => (
-            <line
-              key={year}
-              x1={(xScale(year) ?? 0) + xScale.bandwidth() / 2}
-              x2={(xScale(year) ?? 0) + xScale.bandwidth() / 2}
-              y1={0}
-              y2={boundsHeight}
-              stroke="#e2e8f0"
-              strokeWidth="1"
-              strokeDasharray="4 4"
-            />
-          ))}
+          {/* Vertical Grid Lines - only for tick years */}
+          {xAxisTicks.map((year) => {
+            const xPos = (xScale(year) ?? 0) + xScale.bandwidth() / 2;
+            return (
+              <line
+                key={`grid-${year}`}
+                x1={xPos}
+                x2={xPos}
+                y1={0}
+                y2={boundsHeight}
+                stroke="#e2e8f0"
+                strokeWidth="1"
+                strokeDasharray="4 4"
+              />
+            );
+          })}
 
           {/* Horizontal Grid Lines */}
           {countries.map((country) => (
@@ -251,52 +267,81 @@ export function BubbleChart({
                     fill="#ffffff"
                     className="pointer-events-none"
                   >
-                    {(d.value / 1000).toFixed(0)}K
+                    {formatNumber(d.value)}
                   </text>
                 )}
               </g>
             );
           })}
 
-          {/* X Axis - Years */}
-          {years.map((year) => (
-            <text
-              key={year}
-              x={(xScale(year) ?? 0) + xScale.bandwidth() / 2}
-              y={boundsHeight + 22}
-              textAnchor="middle"
-              fill="#64748b"
-              fontSize="11"
-              fontWeight={year === yearTotals.year ? "bold" : "normal"}
-              fill={year === yearTotals.year ? "#d97706" : "#64748b"}
-            >
-              {year}
-              {year === yearTotals.year && <tspan className="text-amber-500"> ●</tspan>}
-            </text>
-          ))}
+          {/* X Axis - Years (rotated to prevent crowding) */}
+          {xAxisTicks.map((year) => {
+            const xPos = (xScale(year) ?? 0) + xScale.bandwidth() / 2;
+            const isWorstYear = year === yearTotals.year;
+            
+            return (
+              <g key={`x-tick-${year}`}>
+                <line
+                  x1={xPos}
+                  y1={boundsHeight}
+                  x2={xPos}
+                  y2={boundsHeight + 5}
+                  stroke="#94a3b8"
+                  strokeWidth="1"
+                />
+                <text
+                  x={xPos}
+                  y={boundsHeight + 20}
+                  textAnchor="start"
+                  fontSize={isWorstYear ? "11" : "10"}
+                  fill={isWorstYear ? "#d97706" : "#64748b"}
+                  fontWeight={isWorstYear ? "bold" : "normal"}
+                  transform={`rotate(45, ${xPos}, ${boundsHeight + 20})`}
+                  className="select-none whitespace-nowrap"
+                >
+                  {year}
+                  {isWorstYear && " ●"}
+                </text>
+              </g>
+            );
+          })}
 
           {/* Y Axis - Countries */}
-          {countries.map((country) => (
-            <text
-              key={country}
-              x={-12}
-              y={(yScale(country) ?? 0) + yScale.bandwidth() / 2 + 3}
-              textAnchor="end"
-              dominantBaseline="middle"
-              fill="#475569"
-              fontSize="11"
-              fontWeight={country === largestEvent?.country ? "bold" : "normal"}
-              className={country === largestEvent?.country ? "text-rose-600" : ""}
-            >
-              {country}
-              {country === largestEvent?.country && <tspan className="text-rose-500"> 👑</tspan>}
-            </text>
-          ))}
+          {countries.map((country) => {
+            const yPos = (yScale(country) ?? 0) + yScale.bandwidth() / 2;
+            const isLargestCountry = country === largestEvent?.country;
+            
+            return (
+              <g key={`y-tick-${country}`}>
+                <line
+                  x1={-5}
+                  y1={yPos}
+                  x2={0}
+                  y2={yPos}
+                  stroke="#94a3b8"
+                  strokeWidth="1"
+                />
+                <text
+                  x={-12}
+                  y={yPos + 3}
+                  textAnchor="end"
+                  dominantBaseline="middle"
+                  fontSize="11"
+                  fill={isLargestCountry ? "#e11d48" : "#475569"}
+                  fontWeight={isLargestCountry ? "bold" : "normal"}
+                  className="select-none"
+                >
+                  {country}
+                  {isLargestCountry && " 👑"}
+                </text>
+              </g>
+            );
+          })}
 
           {/* Axis Titles */}
           <text
             x={boundsWidth / 2}
-            y={boundsHeight + 48}
+            y={boundsHeight + 65}
             textAnchor="middle"
             fill="#64748b"
             fontSize="11"
@@ -304,16 +349,26 @@ export function BubbleChart({
           >
             Year
           </text>
+          
+          <text
+            transform={`rotate(-90) translate(${-boundsHeight / 2}, -55)`}
+            textAnchor="middle"
+            fill="#64748b"
+            fontSize="11"
+            fontWeight="500"
+          >
+            
+          </text>
         </g>
       </svg>
 
       {/* Enhanced Tooltip */}
       {hovered && (
         <div
-          className="absolute pointer-events-none bg-white border border-slate-200 shadow-lg px-4 py-3 rounded-lg z-50"
+          className="fixed pointer-events-none bg-white border border-slate-200 shadow-xl px-4 py-3 rounded-lg z-50"
           style={{
             left: (xScale(hovered.year) ?? 0) + MARGIN.left + (xScale.bandwidth() / 2) + 25,
-            top: (yScale(hovered.country) ?? 0) + MARGIN.top + (yScale.bandwidth() / 2) - 20,
+            top: (yScale(hovered.country) ?? 0) + MARGIN.top + (yScale.bandwidth() / 2) - 30,
           }}
         >
           <div className="flex items-center gap-2 mb-1">
@@ -335,7 +390,7 @@ export function BubbleChart({
       <div className="mt-4 pt-3 border-t border-slate-100">
         <p className="text-xs text-slate-500 text-center leading-relaxed">
           📊 {countries.length} Pacific nations tracked across {years.length} years · 
-          Largest bubble = {largestEvent?.country} in {largestEvent?.year} ({largestEvent?.value.toLocaleString()} people)
+          Largest bubble = {largestEvent?.country} in {largestEvent?.year} ({formatNumber(largestEvent?.value || 0)} people)
         </p>
       </div>
     </div>

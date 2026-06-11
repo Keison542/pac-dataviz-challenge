@@ -2,7 +2,7 @@
 import { useRef, useMemo, useCallback, useState, useEffect } from "react";
 import { animated, useTransition, useSpring } from "@react-spring/web";
 import { LineChart } from "@/dataviz/lineChart/LineChart";
-import { Barplot } from "@/dataviz/barplot/Barplot";
+import { TrendLine } from "@/dataviz/lineChart/trendLine";
 import { BubbleChart } from "@/dataviz/bubbleChart/BubbleChart";
 import { geoData } from "@/data/pacificGeoData";
 import { surfaceTempAnomalies } from "@/data/climate_drivers/surface_temp_anomalies";
@@ -126,7 +126,8 @@ const LoadingSkeleton = () => (
 // ============================================================================
 
 const DoughnutChart = ({ value, maxValue, color, size = 70, unit, label, isReversed = false }: any) => {
-  const percentage = Math.min(100, Math.max(0, (Math.abs(value) / maxValue) * 100));
+  const safeValue = value ?? 0;
+  const percentage = Math.min(100, Math.max(0, (Math.abs(safeValue) / maxValue) * 100));
   const radius = size / 2;
   const circumference = 2 * Math.PI * (radius - 8);
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
@@ -136,39 +137,39 @@ const DoughnutChart = ({ value, maxValue, color, size = 70, unit, label, isRever
   
   const getValueColor = () => {
     if (label === "Surface Temp" || label === "Sea Surface Temp") {
-      if (value > 1.5) return "#ef4444";
-      if (value > 1.0) return "#f97316";
-      if (value > 0.5) return "#eab308";
+      if (safeValue > 1.5) return "#ef4444";
+      if (safeValue > 1.0) return "#f97316";
+      if (safeValue > 0.5) return "#eab308";
       return "#22c55e";
     }
     if (label === "Sea Level") {
-      if (value > 0.3) return "#ef4444";
-      if (value > 0.2) return "#f97316";
-      if (value > 0.1) return "#eab308";
+      if (safeValue > 0.3) return "#ef4444";
+      if (safeValue > 0.2) return "#f97316";
+      if (safeValue > 0.1) return "#eab308";
       return "#22c55e";
     }
     if (label === "Crop Yield" || label === "Livestock") {
-      if (value < 3) return "#ef4444";
-      if (value < 5) return "#f97316";
+      if (safeValue < 3) return "#ef4444";
+      if (safeValue < 5) return "#f97316";
       return "#22c55e";
     }
     if (label === "TB Incidence") {
-      if (value > 300) return "#ef4444";
-      if (value > 200) return "#f97316";
-      if (value > 100) return "#eab308";
+      if (safeValue > 300) return "#ef4444";
+      if (safeValue > 200) return "#f97316";
+      if (safeValue > 100) return "#eab308";
       return "#22c55e";
     }
     return color;
   };
 
   const formatDisplayValue = () => {
-    if (label === "Economic Loss") return `$${(value / 1e6).toFixed(1)}M`;
-    if (label === "Tourist Arrivals") return `${(value / 1e3).toFixed(0)}K`;
-    if (label === "People Affected") return `${(value / 1e3).toFixed(0)}K`;
-    if (label === "Land Cover") return `${(value / 1e3).toFixed(0)}K ha`;
-    if (label === "Sea Level") return `${(value * 100).toFixed(0)}cm`;
-    if (label === "Population Growth") return `${value > 0 ? `+${value.toFixed(1)}%` : `${value.toFixed(1)}%`}`;
-    return value.toFixed(2);
+    if (label === "Economic Loss") return `$${(safeValue / 1e6).toFixed(1)}M`;
+    if (label === "Tourist Arrivals") return `${(safeValue / 1e3).toFixed(0)}K`;
+    if (label === "People Affected") return `${(safeValue / 1e3).toFixed(0)}K`;
+    if (label === "Land Cover") return `${(safeValue / 1e3).toFixed(0)}K ha`;
+    if (label === "Sea Level") return `${(safeValue * 100).toFixed(0)}cm`;
+    if (label === "Population Growth") return `${safeValue > 0 ? `+${safeValue.toFixed(1)}%` : `${safeValue.toFixed(1)}%`}`;
+    return safeValue.toFixed(2);
   };
 
   return (
@@ -209,12 +210,36 @@ const DoughnutChart = ({ value, maxValue, color, size = 70, unit, label, isRever
 const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: any) => {
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
   
+  // Provide default values if kpis or deltas are undefined
+  const safeKpis = kpis || {
+    temp: 0, sea_surface_temperature: 0, rainfall: 0, sea: 0,
+    climate_altering_land: 0, crop_yield: 0, lifestock_yield: 0,
+    loss: 0, tourist_arrival: 0, people: 0, population_growth: 0,
+    tubercolosis_incidence: 0
+  };
+  
+  const safeDeltas = deltas || {
+    temp: 0, sea_surface_temperature: 0, rainfall: 0, sea: 0,
+    climate_altering_land: 0, crop_yield: 0, lifestock_yield: 0,
+    loss: 0, tourist_arrival: 0, people: 0, population_growth: 0,
+    tubercolosis_incidence: 0
+  };
+  
   if (isLoading) {
     return <LoadingSkeleton />;
   }
   
   // Define thresholds for each indicator
-  const thresholds = {
+  const thresholds: Record<string, {
+    max: number;
+    unit: string;
+    label: string;
+    icon: string;
+    color: string;
+    isReversed: boolean;
+    multiplier?: number;
+    displayUnit?: string;
+  }> = {
     temp: { max: 2.0, unit: "°C", label: "Surface Temp", icon: "🌡️", color: "#D85A30", isReversed: false },
     sea_surface_temperature: { max: 2.0, unit: "°C", label: "Sea Surface Temp", icon: "🌊", color: "#2AA7FF", isReversed: false },
     rainfall: { max: 200, unit: "mm", label: "Rainfall", icon: "☔", color: "#2E86AB", isReversed: false },
@@ -230,14 +255,15 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
   };
 
   const getDisplayValue = (key: string, value: number) => {
+    const safeValue = value ?? 0;
     const t = thresholds[key as keyof typeof thresholds];
-    if (t?.multiplier) return (value * t.multiplier).toFixed(1);
-    if (key === "sea") return (value * 100).toFixed(0);
-    if (key === "loss") return (value / 1e6).toFixed(1);
-    if (key === "tourist_arrival" || key === "people") return (value / 1e3).toFixed(0);
-    if (key === "climate_altering_land") return (value / 1e3).toFixed(0);
-    if (key === "population_growth") return value.toFixed(1);
-    return value.toFixed(2);
+    if (t?.multiplier) return (safeValue * t.multiplier).toFixed(1);
+    if (key === "sea") return (safeValue * 100).toFixed(0);
+    if (key === "loss") return (safeValue / 1e6).toFixed(1);
+    if (key === "tourist_arrival" || key === "people") return (safeValue / 1e3).toFixed(0);
+    if (key === "climate_altering_land") return (safeValue / 1e3).toFixed(0);
+    if (key === "population_growth") return safeValue.toFixed(1);
+    return safeValue.toFixed(2);
   };
 
   const getDisplayUnit = (key: string) => {
@@ -251,59 +277,61 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
   };
 
   const getPercentage = (key: string, value: number) => {
+    const safeValue = value ?? 0;
     const t = thresholds[key as keyof typeof thresholds];
     if (!t) return 0;
-    let displayValue = value;
-    if (key === "sea") displayValue = value * 100;
-    if (key === "loss") displayValue = value / 1e6;
-    if (key === "tourist_arrival" || key === "people") displayValue = value / 1e3;
-    if (key === "climate_altering_land") displayValue = value / 1e3;
+    let displayValue = safeValue;
+    if (key === "sea") displayValue = safeValue * 100;
+    if (key === "loss") displayValue = safeValue / 1e6;
+    if (key === "tourist_arrival" || key === "people") displayValue = safeValue / 1e3;
+    if (key === "climate_altering_land") displayValue = safeValue / 1e3;
     let pct = (displayValue / t.max) * 100;
     if (t.isReversed) pct = 100 - pct;
     return Math.min(100, Math.max(0, pct));
   };
 
   const getDoughnutColor = (key: string, value: number) => {
+    const safeValue = value ?? 0;
     const t = thresholds[key as keyof typeof thresholds];
     if (key === "temp" || key === "sea_surface_temperature") {
-      if (value > 1.5) return "#ef4444";
-      if (value > 1.0) return "#f97316";
-      if (value > 0.5) return "#eab308";
+      if (safeValue > 1.5) return "#ef4444";
+      if (safeValue > 1.0) return "#f97316";
+      if (safeValue > 0.5) return "#eab308";
       return "#22c55e";
     }
     if (key === "sea") {
-      if (value > 0.3) return "#ef4444";
-      if (value > 0.2) return "#f97316";
-      if (value > 0.1) return "#eab308";
+      if (safeValue > 0.3) return "#ef4444";
+      if (safeValue > 0.2) return "#f97316";
+      if (safeValue > 0.1) return "#eab308";
       return "#22c55e";
     }
     if (key === "crop_yield" || key === "lifestock_yield") {
-      if (value < 3) return "#ef4444";
-      if (value < 5) return "#f97316";
+      if (safeValue < 3) return "#ef4444";
+      if (safeValue < 5) return "#f97316";
       return "#22c55e";
     }
     if (key === "tubercolosis_incidence") {
-      if (value > 300) return "#ef4444";
-      if (value > 200) return "#f97316";
-      if (value > 100) return "#eab308";
+      if (safeValue > 300) return "#ef4444";
+      if (safeValue > 200) return "#f97316";
+      if (safeValue > 100) return "#eab308";
       return "#22c55e";
     }
     return t?.color || "#3b82f6";
   };
 
   const metrics = [
-    { key: "temp", value: kpis.temp, delta: deltas.temp },
-    { key: "sea_surface_temperature", value: kpis.sea_surface_temperature, delta: deltas.sea_surface_temperature },
-    { key: "rainfall", value: kpis.rainfall, delta: deltas.rainfall },
-    { key: "sea", value: kpis.sea, delta: deltas.sea },
-    { key: "climate_altering_land", value: kpis.climate_altering_land, delta: deltas.climate_altering_land },
-    { key: "crop_yield", value: kpis.crop_yield, delta: deltas.crop_yield },
-    { key: "lifestock_yield", value: kpis.lifestock_yield, delta: deltas.lifestock_yield },
-    { key: "loss", value: kpis.loss, delta: deltas.loss },
-    { key: "tourist_arrival", value: kpis.tourist_arrival, delta: deltas.tourist_arrival },
-    { key: "people", value: kpis.people, delta: deltas.people },
-    { key: "population_growth", value: kpis.population_growth, delta: deltas.population_growth },
-    { key: "tubercolosis_incidence", value: kpis.tubercolosis_incidence, delta: deltas.tubercolosis_incidence },
+    { key: "temp", value: safeKpis.temp, delta: safeDeltas.temp },
+    { key: "sea_surface_temperature", value: safeKpis.sea_surface_temperature, delta: safeDeltas.sea_surface_temperature },
+    { key: "rainfall", value: safeKpis.rainfall, delta: safeDeltas.rainfall },
+    { key: "sea", value: safeKpis.sea, delta: safeDeltas.sea },
+    { key: "climate_altering_land", value: safeKpis.climate_altering_land, delta: safeDeltas.climate_altering_land },
+    { key: "crop_yield", value: safeKpis.crop_yield, delta: safeDeltas.crop_yield },
+    { key: "lifestock_yield", value: safeKpis.lifestock_yield, delta: safeDeltas.lifestock_yield },
+    { key: "loss", value: safeKpis.loss, delta: safeDeltas.loss },
+    { key: "tourist_arrival", value: safeKpis.tourist_arrival, delta: safeDeltas.tourist_arrival },
+    { key: "people", value: safeKpis.people, delta: safeDeltas.people },
+    { key: "population_growth", value: safeKpis.population_growth, delta: safeDeltas.population_growth },
+    { key: "tubercolosis_incidence", value: safeKpis.tubercolosis_incidence, delta: safeDeltas.tubercolosis_incidence },
   ];
 
   return (
@@ -532,7 +560,7 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
             {/* Economic Summary */}
             <div className="mt-2 pt-2 border-t border-amber-100">
               <div className="text-center">
-                <div className="text-lg font-bold text-amber-700">${(kpis.loss / 1e6).toFixed(0)}M</div>
+                <div className="text-lg font-bold text-amber-700">${(safeKpis.loss / 1e6).toFixed(0)}M</div>
                 <div className="text-[9px] text-slate-500">Total economic impact</div>
               </div>
             </div>
@@ -607,18 +635,18 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
       {/* Floating Tooltip */}
       {activeMetric && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 text-white text-xs px-4 py-2 rounded-lg shadow-xl max-w-md text-center animate-fade-in">
-          {activeMetric === "temp" && `🌡️ Surface Temperature: ${kpis.temp > 0 ? `+${kpis.temp.toFixed(2)}°C` : `${kpis.temp.toFixed(2)}°C`} above pre-industrial baseline. Paris Agreement target: 1.5°C`}
-          {activeMetric === "sea_surface_temperature" && `🌊 Sea Surface Temperature: ${kpis.sea_surface_temperature > 0 ? `+${kpis.sea_surface_temperature.toFixed(2)}°C` : `${kpis.sea_surface_temperature.toFixed(2)}°C`} - affects marine ecosystems and coral bleaching`}
-          {activeMetric === "rainfall" && `☔ Rainfall Anomaly: ${kpis.rainfall > 0 ? `${kpis.rainfall.toFixed(0)}mm above` : `${Math.abs(kpis.rainfall).toFixed(0)}mm below`} normal - affects water security and agriculture`}
-          {activeMetric === "sea" && `📈 Sea Level: ${kpis.sea > 0 ? `+${(kpis.sea * 100).toFixed(0)}cm` : `${(kpis.sea * 100).toFixed(0)}cm`} - threatens coastal communities and infrastructure`}
-          {activeMetric === "climate_altering_land" && `🌱 Land Cover: ${(kpis.climate_altering_land / 1000).toFixed(0)}K ha altered - affects carbon storage and biodiversity`}
-          {activeMetric === "crop_yield" && `🌾 Crop Yield: ${kpis.crop_yield.toFixed(1)} t/ha - ${kpis.crop_yield > 5 ? "Above average productivity" : kpis.crop_yield > 3 ? "Moderate productivity" : "Below average - food security concern"}`}
-          {activeMetric === "lifestock_yield" && `🐄 Livestock Yield: ${kpis.lifestock_yield.toFixed(1)} tons - ${kpis.lifestock_yield > 12 ? "Strong production" : "Below potential"}`}
-          {activeMetric === "loss" && `💰 Economic Loss: $${(kpis.loss / 1e6).toFixed(1)}M in disaster-related damages - affects GDP and recovery capacity`}
-          {activeMetric === "tourist_arrival" && `🌴 Tourist Arrivals: ${(kpis.tourist_arrival / 1000).toFixed(0)}K visitors - ${kpis.tourist_arrival / 1000 < 500 ? "Below average" : "Steady flow"}`}
-          {activeMetric === "people" && `👥 People Affected: ${(kpis.people / 1000).toFixed(0)}K individuals directly impacted by climate disasters`}
-          {activeMetric === "population_growth" && `📈 Population Growth: ${kpis.population_growth > 0 ? `+${kpis.population_growth.toFixed(1)}%` : `${kpis.population_growth.toFixed(1)}%`} annually - affects infrastructure and service demand`}
-          {activeMetric === "tubercolosis_incidence" && `🩺 TB Incidence: ${kpis.tubercolosis_incidence.toFixed(0)} cases per 100,000 people - ${kpis.tubercolosis_incidence > 200 ? "Epidemic level" : kpis.tubercolosis_incidence > 100 ? "High burden" : "Near WHO elimination target"}`}
+          {activeMetric === "temp" && `🌡️ Surface Temperature: ${safeKpis.temp > 0 ? `+${safeKpis.temp.toFixed(2)}°C` : `${safeKpis.temp.toFixed(2)}°C`} above pre-industrial baseline. Paris Agreement target: 1.5°C`}
+          {activeMetric === "sea_surface_temperature" && `🌊 Sea Surface Temperature: ${safeKpis.sea_surface_temperature > 0 ? `+${safeKpis.sea_surface_temperature.toFixed(2)}°C` : `${safeKpis.sea_surface_temperature.toFixed(2)}°C`} - affects marine ecosystems and coral bleaching`}
+          {activeMetric === "rainfall" && `☔ Rainfall Anomaly: ${safeKpis.rainfall > 0 ? `${safeKpis.rainfall.toFixed(0)}mm above` : `${Math.abs(safeKpis.rainfall).toFixed(0)}mm below`} normal - affects water security and agriculture`}
+          {activeMetric === "sea" && `📈 Sea Level: ${safeKpis.sea > 0 ? `+${(safeKpis.sea * 100).toFixed(0)}cm` : `${(safeKpis.sea * 100).toFixed(0)}cm`} - threatens coastal communities and infrastructure`}
+          {activeMetric === "climate_altering_land" && `🌱 Land Cover: ${(safeKpis.climate_altering_land / 1000).toFixed(0)}K ha altered - affects carbon storage and biodiversity`}
+          {activeMetric === "crop_yield" && `🌾 Crop Yield: ${safeKpis.crop_yield.toFixed(1)} t/ha - ${safeKpis.crop_yield > 5 ? "Above average productivity" : safeKpis.crop_yield > 3 ? "Moderate productivity" : "Below average - food security concern"}`}
+          {activeMetric === "lifestock_yield" && `🐄 Livestock Yield: ${safeKpis.lifestock_yield.toFixed(1)} tons - ${safeKpis.lifestock_yield > 12 ? "Strong production" : "Below potential"}`}
+          {activeMetric === "loss" && `💰 Economic Loss: $${(safeKpis.loss / 1e6).toFixed(1)}M in disaster-related damages - affects GDP and recovery capacity`}
+          {activeMetric === "tourist_arrival" && `🌴 Tourist Arrivals: ${(safeKpis.tourist_arrival / 1000).toFixed(0)}K visitors - ${safeKpis.tourist_arrival / 1000 < 500 ? "Below average" : "Steady flow"}`}
+          {activeMetric === "people" && `👥 People Affected: ${(safeKpis.people / 1000).toFixed(0)}K individuals directly impacted by climate disasters`}
+          {activeMetric === "population_growth" && `📈 Population Growth: ${safeKpis.population_growth > 0 ? `+${safeKpis.population_growth.toFixed(1)}%` : `${safeKpis.population_growth.toFixed(1)}%`} annually - affects infrastructure and service demand`}
+          {activeMetric === "tubercolosis_incidence" && `🩺 TB Incidence: ${safeKpis.tubercolosis_incidence.toFixed(0)} cases per 100,000 people - ${safeKpis.tubercolosis_incidence > 200 ? "Epidemic level" : safeKpis.tubercolosis_incidence > 100 ? "High burden" : "Near WHO elimination target"}`}
         </div>
       )}
 
@@ -629,10 +657,10 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
           <div>
             <div className="font-semibold text-slate-800 text-sm">The Complete Climate Story for {selectedCountry}</div>
             <div className="text-xs text-slate-600 mt-1 space-y-0.5">
-              <p>🌡️ <span className="font-medium">Climate Drivers:</span> {kpis.temp.toFixed(2)}°C surface anomaly • Sea level {kpis.sea > 0 ? `+${(kpis.sea * 100).toFixed(0)}cm` : `${(kpis.sea * 100).toFixed(0)}cm`} • {kpis.rainfall > 0 ? `+${kpis.rainfall.toFixed(0)}mm` : `${kpis.rainfall.toFixed(0)}mm`} rainfall anomaly</p>
-              <p>🌿 <span className="font-medium">Environmental Impact:</span> {(kpis.climate_altering_land / 1000).toFixed(0)}K ha land altered • {kpis.crop_yield.toFixed(1)} t/ha crops • {kpis.lifestock_yield.toFixed(1)} tons livestock</p>
-              <p>💰 <span className="font-medium">Economic Consequence:</span> ${(kpis.loss / 1e6).toFixed(1)}M losses • {(kpis.tourist_arrival / 1000).toFixed(0)}K tourist arrivals</p>
-              <p>👥 <span className="font-medium">Human Consequence:</span> {(kpis.people / 1000).toFixed(0)}K affected • Population {kpis.population_growth > 0 ? `+${kpis.population_growth.toFixed(1)}%` : `${kpis.population_growth.toFixed(1)}%`} • TB: {kpis.tubercolosis_incidence.toFixed(0)}/100k</p>
+              <p>🌡️ <span className="font-medium">Climate Drivers:</span> {safeKpis.temp.toFixed(2)}°C surface anomaly • Sea level {safeKpis.sea > 0 ? `+${(safeKpis.sea * 100).toFixed(0)}cm` : `${(safeKpis.sea * 100).toFixed(0)}cm`} • {safeKpis.rainfall > 0 ? `+${safeKpis.rainfall.toFixed(0)}mm` : `${safeKpis.rainfall.toFixed(0)}mm`} rainfall anomaly</p>
+              <p>🌿 <span className="font-medium">Environmental Impact:</span> {(safeKpis.climate_altering_land / 1000).toFixed(0)}K ha land altered • {safeKpis.crop_yield.toFixed(1)} t/ha crops • {safeKpis.lifestock_yield.toFixed(1)} tons livestock</p>
+              <p>💰 <span className="font-medium">Economic Consequence:</span> ${(safeKpis.loss / 1e6).toFixed(1)}M losses • {(safeKpis.tourist_arrival / 1000).toFixed(0)}K tourist arrivals</p>
+              <p>👥 <span className="font-medium">Human Consequence:</span> {(safeKpis.people / 1000).toFixed(0)}K affected • Population {safeKpis.population_growth > 0 ? `+${safeKpis.population_growth.toFixed(1)}%` : `${safeKpis.population_growth.toFixed(1)}%`} • TB: {safeKpis.tubercolosis_incidence.toFixed(0)}/100k</p>
             </div>
           </div>
         </div>
@@ -847,7 +875,8 @@ export default function Home() {
             {/* ========== DOUGHNUT CLIMATE IMPACT DASHBOARD ========== */}
             <div style={S.storySection}>
               <DoughnutClimateDashboard 
-                kpis={kpis} 
+                height={260} 
+                kpis={kpis}
                 deltas={deltas} 
                 selectedCountry={selectedCountry}
                 isLoading={false}
@@ -898,7 +927,7 @@ export default function Home() {
               <div style={S.twoColumnGrid}>
                 <div style={S.chartPanel}>
                   <div style={S.chartHead}><span style={S.chartIcon}>💰</span><span style={S.chartTitle}>Direct Disaster Economic Loss</span><span style={S.chartInsight}>The financial burden</span></div>
-                  <Barplot width={chartWidth} height={260} data={dataMap.loss} dataType="loss" setSelectedCountry={setSelectedCountry} />
+                  <TrendLine width={chartWidth} height={260} data={dataMap.loss} dataType="loss" setSelectedCountry={setSelectedCountry} />
                 </div>
                 <div style={S.chartPanel}>
                   <div style={S.chartHead}><span style={S.chartIcon}>👥</span><span style={S.chartTitle}>Number of People Affected</span><span style={S.chartInsight}>Lives disrupted or destroyed</span></div>

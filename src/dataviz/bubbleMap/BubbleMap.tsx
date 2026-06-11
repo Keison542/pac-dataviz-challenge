@@ -6,7 +6,7 @@ import { geoOrthographic, geoPath } from "d3-geo";
 import { FeatureCollection } from "geojson";
 import { CircleItem } from "./CircleItem";
 import { useState, useRef } from "react";
-import type { InteractionData } from "@/dataviz/barplot/types/interaction";
+import type { InteractionData } from "@/dataviz/lineChart/types/interaction";
 
 import styles from "./bubble-map.module.css";
 

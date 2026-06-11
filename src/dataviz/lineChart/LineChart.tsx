@@ -6,7 +6,7 @@ import { line, area, curveMonotoneX } from "d3-shape";
 import { useState, useMemo, useEffect } from "react";
 import { CircleItem } from "./CircleItem";
 import { LineItem } from "./LineItem";
-import { InteractionData } from "../barplot/types/interaction";
+import { InteractionData } from "./types/interaction";
 import { AXIS_COLOR, AXIS_FONT_SIZE } from "../constant";
 
 const MARGIN = { top: 50, right: 40, bottom: 70, left: 75 };
