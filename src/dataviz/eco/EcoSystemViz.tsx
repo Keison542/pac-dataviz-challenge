@@ -5,18 +5,15 @@ import { useMemo, useState, useEffect } from "react";
 type Props = {
   width: number;
   height: number;
-  // Climate Drivers
-  seaLevelAnomaly: number;
-  surfaceTempAnomaly: number;
-  seaSurfaceTemp: number;
-  rainfallAnomaly: number;
+
+  
   // Human Impacts
-  peopleAffected: number;
+
   tuberculosisIncidence: number;
   // Economic
   cropYield: number;
   livestockYield: number;
-  economicLoss: number;
+ 
   touristArrivals: number;
   countryName: string;
 };
@@ -24,15 +21,11 @@ type Props = {
 export function LivingEcosystem({
   width,
   height,
-  seaLevelAnomaly,
-  surfaceTempAnomaly,
-  seaSurfaceTemp,
-  rainfallAnomaly,
-  peopleAffected,
+  
   tuberculosisIncidence,
   cropYield,
   livestockYield,
-  economicLoss,
+  
   touristArrivals,
   countryName,
 }: Props) {

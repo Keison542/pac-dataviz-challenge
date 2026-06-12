@@ -67,6 +67,7 @@ export function TimeSeriesDashboard({
   height,
   data,
   selectedCountry,
+  title = "Climate & Socioeconomic Trends",
   insight = "Track crop yields, livestock production, and tourist arrivals over time. Click on any metric in the legend to toggle visibility. Hover over lines to see exact values.",
 }: Props) {
   const [hoveredMetric, setHoveredMetric] = useState<string | null>(null);
@@ -92,20 +93,52 @@ export function TimeSeriesDashboard({
     setVisibleMetrics(newVisible);
   };
 
-  // Calculate series data
+  // Calculate series data with safe value handling
   const seriesData = useMemo(() => {
     return METRICS.map((metric) => {
       const values = data.map(
         (d) => d[metric.key as keyof DataPoint] as number
       );
+      
+      if (values.length === 0) {
+        return {
+          ...metric,
+          values: [],
+          total: 0,
+          average: 0,
+          max: 0,
+          maxYear: 0,
+          min: 0,
+          minYear: 0,
+          growthRate: 0,
+        };
+      }
+
       const total = values.reduce((a, b) => a + b, 0);
       const average = total / values.length;
-      const max = Math.max(...values);
-      const maxYear = data[values.indexOf(max)].year;
-      const min = Math.min(...values);
-      const minYear = data[values.indexOf(min)].year;
-      const first = values[0];
-      const last = values[values.length - 1];
+      
+      // Find max with safe index
+      let max = -Infinity;
+      let maxIndex = -1;
+      let min = Infinity;
+      let minIndex = -1;
+      
+      values.forEach((v, i) => {
+        if (v > max) {
+          max = v;
+          maxIndex = i;
+        }
+        if (v < min) {
+          min = v;
+          minIndex = i;
+        }
+      });
+      
+      const maxYear = maxIndex !== -1 ? data[maxIndex]?.year || 0 : 0;
+      const minYear = minIndex !== -1 ? data[minIndex]?.year || 0 : 0;
+      
+      const first = values[0] || 0;
+      const last = values[values.length - 1] || 0;
       const growthRate = first !== 0 ? ((last - first) / first) * 100 : 0;
 
       return {
@@ -113,9 +146,9 @@ export function TimeSeriesDashboard({
         values,
         total,
         average,
-        max,
+        max: max === -Infinity ? 0 : max,
         maxYear,
-        min,
+        min: min === Infinity ? 0 : min,
         minYear,
         growthRate,
       };
@@ -125,6 +158,7 @@ export function TimeSeriesDashboard({
   // X scale
   const xScale = useMemo(() => {
     const years = data.map((d) => d.year);
+    if (years.length === 0) return () => 0;
     return scaleLinear()
       .domain([Math.min(...years), Math.max(...years)])
       .range([0, boundsWidth]);
@@ -183,6 +217,7 @@ export function TimeSeriesDashboard({
   // X-axis ticks by decade
   const xAxisTicks = useMemo(() => {
     const years = data.map((d) => d.year);
+    if (years.length === 0) return [];
     const minYear = Math.min(...years);
     const maxYear = Math.max(...years);
     const startDecade = Math.floor(minYear / 10) * 10;
@@ -258,6 +293,7 @@ export function TimeSeriesDashboard({
     <div className="w-full">
       {/* Header */}
       <div className="mb-4">
+        <h3 className="text-base font-semibold text-slate-800 mb-1">{title}</h3>
         <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-slate-600">
           <p className="text-xs text-slate-600 leading-relaxed">
             <span className="font-semibold text-slate-800">💡 Story Insight:</span> {insight}
@@ -439,7 +475,8 @@ export function TimeSeriesDashboard({
                     hoveredPoint?.metric === metric.key &&
                     hoveredPoint?.year === point.year;
                   const isMax =
-                    value === seriesData.find((m) => m.key === metric.key)?.max;
+                    value === seriesData.find((m) => m.key === metric.key)?.max &&
+                    value > 0;
                   const pointRadius = isMax ? 6 : isActive ? 8 : 4.5;
 
                   if (value === 0) return null;
@@ -570,7 +607,7 @@ export function TimeSeriesDashboard({
               fill="#64748b"
               fontWeight="500"
             >
-              
+              Value
             </text>
 
             {/* Zero baseline highlight */}

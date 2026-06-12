@@ -15,6 +15,11 @@ type Props = {
     loss: number;
     people: number;
     sea_surface_temperature: number;
+    crop_yield: number;
+    tourist_arrival: number;
+    lifestock_yield: number;
+    climate_altering_land: number;
+    population_growth: number;
   }[];
   selectedCountry: string;
   title?: string;
@@ -22,17 +27,26 @@ type Props = {
 };
 
 const NODE_COLOR: Record<string, string> = {
+  // Climate Drivers
   "Surface Temperature": "#f97316",
   "Sea Surface Temperature": "#06b6d4",
   "Sea Level": "#3b82f6",
   "Rainfall": "#22c55e",
+  // Environmental Impact
+  "Crop Yield": "#10b981",
+  "Livestock Yield": "#f59e0b",
+  "Climate Altering Land": "#8b5cf6",
+  // Disasters & Economic
   "Disasters": "#a855f7",
   "Economic Loss": "#f59e0b",
+  // Human Impact
   "People Affected": "#ef4444",
+  "Population Growth": "#ec4898",
+  "Tourist Arrivals": "#14b8a6",
 };
 
-function normalize(v: number) {
-  return Math.max(Math.abs(v), 0.5);
+function normalize(v: number, multiplier: number = 1) {
+  return Math.min(Math.max(Math.abs(v) * multiplier, 0.3), 30);
 }
 
 export default function TimeSankey({
@@ -40,8 +54,8 @@ export default function TimeSankey({
   height,
   data,
   selectedCountry,
-  title = "Climate Impact Flow",
-  insight = "This diagram traces the causal chain from climate drivers to human impacts. Thicker lines indicate stronger connections.",
+  title = "Comprehensive Climate Impact Flow",
+  insight = "This diagram traces the complete causal chain from climate drivers to environmental, economic, and human impacts. Thicker lines indicate stronger connections.",
 }: Props) {
   const [hover, setHover] = useState<any>(null);
 
@@ -52,53 +66,170 @@ export default function TimeSankey({
     const latest = filtered[filtered.length - 1];
 
     const nodes = [
-      { name: "Surface Temperature" },
-      { name: "Sea Surface Temperature" },
-      { name: "Sea Level" },
-      { name: "Rainfall" },
-      { name: "Disasters" },
-      { name: "Economic Loss" },
-      { name: "People Affected" },
+      // Climate Drivers
+      { name: "Surface Temperature", category: "driver" },
+      { name: "Sea Surface Temperature", category: "driver" },
+      { name: "Sea Level", category: "driver" },
+      { name: "Rainfall", category: "driver" },
+      // Environmental Impact
+      { name: "Crop Yield", category: "environmental" },
+      { name: "Livestock Yield", category: "environmental" },
+      { name: "Climate Altering Land", category: "environmental" },
+      // Disasters
+      { name: "Disasters", category: "disaster" },
+      // Economic Consequence
+      { name: "Economic Loss", category: "economic" },
+      { name: "Tourist Arrivals", category: "economic" },
+      // Human Consequence
+      { name: "People Affected", category: "human" },
+      { name: "Population Growth", category: "human" },
     ];
 
     // Calculate link strengths using actual data fields
-    // temp → sea_surface_temperature: Surface temp affects ocean temp
-    const surfaceToSeaSurface = normalize(Math.abs(latest.temp) * 1.2);
-    
-    // sea_surface_temperature → sea: Ocean warming causes thermal expansion
-    const seaSurfaceToSeaLevel = normalize(Math.abs(latest.sea_surface_temperature) * 1.0);
-    
-    // sea → disasters: Sea level rise increases coastal disaster risk
-    const seaLevelToDisasters = normalize(Math.abs(latest.sea) * 1.5);
-    
-    // rainfall → disasters: Extreme precipitation causes flooding disasters
-    const rainfallToDisasters = normalize(Math.abs(latest.rainfall) * 0.8);
-    
-    // disasters → loss: Disasters cause economic damage
-    const disastersToLoss = normalize(Math.abs(latest.loss) * 0.3);
-    
-    // loss → people: Economic loss affects people's livelihoods
-    const lossToPeople = normalize(Math.abs(latest.people) * 0.1);
+    const links = [];
 
-    const links = [
-      { source: 0, target: 1, value: surfaceToSeaSurface, label: "Surface heat warms ocean" },
-      { source: 1, target: 2, value: seaSurfaceToSeaLevel, label: "Thermal expansion" },
-      { source: 2, target: 4, value: seaLevelToDisasters, label: "Coastal flooding" },
-      { source: 3, target: 4, value: rainfallToDisasters, label: "Extreme precipitation" },
-      { source: 4, target: 5, value: disastersToLoss, label: "Infrastructure damage" },
-      { source: 5, target: 6, value: lossToPeople, label: "Displacement & aid" },
-    ];
+    // Climate Drivers → Environmental Impacts
+    links.push({
+      source: nodes.findIndex(n => n.name === "Surface Temperature"),
+      target: nodes.findIndex(n => n.name === "Crop Yield"),
+      value: normalize(Math.abs(latest.temp) * 0.8),
+      label: "Heat stress reduces crop productivity"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Rainfall"),
+      target: nodes.findIndex(n => n.name === "Crop Yield"),
+      value: normalize(Math.abs(latest.rainfall) * 0.6),
+      label: "Rainfall variability affects harvests"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Surface Temperature"),
+      target: nodes.findIndex(n => n.name === "Livestock Yield"),
+      value: normalize(Math.abs(latest.temp) * 0.7),
+      label: "Heat stress reduces livestock production"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Rainfall"),
+      target: nodes.findIndex(n => n.name === "Livestock Yield"),
+      value: normalize(Math.abs(latest.rainfall) * 0.5),
+      label: "Drought affects grazing lands"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Surface Temperature"),
+      target: nodes.findIndex(n => n.name === "Climate Altering Land"),
+      value: normalize(Math.abs(latest.temp) * 0.6),
+      label: "Temperature shifts alter ecosystems"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Rainfall"),
+      target: nodes.findIndex(n => n.name === "Climate Altering Land"),
+      value: normalize(Math.abs(latest.rainfall) * 0.5),
+      label: "Precipitation changes affect land cover"
+    });
+
+    // Climate Drivers → Disasters
+    links.push({
+      source: nodes.findIndex(n => n.name === "Sea Surface Temperature"),
+      target: nodes.findIndex(n => n.name === "Disasters"),
+      value: normalize(latest.sea_surface_temperature * 1.2),
+      label: "Warm oceans fuel cyclones"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Sea Level"),
+      target: nodes.findIndex(n => n.name === "Disasters"),
+      value: normalize(latest.sea * 1.5),
+      label: "Sea level rise increases coastal flooding"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Rainfall"),
+      target: nodes.findIndex(n => n.name === "Disasters"),
+      value: normalize(Math.abs(latest.rainfall) * 0.8),
+      label: "Extreme precipitation causes flooding"
+    });
+
+    // Environmental Impact → Economic Loss
+    links.push({
+      source: nodes.findIndex(n => n.name === "Crop Yield"),
+      target: nodes.findIndex(n => n.name === "Economic Loss"),
+      value: normalize(latest.crop_yield * 0.3),
+      label: "Crop failure causes economic damage"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Livestock Yield"),
+      target: nodes.findIndex(n => n.name === "Economic Loss"),
+      value: normalize(latest.lifestock_yield * 0.25),
+      label: "Livestock loss affects livelihoods"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Climate Altering Land"),
+      target: nodes.findIndex(n => n.name === "Economic Loss"),
+      value: normalize(latest.climate_altering_land * 0.2),
+      label: "Land degradation reduces economic value"
+    });
+
+    // Disasters → Economic Loss
+    links.push({
+      source: nodes.findIndex(n => n.name === "Disasters"),
+      target: nodes.findIndex(n => n.name === "Economic Loss"),
+      value: normalize(latest.loss * 0.3),
+      label: "Disasters cause infrastructure damage"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Disasters"),
+      target: nodes.findIndex(n => n.name === "Tourist Arrivals"),
+      value: normalize(latest.loss * 0.2),
+      label: "Disasters deter tourism"
+    });
+
+    // Economic Loss → Human Impacts
+    links.push({
+      source: nodes.findIndex(n => n.name === "Economic Loss"),
+      target: nodes.findIndex(n => n.name === "People Affected"),
+      value: normalize(latest.people * 0.1),
+      label: "Economic hardship displaces communities"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Economic Loss"),
+      target: nodes.findIndex(n => n.name === "Population Growth"),
+      value: normalize(Math.abs(latest.population_growth) * 0.15),
+      label: "Economic stress affects migration"
+    });
+
+    // Climate Drivers → Direct Human Impacts
+    links.push({
+      source: nodes.findIndex(n => n.name === "Surface Temperature"),
+      target: nodes.findIndex(n => n.name === "Tourist Arrivals"),
+      value: normalize(Math.abs(latest.temp) * 0.5),
+      label: "Temperature affects tourism patterns"
+    });
+    
+    links.push({
+      source: nodes.findIndex(n => n.name === "Rainfall"),
+      target: nodes.findIndex(n => n.name === "Tourist Arrivals"),
+      value: normalize(Math.abs(latest.rainfall) * 0.4),
+      label: "Rainfall affects travel decisions"
+    });
 
     return { nodes, links };
   }, [data, selectedCountry]);
 
   const sankeyData = useMemo(() => {
-    if (!processed.nodes.length) return null;
+    if (!processed.nodes.length || !processed.links.length) return null;
 
     const layout = sankey<any, any>()
-      .nodeWidth(24)
-      .nodePadding(22)
-      .extent([[1, 60], [width - 1, height - 20]]);
+      .nodeWidth(28)
+      .nodePadding(18)
+      .extent([[80, 50], [width - 80, height - 80]]);
 
     return layout({
       nodes: processed.nodes.map(d => ({ ...d })),
@@ -106,17 +237,17 @@ export default function TimeSankey({
     });
   }, [processed, width, height]);
 
-  // Calculate total flow strength for storytelling
-  const totalFlow = useMemo(() => {
-    if (!sankeyData) return 0;
-    return sankeyData.links.reduce((sum: number, link: any) => sum + (link.value || 0), 0);
-  }, [sankeyData]);
-
   const strongestLink = useMemo(() => {
     if (!sankeyData || !sankeyData.links.length) return null;
     return sankeyData.links.reduce((max: any, link: any) => 
       (link.value > max.value) ? link : max, sankeyData.links[0]);
   }, [sankeyData]);
+
+  // Calculate category counts for storytelling
+  const driverCount = processed.nodes.filter(n => n.category === "driver").length;
+  const environmentalCount = processed.nodes.filter(n => n.category === "environmental").length;
+  const economicCount = processed.nodes.filter(n => n.category === "economic").length;
+  const humanCount = processed.nodes.filter(n => n.category === "human").length;
 
   if (!sankeyData) {
     return (
@@ -149,27 +280,34 @@ export default function TimeSankey({
 
       {/* Key Findings Summary Cards */}
       {strongestLink && (
-        <div className="mb-5 grid grid-cols-3 gap-2">
+        <div className="mb-5 grid grid-cols-4 gap-2">
           <div className="text-center p-2 bg-orange-50 rounded-lg">
             <div className="text-lg font-bold text-orange-700">
-              {strongestLink.source?.name || "—"}
+              {driverCount}
             </div>
-            <div className="text-xs text-slate-500">strongest driver</div>
-            <div className="text-[10px] text-slate-400">→ {strongestLink.target?.name}</div>
+            <div className="text-xs text-slate-500">Climate Drivers</div>
+            <div className="text-[10px] text-slate-400">Starting point</div>
           </div>
-          <div className="text-center p-2 bg-purple-50 rounded-lg">
-            <div className="text-lg font-bold text-purple-700">
-              {sankeyData.links.length}
+          <div className="text-center p-2 bg-emerald-50 rounded-lg">
+            <div className="text-lg font-bold text-emerald-700">
+              {environmentalCount}
             </div>
-            <div className="text-xs text-slate-500">causal connections</div>
-            <div className="text-[10px] text-slate-400">in the chain</div>
+            <div className="text-xs text-slate-500">Environmental Impacts</div>
+            <div className="text-[10px] text-slate-400">Food & Land</div>
           </div>
-          <div className="text-center p-2 bg-teal-50 rounded-lg">
-            <div className="text-lg font-bold text-teal-700">
-              {sankeyData.nodes.length}
+          <div className="text-center p-2 bg-amber-50 rounded-lg">
+            <div className="text-lg font-bold text-amber-700">
+              {economicCount}
             </div>
-            <div className="text-xs text-slate-500">impact stages</div>
-            <div className="text-[10px] text-slate-400">from cause to effect</div>
+            <div className="text-xs text-slate-500">Economic Consequences</div>
+            <div className="text-[10px] text-slate-400">Losses & Tourism</div>
+          </div>
+          <div className="text-center p-2 bg-rose-50 rounded-lg">
+            <div className="text-lg font-bold text-rose-700">
+              {humanCount}
+            </div>
+            <div className="text-xs text-slate-500">Human Impacts</div>
+            <div className="text-[10px] text-slate-400">People & Population</div>
           </div>
         </div>
       )}
@@ -178,11 +316,14 @@ export default function TimeSankey({
       {strongestLink && (
         <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
           <p className="text-sm text-slate-700 leading-relaxed">
-            In <span className="font-bold text-slate-900">{selectedCountry}</span>, the climate impact cascade shows that 
-            <span className="font-bold text-orange-600"> {strongestLink.source?.name?.toLowerCase()}</span> has the strongest influence on 
-            <span className="font-bold text-purple-600"> {strongestLink.target?.name?.toLowerCase()}</span>, 
-            with a flow strength of <span className="font-semibold">{Math.round(strongestLink.value)}</span> units.
-            This suggests that {strongestLink.source?.name?.toLowerCase()} variability is a primary driver of disaster risk in the region.
+            The climate impact cascade in <span className="font-bold text-slate-900">{selectedCountry}</span> flows through 
+            <span className="font-bold text-orange-600"> {driverCount} climate drivers</span> → 
+            <span className="font-bold text-emerald-600"> {environmentalCount} environmental impacts</span> → 
+            <span className="font-bold text-amber-600"> {economicCount} economic consequences</span> → 
+            <span className="font-bold text-rose-600"> {humanCount} human outcomes</span>.
+            The strongest causal link is from <span className="font-bold text-orange-600">{strongestLink.source?.name}</span> to 
+            <span className="font-bold text-purple-600"> {strongestLink.target?.name}</span> (strength: {Math.round(strongestLink.value)}), 
+            highlighting the critical role of climate drivers in shaping disaster risk and downstream impacts.
           </p>
         </div>
       )}
@@ -191,23 +332,33 @@ export default function TimeSankey({
       <div className="mb-3 flex flex-wrap items-center gap-4 text-xs">
         <span className="text-slate-500">📊 Flow strength = line thickness</span>
         <div className="flex flex-wrap items-center gap-3">
-          {Object.entries(NODE_COLOR).map(([name, color]) => (
-            <div key={name} className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: color }}></div>
-              <span className="text-slate-500 text-[10px]">{name}</span>
-            </div>
-          ))}
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+            <span className="text-slate-500 text-[10px]">Climate Drivers</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+            <span className="text-slate-500 text-[10px]">Environmental</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+            <span className="text-slate-500 text-[10px]">Economic</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+            <span className="text-slate-500 text-[10px]">Human</span>
+          </div>
         </div>
       </div>
 
       <svg width={width} height={height} className="overflow-visible">
-        {/* Title / Instruction */}
-        <text x={20} y={18} fontSize={10} fill="#64748b" fontWeight="500">
-          ⚡ Causal flow: Left (drivers) → Right (impacts) | Thicker lines = stronger influence
+        {/* Instruction text */}
+        <text x={20} y={22} fontSize={10} fill="#64748b" fontWeight="500">
+          ⚡ Complete causal flow: Climate Drivers → Environmental → Economic → Human | Thicker lines = stronger influence
         </text>
 
-        {/* Background for better visibility */}
-        <rect x={0} y={30} width={width} height={height - 30} fill="#fafbfc" rx={8} />
+        {/* Background */}
+        <rect x={5} y={35} width={width - 10} height={height - 45} fill="#fafbfc" rx={8} />
 
         {/* LINKS */}
         <g>
@@ -219,8 +370,8 @@ export default function TimeSankey({
                 key={i}
                 d={sankeyLinkHorizontal()(link) || ""}
                 stroke="#a855f7"
-                strokeOpacity={isHovered ? 0.9 : (isStrongest ? 0.7 : 0.35)}
-                strokeWidth={Math.max(2, isStrongest ? link.width * 1.2 : link.width || 1.5)}
+                strokeOpacity={isHovered ? 0.9 : (isStrongest ? 0.7 : 0.3)}
+                strokeWidth={Math.max(1.5, isStrongest ? link.width * 1.3 : link.width || 1.5)}
                 fill="none"
                 cursor="pointer"
                 onMouseEnter={() => setHover({ type: "link", index: i, data: link })}
@@ -234,6 +385,8 @@ export default function TimeSankey({
         <g>
           {sankeyData.nodes.map((node: any, i: number) => {
             const isHovered = hover?.type === "node" && hover.data?.name === node.name;
+            const nodeColor = NODE_COLOR[node.name] || "#94a3b8";
+            
             return (
               <g
                 key={i}
@@ -245,7 +398,7 @@ export default function TimeSankey({
                 <rect
                   width={node.x1 - node.x0}
                   height={node.y1 - node.y0}
-                  fill={NODE_COLOR[node.name] || "#94a3b8"}
+                  fill={nodeColor}
                   opacity={isHovered ? 1 : 0.85}
                   stroke={isHovered ? "#0f172a" : "none"}
                   strokeWidth={isHovered ? 2 : 0}
@@ -254,11 +407,11 @@ export default function TimeSankey({
                 />
 
                 <text
-                  x={-10}
+                  x={-12}
                   y={(node.y1 - node.y0) / 2}
                   textAnchor="end"
                   dominantBaseline="middle"
-                  fontSize={11}
+                  fontSize={10}
                   fill="#1e293b"
                   fontWeight={600}
                 >
@@ -267,10 +420,10 @@ export default function TimeSankey({
 
                 {node.value > 0 && (
                   <text
-                    x={8}
+                    x={6}
                     y={(node.y1 - node.y0) / 2 + 1}
                     dominantBaseline="middle"
-                    fontSize={9}
+                    fontSize={8}
                     fill="#ffffff"
                     fontWeight={700}
                   >
@@ -282,9 +435,32 @@ export default function TimeSankey({
           })}
         </g>
 
+        {/* Category labels at the top */}
+        <g>
+          {[
+            { x: 140, label: "🌡️ Climate Drivers" },
+            { x: 340, label: "🌿 Environmental" },
+            { x: 540, label: "💰 Economic" },
+            { x: 740, label: "👥 Human" },
+          ].map((item) => (
+            <text
+              key={item.label}
+              x={item.x}
+              y={48}
+              textAnchor="middle"
+              fontSize={9}
+              fill="#94a3b8"
+              fontWeight="600"
+              letterSpacing="0.05em"
+            >
+              {item.label}
+            </text>
+          ))}
+        </g>
+
         {/* Tooltip */}
         {hover && (
-          <foreignObject x={20} y={55} width={300} height={150}>
+          <foreignObject x={20} y={70} width={320} height={180}>
             <div
               style={{
                 background: "#ffffff",
@@ -309,33 +485,33 @@ export default function TimeSankey({
                     Impact score: <span className="font-semibold text-slate-800">{Math.round(hover.data.value)}</span>
                   </div>
                   <div className="text-slate-400 text-[10px] mt-2">
-                    {hover.data.name === "Surface Temperature" && "🌡️ Land and air temperature anomaly"}
-                    {hover.data.name === "Sea Surface Temperature" && "🌊 Ocean surface warming"}
-                    {hover.data.name === "Sea Level" && "📈 Rising sea levels from thermal expansion"}
-                    {hover.data.name === "Rainfall" && "☔ Extreme precipitation events"}
-                    {hover.data.name === "Disasters" && "🌀 Cyclones, floods, storm surges"}
-                    {hover.data.name === "Economic Loss" && "💰 Infrastructure & livelihood costs"}
-                    {hover.data.name === "People Affected" && "👥 Human displacement & impact"}
+                    {hover.data.name === "Surface Temperature" && "🌡️ Land and air temperature anomaly - affects agriculture, ecosystems, and human health"}
+                    {hover.data.name === "Sea Surface Temperature" && "🌊 Ocean surface warming - fuels cyclones and marine heatwaves"}
+                    {hover.data.name === "Sea Level" && "📈 Rising sea levels from thermal expansion - threatens coastal communities"}
+                    {hover.data.name === "Rainfall" && "☔ Extreme precipitation events - causes flooding and landslides"}
+                    {hover.data.name === "Crop Yield" && "🌾 Agricultural productivity - affected by temperature and rainfall changes"}
+                    {hover.data.name === "Livestock Yield" && "🐄 Livestock production - heat stress reduces meat and dairy output"}
+                    {hover.data.name === "Climate Altering Land" && "🌍 Land cover changes - affects carbon storage and biodiversity"}
+                    {hover.data.name === "Disasters" && "🌀 Cyclones, floods, storm surges - direct climate impacts"}
+                    {hover.data.name === "Economic Loss" && "💰 Infrastructure and economic damage from disasters"}
+                    {hover.data.name === "Tourist Arrivals" && "✈️ Tourism-dependent economies - vulnerable to climate disruptions"}
+                    {hover.data.name === "People Affected" && "👥 Human displacement and livelihood impacts"}
+                    {hover.data.name === "Population Growth" && "📈 Demographic trends - affected by migration and economic conditions"}
                   </div>
                 </>
               )}
 
               {hover.type === "link" && (
                 <>
-                  <strong className="text-slate-800">Causal Flow</strong>
+                  <strong className="text-slate-800">Causal Connection</strong>
                   <div className="mt-1 text-slate-600">
                     {hover.data.source?.name} → {hover.data.target?.name}
                   </div>
                   <div className="text-slate-600">
-                    Strength: <span className="font-semibold text-purple-600">{Math.round(hover.data.value)}</span>
+                    Flow strength: <span className="font-semibold text-purple-600">{Math.round(hover.data.value)}</span>
                   </div>
-                  <div className="text-slate-400 text-[10px] mt-2">
-                    {hover.data.source?.name === "Surface Temperature" && hover.data.target?.name === "Sea Surface Temperature" && "🌡️ → 🌊: Surface warming heats the ocean"}
-                    {hover.data.source?.name === "Sea Surface Temperature" && hover.data.target?.name === "Sea Level" && "🌊 → 📈: Thermal expansion raises sea level"}
-                    {hover.data.source?.name === "Sea Level" && hover.data.target?.name === "Disasters" && "📈 → 🌀: Higher seas increase coastal flooding"}
-                    {hover.data.source?.name === "Rainfall" && hover.data.target?.name === "Disasters" && "☔ → 🌀: Extreme rain causes inland flooding"}
-                    {hover.data.source?.name === "Disasters" && hover.data.target?.name === "Economic Loss" && "🌀 → 💰: Disaster damage costs"}
-                    {hover.data.source?.name === "Economic Loss" && hover.data.target?.name === "People Affected" && "💰 → 👥: Economic strain affects communities"}
+                  <div className="text-slate-500 text-[10px] mt-2">
+                    {hover.data.label || "Relationship magnitude based on historical data"}
                   </div>
                 </>
               )}
@@ -347,9 +523,9 @@ export default function TimeSankey({
       {/* Footer Insight */}
       <div className="mt-4 pt-3 border-t border-slate-100">
         <p className="text-xs text-slate-500 text-center leading-relaxed">
-          📊 Hover over any link or node to explore the causal chain · 
+          📊 Hover over any link or node to explore the complete causal chain · 
           Thicker lines indicate stronger relationships · 
-          Traces path: Surface Temperature → Sea Surface Temperature → Sea Level → Disasters → Economic Loss → People
+          Full pathway: Climate Drivers → Environmental → Economic → Human Impacts
         </p>
       </div>
     </div>

@@ -1,7 +1,13 @@
 /** @type {import('next').NextConfig} */
 
+const isProdExport = process.env.NEXT_PUBLIC_EXPORT === "true";
+
 const nextConfig = {
-  output: "export",
+  // Only enable static export for production builds
+  ...(isProdExport && {
+    output: "export",
+  }),
+
   trailingSlash: true,
 
   images: {
@@ -16,8 +22,8 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
-  // IMPORTANT for GitHub Pages
-  basePath: "/pac-dataviz-challenge",
+  // GitHub Pages base path (only needed in export mode)
+  basePath: isProdExport ? "/pac-dataviz-challenge" : "",
 };
 
 export default nextConfig;

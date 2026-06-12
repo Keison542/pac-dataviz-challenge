@@ -23,20 +23,29 @@ type Node = {
 };
 
 const CATEGORY_META = [
-  { key: "Temperature", color: "#ef4444", label: "Temperature (°C)", icon: "🌡️", description: "Surface temperature anomaly" },
-  { key: "Sea Surface Temperature", color: "#06b6d4", label: "Sea Surface Temp (°C)", icon: "🌊", description: "Ocean surface warming" },
-  { key: "Sea Level", color: "#3b82f6", label: "Sea Level (mm)", icon: "📈", description: "Ocean level anomaly" },
-  { key: "Rainfall", color: "#22c55e", label: "Rainfall (mm)", icon: "☔", description: "Precipitation anomaly" },
-  { key: "Economic Loss", color: "#f97316", label: "Economic Loss (USD)", icon: "💰", description: "Disaster-related losses" },
-  { key: "People Affected", color: "#a855f7", label: "People Affected", icon: "👥", description: "Human impact magnitude" },
+  // Climate Drivers
+  { key: "Temperature", color: "#ef4444", label: "Temperature (°C)", icon: "🌡️", description: "Surface temperature anomaly", dataKey: "temp" },
+  { key: "Sea Surface Temperature", color: "#06b6d4", label: "Sea Surface Temp (°C)", icon: "🌊", description: "Ocean surface warming", dataKey: "seaSurfaceTemp" },
+  { key: "Sea Level", color: "#3b82f6", label: "Sea Level (mm)", icon: "📈", description: "Ocean level anomaly", dataKey: "sea" },
+  { key: "Rainfall", color: "#22c55e", label: "Rainfall (mm)", icon: "☔", description: "Precipitation anomaly", dataKey: "rainfall" },
+  // Environmental Impacts
+  { key: "Crop Yield", color: "#10b981", label: "Crop Yield (t/ha)", icon: "🌾", description: "Agricultural productivity", dataKey: "cropYield" },
+  { key: "Livestock Yield", color: "#f59e0b", label: "Livestock Yield (tons)", icon: "🐄", description: "Livestock production", dataKey: "lifestockYield" },
+  { key: "Climate Altering Land", color: "#8b5cf6", label: "Climate Altering Land (ha)", icon: "🌍", description: "Land cover changes", dataKey: "climateAlteringLand" },
+  // Economic Consequences
+  { key: "Economic Loss", color: "#f97316", label: "Economic Loss (USD)", icon: "💰", description: "Disaster-related losses", dataKey: "loss" },
+  { key: "Tourist Arrivals", color: "#14b8a6", label: "Tourist Arrivals", icon: "✈️", description: "Tourism volume", dataKey: "tourists" },
+  // Human Consequences
+  { key: "People Affected", color: "#ef4444", label: "People Affected", icon: "👥", description: "Human impact magnitude", dataKey: "people" },
+  { key: "Population Growth", color: "#ec4898", label: "Population Growth (%)", icon: "📈", description: "Demographic trends", dataKey: "populationGrowth" },
 ];
 
 export default function BeeswarmChart({ 
   width, 
   height, 
   data, 
-  title = "Climate Impact Distribution",
-  insight = "Each dot represents a climate impact event. Size shows magnitude, color indicates type. Dots cluster by country (vertical) and year (horizontal)."
+  title = "Comprehensive Climate Impact Distribution",
+  insight = "Each dot represents a climate impact measurement. Size shows magnitude, color indicates type. Dots cluster by country (vertical) and decade (horizontal). Click legend to filter categories."
 }: Props) {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [hovered, setHovered] = useState<Node | null>(null);
@@ -55,25 +64,20 @@ export default function BeeswarmChart({
     data
       .filter(d => d.year % 10 === 0)
       .forEach(d => {
-        const push = (category: string, value: number | null) => {
+        CATEGORY_META.forEach(category => {
+          const value = d[category.dataKey as keyof ClimateRecord] as number | null;
           if (value == null) return;
-          if (!activeCategories.includes(category)) return;
+          if (value === 0) return;
+          if (!activeCategories.includes(category.key)) return;
 
           out.push({
-            id: `${d.country}-${category}-${d.year}`,
+            id: `${d.country}-${category.key}-${d.year}`,
             country: d.country,
             year: d.year,
-            category,
-            value: Math.abs(value), // Use absolute values for size
+            category: category.key,
+            value: Math.abs(value),
           });
-        };
-
-        push("Temperature", d.temp);
-        push("Sea Surface Temperature", d.seaSurfaceTemp);
-        push("Sea Level", d.sea);
-        push("Rainfall", d.rainfall);
-        push("Economic Loss", d.loss);
-        push("People Affected", d.people);
+        });
       });
 
     return out;
@@ -103,12 +107,23 @@ export default function BeeswarmChart({
   const mostCommonCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
   const mostCommonMeta = CATEGORY_META.find(c => c.key === mostCommonCategory);
 
+  // Calculate category group counts
+  const driverCategories = ["Temperature", "Sea Surface Temperature", "Sea Level", "Rainfall"];
+  const environmentalCategories = ["Crop Yield", "Livestock Yield", "Climate Altering Land"];
+  const economicCategories = ["Economic Loss", "Tourist Arrivals"];
+  const humanCategories = ["People Affected", "Population Growth"];
+
+  const driverCount = flat.filter(d => driverCategories.includes(d.category)).length;
+  const environmentalCount = flat.filter(d => environmentalCategories.includes(d.category)).length;
+  const economicCount = flat.filter(d => economicCategories.includes(d.category)).length;
+  const humanCount = flat.filter(d => humanCategories.includes(d.category)).length;
+
   // ─────────────────────────────────────────────
   // ADAPTIVE HEIGHT
   // ─────────────────────────────────────────────
   const MIN_ROW_HEIGHT = 32;
   const computedHeight = useMemo(() => {
-    return Math.max(height, countries.length * MIN_ROW_HEIGHT + 160);
+    return Math.max(height, countries.length * MIN_ROW_HEIGHT + 180);
   }, [height, countries.length]);
 
   // ─────────────────────────────────────────────
@@ -118,16 +133,17 @@ export default function BeeswarmChart({
     () =>
       d3.scalePoint<number>()
         .domain(years)
-        .range([160, width - 50])
+        .range([180, width - 50])
         .padding(0.6),
     [years, width]
   );
 
   const yScale = useMemo(() => {
-    const rowHeight = (computedHeight - 160) / Math.max(countries.length, 1);
+    if (countries.length === 0) return () => 0;
+    const rowHeight = (computedHeight - 180) / Math.max(countries.length, 1);
     return d3.scalePoint<string>()
       .domain(countries)
-      .range([80, 80 + countries.length * rowHeight])
+      .range([100, 100 + countries.length * rowHeight])
       .padding(0.7);
   }, [countries, computedHeight]);
 
@@ -135,7 +151,7 @@ export default function BeeswarmChart({
     () =>
       d3.scaleSqrt()
         .domain([0, maxValue])
-        .range([4, 16]),
+        .range([3, 18]),
     [maxValue]
   );
 
@@ -153,18 +169,18 @@ export default function BeeswarmChart({
   useEffect(() => {
     if (!flat.length || !width || !computedHeight) return;
 
-    if (!simulationRef.current) {
-      simulationRef.current = d3.forceSimulation<Node>();
+    if (simulationRef.current) {
+      simulationRef.current.stop();
     }
 
-    const sim = simulationRef.current;
-
-    sim.nodes(flat as any)
+    const sim = d3.forceSimulation<Node>(flat as any)
       .force("x", d3.forceX((d: any) => xScale(d.year) ?? 0).strength(0.85))
       .force("y", d3.forceY((d: any) => yScale(d.country) ?? 0).strength(0.85))
       .force("collide", d3.forceCollide((d: any) => rScale(d.value) + 3))
       .alpha(0.8)
       .restart();
+
+    simulationRef.current = sim;
 
     const ticked = () => {
       setNodes([...sim.nodes()] as Node[]);
@@ -173,7 +189,8 @@ export default function BeeswarmChart({
     sim.on("tick", ticked);
 
     return () => {
-      sim.on("tick", null);
+      sim.stop();
+      simulationRef.current = null;
     };
   }, [flat, xScale, yScale, rScale, width, computedHeight]);
 
@@ -198,12 +215,58 @@ export default function BeeswarmChart({
       if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K people`;
       return `${value.toLocaleString()} people`;
     }
-    if (category === "Temperature") return `${value.toFixed(1)}°C`;
-    if (category === "Sea Surface Temperature") return `${value.toFixed(1)}°C`;
+    if (category === "Tourist Arrivals") {
+      if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M visitors`;
+      if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K visitors`;
+      return `${value.toLocaleString()} visitors`;
+    }
+    if (category === "Population Growth") {
+      return `${value.toFixed(1)}% growth`;
+    }
+    if (category === "Crop Yield") {
+      return `${value.toFixed(1)} t/ha`;
+    }
+    if (category === "Livestock Yield") {
+      if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M tons`;
+      if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K tons`;
+      return `${value.toLocaleString()} tons`;
+    }
+    if (category === "Climate Altering Land") {
+      if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M ha`;
+      if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K ha`;
+      return `${value.toLocaleString()} ha`;
+    }
+    if (category === "Temperature" || category === "Sea Surface Temperature") {
+      return `${value.toFixed(1)}°C`;
+    }
     if (category === "Sea Level") return `${value.toFixed(1)}mm`;
     if (category === "Rainfall") return `${value.toFixed(0)}mm`;
     return value.toLocaleString();
   };
+
+  if (!data.length) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white" style={{ width, height }}>
+        <div className="text-center p-6">
+          <div className="text-4xl mb-3 opacity-30">🐝</div>
+          <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
+          <p className="text-xs text-slate-400 max-w-xs">No climate impact data available</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!flat.length) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white" style={{ width, height }}>
+        <div className="text-center p-6">
+          <div className="text-4xl mb-3 opacity-30">🐝</div>
+          <h3 className="text-base font-semibold text-slate-700 mb-1">No Data for Selected Filters</h3>
+          <p className="text-xs text-slate-400 max-w-xs">Try enabling more categories in the legend</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -218,7 +281,7 @@ export default function BeeswarmChart({
       </div>
 
       {/* Key Findings Summary Cards */}
-      <div className="mb-5 grid grid-cols-4 gap-2">
+      <div className="mb-5 grid grid-cols-5 gap-2">
         <div className="text-center p-2 bg-blue-50 rounded-lg">
           <div className="text-lg font-bold text-blue-700">{totalEvents}</div>
           <div className="text-xs text-slate-500">Total Events</div>
@@ -238,21 +301,49 @@ export default function BeeswarmChart({
           <div className="text-xs text-slate-500">Most Frequent</div>
           <div className="text-[10px] text-slate-400">{mostCommonMeta?.label || mostCommonCategory}</div>
         </div>
+        <div className="text-center p-2 bg-rose-50 rounded-lg">
+          <div className="text-lg font-bold text-rose-700">
+            {driverCount + environmentalCount + economicCount + humanCount}
+          </div>
+          <div className="text-xs text-slate-500">Measurements</div>
+        </div>
+      </div>
+
+      {/* Category Breakdown Cards */}
+      <div className="mb-5 grid grid-cols-4 gap-2">
+        <div className="text-center p-1.5 bg-orange-50 rounded-lg">
+          <span className="text-sm">🌡️</span>
+          <div className="text-xs font-bold text-orange-700">{driverCount}</div>
+          <div className="text-[9px] text-slate-400">Climate Drivers</div>
+        </div>
+        <div className="text-center p-1.5 bg-emerald-50 rounded-lg">
+          <span className="text-sm">🌿</span>
+          <div className="text-xs font-bold text-emerald-700">{environmentalCount}</div>
+          <div className="text-[9px] text-slate-400">Environmental</div>
+        </div>
+        <div className="text-center p-1.5 bg-amber-50 rounded-lg">
+          <span className="text-sm">💰</span>
+          <div className="text-xs font-bold text-amber-700">{economicCount}</div>
+          <div className="text-[9px] text-slate-400">Economic</div>
+        </div>
+        <div className="text-center p-1.5 bg-rose-50 rounded-lg">
+          <span className="text-sm">👥</span>
+          <div className="text-xs font-bold text-rose-700">{humanCount}</div>
+          <div className="text-[9px] text-slate-400">Human</div>
+        </div>
       </div>
 
       {/* Narrative Paragraph */}
       <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
-          This beeswarm chart visualizes <span className="font-bold text-blue-600">{totalEvents} climate impact events</span> across 
+          This comprehensive beeswarm chart visualizes <span className="font-bold text-blue-600">{totalEvents} climate impact events</span> across 
           <span className="font-bold text-emerald-600"> {countries.length} Pacific nations</span> over 
           <span className="font-bold text-slate-700"> {years.length} decades</span>. 
-          Each <span className="font-bold text-purple-600">colored dot</span> represents an impact measurement — 
-          <span className="font-bold text-red-500"> red for temperature</span>, 
-          <span className="font-bold text-cyan-500"> cyan for sea surface temperature</span>, 
-          <span className="font-bold text-blue-500"> blue for sea level</span>, 
-          <span className="font-bold text-green-500"> green for rainfall</span>, 
-          <span className="font-bold text-orange-500"> orange for economic loss</span>, and 
-          <span className="font-bold text-purple-500"> purple for people affected</span>. 
+          Each dot represents a measurement across the full climate cascade: 
+          <span className="font-bold text-orange-600"> climate drivers</span> (🌡️🌊📈☔), 
+          <span className="font-bold text-emerald-600"> environmental impacts</span> (🌾🐄🌍), 
+          <span className="font-bold text-amber-600"> economic consequences</span> (💰✈️), and 
+          <span className="font-bold text-rose-600"> human outcomes</span> (👥📈). 
           Larger dots indicate more severe impacts.
         </p>
       </div>
@@ -272,9 +363,9 @@ export default function BeeswarmChart({
             <rect
               key={`bg-${country}`}
               x={0}
-              y={y - 16}
+              y={y - 18}
               width={width}
-              height={32}
+              height={36}
               fill={i % 2 === 0 ? "#ffffff" : "#f8fafc"}
               opacity={0.5}
             />
@@ -282,7 +373,7 @@ export default function BeeswarmChart({
         })}
 
         {/* Year Labels */}
-        <text x={width / 2} y={32} textAnchor="middle" fontSize={10} fill="#94a3b8" fontWeight="600" letterSpacing="0.05em">
+        <text x={width / 2} y={38} textAnchor="middle" fontSize={10} fill="#94a3b8" fontWeight="600" letterSpacing="0.05em">
           TIME → (Decades)
         </text>
         
@@ -290,7 +381,7 @@ export default function BeeswarmChart({
           <text
             key={year}
             x={xScale(year) ?? 0}
-            y={52}
+            y={58}
             textAnchor="middle"
             fontSize={10}
             fontWeight={600}
@@ -301,9 +392,9 @@ export default function BeeswarmChart({
         ))}
 
         {/* Country Labels */}
-        <text x={30} y={70} fontSize={10} fill="#94a3b8" fontWeight="600" letterSpacing="0.05em">
+        <text x={40} y={80} fontSize={10} fill="#94a3b8" fontWeight="600" letterSpacing="0.05em">
           COUNTRY
-          <tspan dy={15} x={30}>↓</tspan>
+          <tspan dy={15} x={40}>↓</tspan>
         </text>
 
         {countries.map((country, i) => {
@@ -311,7 +402,7 @@ export default function BeeswarmChart({
           return (
             <g key={country}>
               <text
-                x={100}
+                x={120}
                 y={y + 4}
                 textAnchor="end"
                 fontSize={countries.length > 14 ? 9 : 10}
@@ -328,8 +419,6 @@ export default function BeeswarmChart({
         <g filter="url(#shadow)">
           {nodes.map(d => {
             const isHovered = hovered?.id === d.id;
-            const meta = CATEGORY_META.find(c => c.key === d.category);
-
             return (
               <circle
                 key={d.id}
@@ -350,7 +439,7 @@ export default function BeeswarmChart({
       </svg>
 
       {/* Legend - Clickable Toggles */}
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
         {CATEGORY_META.map(cat => {
           const active = activeCategories.includes(cat.key);
           const count = categoryCounts[cat.key] || 0;
@@ -359,19 +448,19 @@ export default function BeeswarmChart({
             <button
               key={cat.key}
               onClick={() => toggleCategory(cat.key)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all duration-150 ${
                 active 
                   ? "bg-slate-100 text-slate-700" 
                   : "bg-slate-50 text-slate-400"
               }`}
             >
               <span
-                className="w-2.5 h-2.5 rounded-full"
+                className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: cat.color, opacity: active ? 1 : 0.4 }}
               />
               <span>{cat.icon}</span>
-              <span>{cat.label}</span>
-              <span className={`text-[10px] ${active ? "text-slate-400" : "text-slate-300"}`}>
+              <span className="hidden sm:inline">{cat.label.split(' ')[0]}</span>
+              <span className={`text-[9px] ${active ? "text-slate-400" : "text-slate-300"}`}>
                 ({count})
               </span>
             </button>
@@ -382,10 +471,10 @@ export default function BeeswarmChart({
       {/* Tooltip */}
       {hovered && (
         <div
-          className="fixed pointer-events-none bg-white border border-slate-200 shadow-lg px-4 py-2 rounded-lg z-50"
+          className="fixed pointer-events-none bg-white border border-slate-200 shadow-lg px-3 py-2 rounded-lg z-50"
           style={{
             left: (hovered.x ?? 0) + 20,
-            top: (hovered.y ?? 0) - 40,
+            top: (hovered.y ?? 0) - 45,
           }}
         >
           <div className="flex items-center gap-2 mb-1">
@@ -393,14 +482,14 @@ export default function BeeswarmChart({
               className="w-2 h-2 rounded-full" 
               style={{ backgroundColor: colorScale(hovered.category) }}
             />
-            <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+            <span className="text-[10px] font-semibold text-slate-700 uppercase tracking-wide">
               {hovered.category}
             </span>
           </div>
-          <div className="text-sm font-bold text-slate-800">
+          <div className="text-xs font-bold text-slate-800">
             {hovered.country} • {hovered.year}
           </div>
-          <div className="text-xs text-slate-600 mt-1">
+          <div className="text-[11px] text-slate-600 mt-0.5">
             {formatValue(hovered.value, hovered.category)}
           </div>
         </div>
@@ -411,7 +500,7 @@ export default function BeeswarmChart({
         <p className="text-xs text-slate-500 text-center leading-relaxed">
           📊 Hover over any dot for details · Click legend to filter categories · 
           Dot size = magnitude of impact · Vertical position = country · Horizontal = decade · 
-          Sea surface temperature shows ocean warming trends
+          Complete cascade: Climate Drivers → Environmental → Economic → Human Impacts
         </p>
       </div>
     </div>

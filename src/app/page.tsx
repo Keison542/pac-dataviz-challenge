@@ -1,58 +1,45 @@
 "use client";
-import { useRef, useMemo, useCallback, useState, useEffect } from "react";
-import { animated, useTransition, useSpring } from "@react-spring/web";
+import { useMemo, useCallback, useState, useEffect } from "react";
 import { LineChart } from "@/dataviz/lineChart/LineChart";
 import { TrendLine } from "@/dataviz/lineChart/trendLine";
 import { BubbleChart } from "@/dataviz/bubbleChart/BubbleChart";
-import { geoData } from "@/data/pacificGeoData";
 import { surfaceTempAnomalies } from "@/data/climate_drivers/surface_temp_anomalies";
 import { rainfallAnomalies } from "@/data/climate_drivers/rainfall_anomalies";
 import { seaLevelAnomalies } from "@/data/climate_drivers/sea_level_anomalies";
 import { disasterEconomicLoss } from "@/data/economic_consequence/direct_disaster_economic_loss";
 import { affectedPersons } from "@/data/human_consequence/number_of_persons_affected";
-import {seaSurfaceTempAnomalies} from "@/data/climate_drivers/sea_surface_temp_anomalies";
-import { RankedBarChart } from "@/dataviz/barplot/RankedBarChart";
-import { CountryComparison } from "@/dataviz/barplot/CountryComparison";
-import TimeSankey from "@/dataviz/sankey/TimeSankey";
-import AlluvialDiagram from "@/dataviz/sankey/AlluvialDiagram";
-import BeeswarmChart from "@/dataviz/beeswarm/BeeswarmChart";
-import { buildClimateRecords } from "@/lib/mergedClimateRecord";
+import { seaSurfaceTempAnomalies } from "@/data/climate_drivers/sea_surface_temp_anomalies";
 import { MultiLineChart } from "@/dataviz/lineChart/MultiLineChart";
 import { buildMultiLineData } from "@/data/climate_drivers/buildMultiLineData";
 import { climateSeries } from "@/data/climate_drivers/climateSeries";
-import {crop_yield} from "@/data/environmental_impact/crop_yield"
-import {tourist_arrival} from "@/data/economic_consequence/tourist_arrival";
+import { crop_yield } from "@/data/environmental_impact/crop_yield";
+import { tourist_arrival } from "@/data/economic_consequence/tourist_arrival";
 import { climate_altering_land } from "@/data/environmental_impact/climate_altering_land";
 import { lifestock_yield } from "@/data/environmental_impact/lifestock_yield";
 import { population_growth } from "@/data/human_consequence/population_growth";
-import {tubercolosis_incidence} from "@/data/human_consequence/tubercolosis_incidence";
 import { TimeSeriesDashboard } from "@/dataviz/bubbleChart/TimeSeries";
-import {MultiMetricRankedDashboard } from "@/dataviz/barplot/BarChart";
-
+import { MultiMetricRankedDashboard } from "@/dataviz/barplot/BarChart";
+import TimeSankey from "@/dataviz/sankey/TimeSankey";
+import BeeswarmChart from "@/dataviz/beeswarm/BeeswarmChart";
+import { buildClimateRecords } from "@/lib/mergedClimateRecord";
 
 // ============================================================================
 // TYPES
 // ============================================================================
-
-interface IslandSelectPayload { event: string; country: string; countryName: string; position: { x: number; y: number }; timestamp: string; }
 interface TimeSeriesPoint { country: string; year: number; value: number; }
-interface KpiSet { temp: number; sea: number; loss: number; people: number; rainfall: number; sea_surface_temperature: number; crop_yield: number; tourist_arrival: number; climate_altering_land: number; lifestock_yield: number; population_growth: number; tubercolosis_incidence: number; }
 
 const CONTAINER_WIDTH = 1200;
 
 // ============================================================================
 // STYLES
 // ============================================================================
-
 const S = {
   page: { minHeight: "100vh", background: "#ffffff", fontFamily: "'Inter', system-ui, sans-serif", color: "#0f172a" },
   container: { maxWidth: CONTAINER_WIDTH, margin: "0 auto", padding: "2rem 1.5rem" },
-  
   hero: { marginBottom: "4rem", textAlign: "center" as const },
   kicker: { fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" as const, color: "#D85A30", marginBottom: "1rem" },
   h1: { fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: "1rem", color: "#0f172a", lineHeight: 1.2 },
   subhead: { fontSize: "1.1rem", color: "#475569", maxWidth: "680px", margin: "0 auto", lineHeight: 1.5 },
-  
   pillRow: { display: "flex", flexWrap: "wrap" as const, gap: "0.5rem", justifyContent: "center", marginTop: "2rem", maxHeight: "180px", overflowY: "auto" as const, padding: "0.5rem" },
   countryPill: (active: boolean, hover: boolean) => ({
     display: "inline-flex", padding: "0.4rem 1.2rem", borderRadius: "2rem", fontSize: "0.8rem", fontWeight: active ? 600 : 400,
@@ -60,44 +47,29 @@ const S = {
     color: active ? "#ffffff" : "#334155",
     border: "1px solid #e2e8f0", cursor: "pointer", transition: "all 0.15s ease",
   }),
-  
   storySection: { marginBottom: "4rem" },
   storyHeader: { marginBottom: "1.5rem", textAlign: "center" as const },
   storyTitle: { fontSize: "1.75rem", fontWeight: 600, marginBottom: "0.75rem", color: "#0f172a" },
   storySubtitle: { fontSize: "0.9rem", color: "#64748b", maxWidth: "680px", margin: "0 auto", lineHeight: 1.5 },
   storyInsight: { fontSize: "0.85rem", color: "#D85A30", marginTop: "0.5rem", fontWeight: 500 },
-  
   twoColumnGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))", gap: "1.5rem", marginBottom: "1.5rem" },
   chartPanel: { background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "1rem", padding: "1.25rem" },
   chartHead: { display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem", paddingBottom: "0.75rem", borderBottom: "1px solid #f1f5f9" },
   chartIcon: { fontSize: "1.25rem" },
   chartTitle: { fontWeight: 600, fontSize: "0.9rem", color: "#1e293b" },
   chartInsight: { fontSize: "0.7rem", color: "#94a3b8", marginLeft: "auto", fontStyle: "italic" },
-  
-  comparisonGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))", gap: "1.5rem", marginBottom: "2rem" },
-  
   tabContainer: { display: "flex", gap: "1rem", justifyContent: "center", marginBottom: "1.5rem", flexWrap: "wrap" as const },
   tabButton: (active: boolean) => ({ padding: "0.5rem 1.5rem", borderRadius: "2rem", fontSize: "0.85rem", fontWeight: 500, background: active ? "#0f172a" : "#ffffff", color: active ? "#ffffff" : "#475569", border: "1px solid #e2e8f0", cursor: "pointer", transition: "all 0.15s ease" }),
-  
   conclusion: { textAlign: "center" as const, marginTop: "4rem", paddingTop: "2rem", borderTop: "1px solid #e2e8f0" },
   conclusionTitle: { fontSize: "1.5rem", fontWeight: 600, marginBottom: "1rem" },
   conclusionText: { fontSize: "1rem", color: "#475569", maxWidth: "720px", margin: "0 auto", lineHeight: 1.6 },
-  
   footer: { textAlign: "center" as const, paddingTop: "2rem", marginTop: "2rem", borderTop: "1px solid #e2e8f0", fontSize: "0.75rem", color: "#94a3b8" }
 };
-
-// ============================================================================
-// COMPONENTS
-// ============================================================================
 
 const CountryPill = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => {
   const [hover, setHover] = useState(false);
   return <button onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={S.countryPill(active, hover)}>{label}</button>;
 };
-
-// ============================================================================
-// LOADING SKELETON COMPONENT
-// ============================================================================
 
 const LoadingSkeleton = () => (
   <div className="animate-pulse">
@@ -125,124 +97,17 @@ const LoadingSkeleton = () => (
 );
 
 // ============================================================================
-// DOUGHNUT CHART COMPONENT
-// ============================================================================
-
-const DoughnutChart = ({ value, maxValue, color, size = 70, unit, label, isReversed = false }: any) => {
-  const safeValue = value ?? 0;
-  const percentage = Math.min(100, Math.max(0, (Math.abs(safeValue) / maxValue) * 100));
-  const radius = size / 2;
-  const circumference = 2 * Math.PI * (radius - 8);
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-  
-  const actualPercentage = isReversed ? 100 - percentage : percentage;
-  const actualStrokeDashoffset = circumference - (actualPercentage / 100) * circumference;
-  
-  const getValueColor = () => {
-    if (label === "Surface Temp" || label === "Sea Surface Temp") {
-      if (safeValue > 1.5) return "#ef4444";
-      if (safeValue > 1.0) return "#f97316";
-      if (safeValue > 0.5) return "#eab308";
-      return "#22c55e";
-    }
-    if (label === "Sea Level") {
-      if (safeValue > 0.3) return "#ef4444";
-      if (safeValue > 0.2) return "#f97316";
-      if (safeValue > 0.1) return "#eab308";
-      return "#22c55e";
-    }
-    if (label === "Crop Yield" || label === "Livestock") {
-      if (safeValue < 3) return "#ef4444";
-      if (safeValue < 5) return "#f97316";
-      return "#22c55e";
-    }
-    if (label === "TB Incidence") {
-      if (safeValue > 300) return "#ef4444";
-      if (safeValue > 200) return "#f97316";
-      if (safeValue > 100) return "#eab308";
-      return "#22c55e";
-    }
-    return color;
-  };
-
-  const formatDisplayValue = () => {
-    if (label === "Economic Loss") return `$${(safeValue / 1e6).toFixed(1)}M`;
-    if (label === "Tourist Arrivals") return `${(safeValue / 1e3).toFixed(0)}K`;
-    if (label === "People Affected") return `${(safeValue / 1e3).toFixed(0)}K`;
-    if (label === "Land Cover") return `${(safeValue / 1e3).toFixed(0)}K ha`;
-    if (label === "Sea Level") return `${(safeValue * 100).toFixed(0)}cm`;
-    if (label === "Population Growth") return `${safeValue > 0 ? `+${safeValue.toFixed(1)}%` : `${safeValue.toFixed(1)}%`}`;
-    return safeValue.toFixed(2);
-  };
-
-  return (
-    <div className="flex flex-col items-center group">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90">
-          <circle cx={radius} cy={radius} r={radius - 8} fill="none" stroke="#e2e8f0" strokeWidth="6" />
-          <circle
-            cx={radius}
-            cy={radius}
-            r={radius - 8}
-            fill="none"
-            stroke={getValueColor()}
-            strokeWidth="6"
-            strokeDasharray={circumference}
-            strokeDashoffset={actualStrokeDashoffset}
-            strokeLinecap="round"
-            className="transition-all duration-1000 ease-out"
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-lg font-bold" style={{ color: getValueColor() }}>{formatDisplayValue()}</span>
-          <span className="text-[8px] text-slate-400">{unit}</span>
-        </div>
-      </div>
-      <div className="mt-1 text-center">
-        <div className="text-[10px] font-medium text-slate-600">{label}</div>
-        <div className="text-[8px] text-slate-400">{percentage.toFixed(0)}% of threshold</div>
-      </div>
-    </div>
-  );
-};
-
-// ============================================================================
 // DOUGHNUT CLIMATE IMPACT DASHBOARD
 // ============================================================================
-
 const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: any) => {
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
   
-  // Provide default values if kpis or deltas are undefined
-  const safeKpis = kpis || {
-    temp: 0, sea_surface_temperature: 0, rainfall: 0, sea: 0,
-    climate_altering_land: 0, crop_yield: 0, lifestock_yield: 0,
-    loss: 0, tourist_arrival: 0, people: 0, population_growth: 0,
-    tubercolosis_incidence: 0
-  };
+  const safeKpis = kpis || { temp: 0, sea_surface_temperature: 0, rainfall: 0, sea: 0, climate_altering_land: 0, crop_yield: 0, lifestock_yield: 0, loss: 0, tourist_arrival: 0, people: 0, population_growth: 0, tubercolosis_incidence: 0 };
+  const safeDeltas = deltas || { temp: 0, sea_surface_temperature: 0, rainfall: 0, sea: 0, climate_altering_land: 0, crop_yield: 0, lifestock_yield: 0, loss: 0, tourist_arrival: 0, people: 0, population_growth: 0, tubercolosis_incidence: 0 };
   
-  const safeDeltas = deltas || {
-    temp: 0, sea_surface_temperature: 0, rainfall: 0, sea: 0,
-    climate_altering_land: 0, crop_yield: 0, lifestock_yield: 0,
-    loss: 0, tourist_arrival: 0, people: 0, population_growth: 0,
-    tubercolosis_incidence: 0
-  };
+  if (isLoading) return <LoadingSkeleton />;
   
-  if (isLoading) {
-    return <LoadingSkeleton />;
-  }
-  
-  // Define thresholds for each indicator
-  const thresholds: Record<string, {
-    max: number;
-    unit: string;
-    label: string;
-    icon: string;
-    color: string;
-    isReversed: boolean;
-    multiplier?: number;
-    displayUnit?: string;
-  }> = {
+  const thresholds: Record<string, any> = {
     temp: { max: 2.0, unit: "°C", label: "Surface Temp", icon: "🌡️", color: "#D85A30", isReversed: false },
     sea_surface_temperature: { max: 2.0, unit: "°C", label: "Sea Surface Temp", icon: "🌊", color: "#2AA7FF", isReversed: false },
     rainfall: { max: 200, unit: "mm", label: "Rainfall", icon: "☔", color: "#2E86AB", isReversed: false },
@@ -257,376 +122,146 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
     tubercolosis_incidence: { max: 500, unit: "/100k", label: "TB Incidence", icon: "🩺", color: "#E91E63", isReversed: true },
   };
 
-  const getDisplayValue = (key: string, value: number) => {
-    const safeValue = value ?? 0;
-    const t = thresholds[key as keyof typeof thresholds];
-    if (t?.multiplier) return (safeValue * t.multiplier).toFixed(1);
-    if (key === "sea") return (safeValue * 100).toFixed(0);
-    if (key === "loss") return (safeValue / 1e6).toFixed(1);
-    if (key === "tourist_arrival" || key === "people") return (safeValue / 1e3).toFixed(0);
-    if (key === "climate_altering_land") return (safeValue / 1e3).toFixed(0);
-    if (key === "population_growth") return safeValue.toFixed(1);
-    return safeValue.toFixed(2);
+  const getMetricValue = (key: string) => {
+    const val = safeKpis[key];
+    return val !== undefined && val !== null ? val : 0;
   };
 
-  const getDisplayUnit = (key: string) => {
-    const t = thresholds[key as keyof typeof thresholds];
-    if (t?.displayUnit) return t.displayUnit;
-    if (key === "sea") return "cm";
-    if (key === "loss") return "M";
-    if (key === "tourist_arrival" || key === "people") return "K";
-    if (key === "climate_altering_land") return "K ha";
-    return t?.unit || "";
-  };
-
-  const getPercentage = (key: string, value: number) => {
-    const safeValue = value ?? 0;
-    const t = thresholds[key as keyof typeof thresholds];
-    if (!t) return 0;
-    let displayValue = safeValue;
-    if (key === "sea") displayValue = safeValue * 100;
-    if (key === "loss") displayValue = safeValue / 1e6;
-    if (key === "tourist_arrival" || key === "people") displayValue = safeValue / 1e3;
-    if (key === "climate_altering_land") displayValue = safeValue / 1e3;
-    let pct = (displayValue / t.max) * 100;
-    if (t.isReversed) pct = 100 - pct;
-    return Math.min(100, Math.max(0, pct));
-  };
-
-  const getDoughnutColor = (key: string, value: number) => {
-    const safeValue = value ?? 0;
-    const t = thresholds[key as keyof typeof thresholds];
-    if (key === "temp" || key === "sea_surface_temperature") {
-      if (safeValue > 1.5) return "#ef4444";
-      if (safeValue > 1.0) return "#f97316";
-      if (safeValue > 0.5) return "#eab308";
-      return "#22c55e";
-    }
-    if (key === "sea") {
-      if (safeValue > 0.3) return "#ef4444";
-      if (safeValue > 0.2) return "#f97316";
-      if (safeValue > 0.1) return "#eab308";
-      return "#22c55e";
-    }
-    if (key === "crop_yield" || key === "lifestock_yield") {
-      if (safeValue < 3) return "#ef4444";
-      if (safeValue < 5) return "#f97316";
-      return "#22c55e";
-    }
-    if (key === "tubercolosis_incidence") {
-      if (safeValue > 300) return "#ef4444";
-      if (safeValue > 200) return "#f97316";
-      if (safeValue > 100) return "#eab308";
-      return "#22c55e";
-    }
-    return t?.color || "#3b82f6";
+  const getDelta = (key: string) => {
+    const delta = safeDeltas[key];
+    return delta !== undefined && delta !== null ? delta : 0;
   };
 
   const metrics = [
-    { key: "temp", value: safeKpis.temp, delta: safeDeltas.temp },
-    { key: "sea_surface_temperature", value: safeKpis.sea_surface_temperature, delta: safeDeltas.sea_surface_temperature },
-    { key: "rainfall", value: safeKpis.rainfall, delta: safeDeltas.rainfall },
-    { key: "sea", value: safeKpis.sea, delta: safeDeltas.sea },
-    { key: "climate_altering_land", value: safeKpis.climate_altering_land, delta: safeDeltas.climate_altering_land },
-    { key: "crop_yield", value: safeKpis.crop_yield, delta: safeDeltas.crop_yield },
-    { key: "lifestock_yield", value: safeKpis.lifestock_yield, delta: safeDeltas.lifestock_yield },
-    { key: "loss", value: safeKpis.loss, delta: safeDeltas.loss },
-    { key: "tourist_arrival", value: safeKpis.tourist_arrival, delta: safeDeltas.tourist_arrival },
-    { key: "people", value: safeKpis.people, delta: safeDeltas.people },
-    { key: "population_growth", value: safeKpis.population_growth, delta: safeDeltas.population_growth },
-    { key: "tubercolosis_incidence", value: safeKpis.tubercolosis_incidence, delta: safeDeltas.tubercolosis_incidence },
+    { key: "temp", value: getMetricValue("temp"), delta: getDelta("temp") },
+    { key: "sea_surface_temperature", value: getMetricValue("sea_surface_temperature"), delta: getDelta("sea_surface_temperature") },
+    { key: "rainfall", value: getMetricValue("rainfall"), delta: getDelta("rainfall") },
+    { key: "sea", value: getMetricValue("sea"), delta: getDelta("sea") },
+    { key: "climate_altering_land", value: getMetricValue("climate_altering_land"), delta: getDelta("climate_altering_land") },
+    { key: "crop_yield", value: getMetricValue("crop_yield"), delta: getDelta("crop_yield") },
+    { key: "lifestock_yield", value: getMetricValue("lifestock_yield"), delta: getDelta("lifestock_yield") },
+    { key: "loss", value: getMetricValue("loss"), delta: getDelta("loss") },
+    { key: "tourist_arrival", value: getMetricValue("tourist_arrival"), delta: getDelta("tourist_arrival") },
+    { key: "people", value: getMetricValue("people"), delta: getDelta("people") },
+    { key: "population_growth", value: getMetricValue("population_growth"), delta: getDelta("population_growth") },
+    { key: "tubercolosis_incidence", value: getMetricValue("tubercolosis_incidence"), delta: getDelta("tubercolosis_incidence") },
   ];
 
   return (
     <div className="w-full max-w-6xl mx-auto">
-      {/* Header */}
       <div className="text-center mb-6">
-        <span className="text-sm font-medium text-slate-600">📍 {selectedCountry} at a Glance: Climate Impact Cascade</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-2 inline-block" />
+        <span className="text-sm font-medium text-slate-600">📍 {selectedCountry} at a Glance</span>
       </div>
-
-      {/* Causal Flow Indicator */}
-      <div className="flex items-center justify-center gap-1 mb-8 flex-wrap">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-100">
-          <span className="text-sm">🌡️</span>
-          <span className="text-xs font-medium text-orange-700">Climate Drivers</span>
-        </div>
-        <span className="text-slate-400 text-lg">→</span>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-100">
-          <span className="text-sm">🌿</span>
-          <span className="text-xs font-medium text-teal-700">Environmental</span>
-        </div>
-        <span className="text-slate-400 text-lg">→</span>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-100">
-          <span className="text-sm">💰</span>
-          <span className="text-xs font-medium text-amber-700">Economic</span>
-        </div>
-        <span className="text-slate-400 text-lg">→</span>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100">
-          <span className="text-sm">👥</span>
-          <span className="text-xs font-medium text-purple-700">Human</span>
-        </div>
-      </div>
-
-      {/* 4-Column Doughnut Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* COLUMN 1: CLIMATE DRIVERS */}
-        <div className="bg-gradient-to-b from-orange-50 to-white rounded-xl border border-orange-200 overflow-hidden shadow-sm">
-          <div className="bg-orange-500 px-3 py-2">
-            <div className="flex items-center justify-between">
-              <span className="text-white text-sm font-semibold">🌡️ Climate Drivers</span>
-              <span className="text-white/70 text-[10px]">4 indicators</span>
-            </div>
+        <div className="bg-orange-50 rounded-xl border border-orange-200 p-3">
+          <div className="bg-orange-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
+            <span className="text-white text-sm font-semibold">🌡️ Climate Drivers</span>
           </div>
-          <div className="p-3 space-y-4">
-            {metrics.slice(0, 4).map((metric) => {
-              const t = thresholds[metric.key as keyof typeof thresholds];
-              const displayValue = getDisplayValue(metric.key, metric.value);
-              const unit = getDisplayUnit(metric.key);
-              const percentage = getPercentage(metric.key, metric.value);
-              const doughnutColor = getDoughnutColor(metric.key, metric.value);
-              
+          <div className="space-y-3">
+            {metrics.slice(0, 4).map(m => {
+              const t = thresholds[m.key];
+              const val = Math.abs(m.value);
+              const pct = Math.min(100, (val / t.max) * 100);
               return (
-                <div 
-                  key={metric.key}
-                  className="relative group cursor-pointer"
-                  onMouseEnter={() => setActiveMetric(metric.key)}
-                  onMouseLeave={() => setActiveMetric(null)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <svg width="70" height="70" viewBox="0 0 70 70" className="transform -rotate-90">
-                        <circle cx="35" cy="35" r="27" fill="none" stroke="#e2e8f0" strokeWidth="5" />
-                        <circle
-                          cx="35"
-                          cy="35"
-                          r="27"
-                          fill="none"
-                          stroke={doughnutColor}
-                          strokeWidth="5"
-                          strokeDasharray={2 * Math.PI * 27}
-                          strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)}
-                          strokeLinecap="round"
-                          className="transition-all duration-1000"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span>
-                        <span className="text-[8px] text-slate-400">{unit}</span>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1">
-                        <span className="text-base">{t?.icon}</span>
-                        <span className="text-xs font-medium text-slate-700">{t?.label}</span>
-                      </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-[9px] text-slate-400">Threshold: {t?.max}{unit === "M" ? "M" : unit}</span>
-                        <span className={`text-[9px] ${metric.delta >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                          {metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}
-                        </span>
-                      </div>
-                    </div>
+                <div key={m.key} className="flex items-center gap-2 cursor-pointer" onMouseEnter={() => setActiveMetric(m.key)} onMouseLeave={() => setActiveMetric(null)}>
+                  <div className="relative w-12 h-12">
+                    <svg className="w-12 h-12 transform -rotate-90">
+                      <circle cx="24" cy="24" r="18" fill="none" stroke="#e2e8f0" strokeWidth="4" />
+                      <circle cx="24" cy="24" r="18" fill="none" stroke={t.color} strokeWidth="4" strokeDasharray={2 * Math.PI * 18} strokeDashoffset={2 * Math.PI * 18 * (1 - pct / 100)} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold">{val.toFixed(1)}</div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs font-medium">{t.icon} {t.label}</div>
+                    <div className="text-[10px] text-slate-400">{pct.toFixed(0)}% of threshold</div>
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
-
-        {/* COLUMN 2: ENVIRONMENTAL IMPACT */}
-        <div className="bg-gradient-to-b from-teal-50 to-white rounded-xl border border-teal-200 overflow-hidden shadow-sm">
-          <div className="bg-teal-500 px-3 py-2">
-            <div className="flex items-center justify-between">
-              <span className="text-white text-sm font-semibold">🌿 Environmental</span>
-              <span className="text-white/70 text-[10px]">3 indicators</span>
-            </div>
+        <div className="bg-teal-50 rounded-xl border border-teal-200 p-3">
+          <div className="bg-teal-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
+            <span className="text-white text-sm font-semibold">🌿 Environmental</span>
           </div>
-          <div className="p-3 space-y-4">
-            {metrics.slice(4, 7).map((metric) => {
-              const t = thresholds[metric.key as keyof typeof thresholds];
-              const displayValue = getDisplayValue(metric.key, metric.value);
-              const unit = getDisplayUnit(metric.key);
-              const percentage = getPercentage(metric.key, metric.value);
-              const doughnutColor = getDoughnutColor(metric.key, metric.value);
-              
+          <div className="space-y-3">
+            {metrics.slice(4, 7).map(m => {
+              const t = thresholds[m.key];
+              const val = m.value;
+              const pct = t.isReversed ? 100 - Math.min(100, (val / t.max) * 100) : Math.min(100, (val / t.max) * 100);
+              const displayVal = t.multiplier ? (val * t.multiplier).toFixed(1) : val.toFixed(1);
               return (
-                <div 
-                  key={metric.key}
-                  className="relative group cursor-pointer"
-                  onMouseEnter={() => setActiveMetric(metric.key)}
-                  onMouseLeave={() => setActiveMetric(null)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <svg width="70" height="70" viewBox="0 0 70 70" className="transform -rotate-90">
-                        <circle cx="35" cy="35" r="27" fill="none" stroke="#e2e8f0" strokeWidth="5" />
-                        <circle
-                          cx="35"
-                          cy="35"
-                          r="27"
-                          fill="none"
-                          stroke={doughnutColor}
-                          strokeWidth="5"
-                          strokeDasharray={2 * Math.PI * 27}
-                          strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)}
-                          strokeLinecap="round"
-                          className="transition-all duration-1000"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span>
-                        <span className="text-[8px] text-slate-400">{unit}</span>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1">
-                        <span className="text-base">{t?.icon}</span>
-                        <span className="text-xs font-medium text-slate-700">{t?.label}</span>
-                      </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-[9px] text-slate-400">Target: {t?.max}{unit}</span>
-                        <span className={`text-[9px] ${metric.delta >= 0 ? (t?.isReversed ? 'text-red-500' : 'text-emerald-600') : (t?.isReversed ? 'text-emerald-600' : 'text-red-500')}`}>
-                          {metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}
-                        </span>
-                      </div>
-                    </div>
+                <div key={m.key} className="flex items-center gap-2">
+                  <div className="relative w-12 h-12">
+                    <svg className="w-12 h-12 transform -rotate-90">
+                      <circle cx="24" cy="24" r="18" fill="none" stroke="#e2e8f0" strokeWidth="4" />
+                      <circle cx="24" cy="24" r="18" fill="none" stroke={t.color} strokeWidth="4" strokeDasharray={2 * Math.PI * 18} strokeDashoffset={2 * Math.PI * 18 * (1 - pct / 100)} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold">{displayVal}</div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs font-medium">{t.icon} {t.label}</div>
+                    <div className="text-[10px] text-slate-400">Target: {t.max}{t.unit}</div>
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
-
-        {/* COLUMN 3: ECONOMIC CONSEQUENCE */}
-        <div className="bg-gradient-to-b from-amber-50 to-white rounded-xl border border-amber-200 overflow-hidden shadow-sm">
-          <div className="bg-amber-500 px-3 py-2">
-            <div className="flex items-center justify-between">
-              <span className="text-white text-sm font-semibold">💰 Economic</span>
-              <span className="text-white/70 text-[10px]">2 indicators</span>
-            </div>
+        <div className="bg-amber-50 rounded-xl border border-amber-200 p-3">
+          <div className="bg-amber-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
+            <span className="text-white text-sm font-semibold">💰 Economic</span>
           </div>
-          <div className="p-3 space-y-4">
-            {metrics.slice(7, 9).map((metric) => {
-              const t = thresholds[metric.key as keyof typeof thresholds];
-              const displayValue = getDisplayValue(metric.key, metric.value);
-              const unit = getDisplayUnit(metric.key);
-              const percentage = getPercentage(metric.key, metric.value);
-              const doughnutColor = getDoughnutColor(metric.key, metric.value);
-              
+          <div className="space-y-3">
+            {metrics.slice(7, 9).map(m => {
+              const t = thresholds[m.key];
+              const val = m.value;
+              const displayVal = t.multiplier ? (val * t.multiplier).toFixed(1) : (val / 1e6).toFixed(1);
+              const pct = t.isReversed ? 100 - Math.min(100, (val / t.max) * 100) : Math.min(100, (val / t.max) * 100);
               return (
-                <div 
-                  key={metric.key}
-                  className="relative group cursor-pointer"
-                  onMouseEnter={() => setActiveMetric(metric.key)}
-                  onMouseLeave={() => setActiveMetric(null)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <svg width="70" height="70" viewBox="0 0 70 70" className="transform -rotate-90">
-                        <circle cx="35" cy="35" r="27" fill="none" stroke="#e2e8f0" strokeWidth="5" />
-                        <circle
-                          cx="35"
-                          cy="35"
-                          r="27"
-                          fill="none"
-                          stroke={doughnutColor}
-                          strokeWidth="5"
-                          strokeDasharray={2 * Math.PI * 27}
-                          strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)}
-                          strokeLinecap="round"
-                          className="transition-all duration-1000"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span>
-                        <span className="text-[8px] text-slate-400">{unit}</span>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1">
-                        <span className="text-base">{t?.icon}</span>
-                        <span className="text-xs font-medium text-slate-700">{t?.label}</span>
-                      </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-[9px] text-slate-400">Threshold: {t?.max}{unit === "M" ? "M" : unit === "K" ? "K" : unit}</span>
-                        <span className={`text-[9px] ${metric.delta >= 0 ? (t?.isReversed ? 'text-red-500' : 'text-emerald-600') : (t?.isReversed ? 'text-emerald-600' : 'text-red-500')}`}>
-                          {metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}
-                        </span>
-                      </div>
-                    </div>
+                <div key={m.key} className="flex items-center gap-2">
+                  <div className="relative w-12 h-12">
+                    <svg className="w-12 h-12 transform -rotate-90">
+                      <circle cx="24" cy="24" r="18" fill="none" stroke="#e2e8f0" strokeWidth="4" />
+                      <circle cx="24" cy="24" r="18" fill="none" stroke={t.color} strokeWidth="4" strokeDasharray={2 * Math.PI * 18} strokeDashoffset={2 * Math.PI * 18 * (1 - pct / 100)} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center text-[9px] font-bold">{displayVal}</div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs font-medium">{t.icon} {t.label}</div>
+                    <div className="text-[10px] text-slate-400">Threshold: {t.max}{t.displayUnit || t.unit}</div>
                   </div>
                 </div>
               );
             })}
-            
-            {/* Economic Summary */}
-            <div className="mt-2 pt-2 border-t border-amber-100">
-              <div className="text-center">
-                <div className="text-lg font-bold text-amber-700">${(safeKpis.loss / 1e6).toFixed(0)}M</div>
-                <div className="text-[9px] text-slate-500">Total economic impact</div>
-              </div>
+            <div className="mt-2 pt-2 text-center border-t border-amber-200">
+              <div className="text-lg font-bold text-amber-700">${(safeKpis.loss / 1e6).toFixed(0)}M</div>
+              <div className="text-[9px] text-slate-500">Total economic impact</div>
             </div>
           </div>
         </div>
-
-        {/* COLUMN 4: HUMAN CONSEQUENCE */}
-        <div className="bg-gradient-to-b from-purple-50 to-white rounded-xl border border-purple-200 overflow-hidden shadow-sm">
-          <div className="bg-purple-500 px-3 py-2">
-            <div className="flex items-center justify-between">
-              <span className="text-white text-sm font-semibold">👥 Human</span>
-              <span className="text-white/70 text-[10px]">3 indicators</span>
-            </div>
+        <div className="bg-purple-50 rounded-xl border border-purple-200 p-3">
+          <div className="bg-purple-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
+            <span className="text-white text-sm font-semibold">👥 Human</span>
           </div>
-          <div className="p-3 space-y-4">
-            {metrics.slice(9, 12).map((metric) => {
-              const t = thresholds[metric.key as keyof typeof thresholds];
-              const displayValue = getDisplayValue(metric.key, metric.value);
-              const unit = getDisplayUnit(metric.key);
-              const percentage = getPercentage(metric.key, metric.value);
-              const doughnutColor = getDoughnutColor(metric.key, metric.value);
-              
+          <div className="space-y-3">
+            {metrics.slice(9, 12).map(m => {
+              const t = thresholds[m.key];
+              const val = m.value;
+              const displayVal = t.multiplier ? (val * t.multiplier).toFixed(1) : val.toFixed(0);
+              const pct = t.isReversed ? 100 - Math.min(100, (val / t.max) * 100) : Math.min(100, (val / t.max) * 100);
               return (
-                <div 
-                  key={metric.key}
-                  className="relative group cursor-pointer"
-                  onMouseEnter={() => setActiveMetric(metric.key)}
-                  onMouseLeave={() => setActiveMetric(null)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <svg width="70" height="70" viewBox="0 0 70 70" className="transform -rotate-90">
-                        <circle cx="35" cy="35" r="27" fill="none" stroke="#e2e8f0" strokeWidth="5" />
-                        <circle
-                          cx="35"
-                          cy="35"
-                          r="27"
-                          fill="none"
-                          stroke={doughnutColor}
-                          strokeWidth="5"
-                          strokeDasharray={2 * Math.PI * 27}
-                          strokeDashoffset={2 * Math.PI * 27 * (1 - percentage / 100)}
-                          strokeLinecap="round"
-                          className="transition-all duration-1000"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-sm font-bold" style={{ color: doughnutColor }}>{displayValue}</span>
-                        <span className="text-[8px] text-slate-400">{unit}</span>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1">
-                        <span className="text-base">{t?.icon}</span>
-                        <span className="text-xs font-medium text-slate-700">{t?.label}</span>
-                      </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-[9px] text-slate-400">Threshold: {t?.max}{unit === "/100k" ? "/100k" : unit}</span>
-                        <span className={`text-[9px] ${metric.delta >= 0 ? (t?.isReversed ? 'text-red-500' : 'text-emerald-600') : (t?.isReversed ? 'text-emerald-600' : 'text-red-500')}`}>
-                          {metric.delta !== 0 && `${metric.delta >= 0 ? '▲' : '▼'} ${Math.abs(metric.delta).toFixed(1)}`}
-                        </span>
-                      </div>
-                    </div>
+                <div key={m.key} className="flex items-center gap-2">
+                  <div className="relative w-12 h-12">
+                    <svg className="w-12 h-12 transform -rotate-90">
+                      <circle cx="24" cy="24" r="18" fill="none" stroke="#e2e8f0" strokeWidth="4" />
+                      <circle cx="24" cy="24" r="18" fill="none" stroke={t.color} strokeWidth="4" strokeDasharray={2 * Math.PI * 18} strokeDashoffset={2 * Math.PI * 18 * (1 - pct / 100)} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center text-[9px] font-bold">{displayVal}</div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs font-medium">{t.icon} {t.label}</div>
+                    <div className="text-[10px] text-slate-400">Threshold: {t.max}{t.unit}</div>
                   </div>
                 </div>
               );
@@ -634,50 +269,15 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
           </div>
         </div>
       </div>
-
-      {/* Floating Tooltip */}
       {activeMetric && (
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 text-white text-xs px-4 py-2 rounded-lg shadow-xl max-w-md text-center animate-fade-in">
-          {activeMetric === "temp" && `🌡️ Surface Temperature: ${safeKpis.temp > 0 ? `+${safeKpis.temp.toFixed(2)}°C` : `${safeKpis.temp.toFixed(2)}°C`} above pre-industrial baseline. Paris Agreement target: 1.5°C`}
-          {activeMetric === "sea_surface_temperature" && `🌊 Sea Surface Temperature: ${safeKpis.sea_surface_temperature > 0 ? `+${safeKpis.sea_surface_temperature.toFixed(2)}°C` : `${safeKpis.sea_surface_temperature.toFixed(2)}°C`} - affects marine ecosystems and coral bleaching`}
-          {activeMetric === "rainfall" && `☔ Rainfall Anomaly: ${safeKpis.rainfall > 0 ? `${safeKpis.rainfall.toFixed(0)}mm above` : `${Math.abs(safeKpis.rainfall).toFixed(0)}mm below`} normal - affects water security and agriculture`}
-          {activeMetric === "sea" && `📈 Sea Level: ${safeKpis.sea > 0 ? `+${(safeKpis.sea * 100).toFixed(0)}cm` : `${(safeKpis.sea * 100).toFixed(0)}cm`} - threatens coastal communities and infrastructure`}
-          {activeMetric === "climate_altering_land" && `🌱 Land Cover: ${(safeKpis.climate_altering_land / 1000).toFixed(0)}K ha altered - affects carbon storage and biodiversity`}
-          {activeMetric === "crop_yield" && `🌾 Crop Yield: ${safeKpis.crop_yield.toFixed(1)} t/ha - ${safeKpis.crop_yield > 5 ? "Above average productivity" : safeKpis.crop_yield > 3 ? "Moderate productivity" : "Below average - food security concern"}`}
-          {activeMetric === "lifestock_yield" && `🐄 Livestock Yield: ${safeKpis.lifestock_yield.toFixed(1)} tons - ${safeKpis.lifestock_yield > 12 ? "Strong production" : "Below potential"}`}
-          {activeMetric === "loss" && `💰 Economic Loss: $${(safeKpis.loss / 1e6).toFixed(1)}M in disaster-related damages - affects GDP and recovery capacity`}
-          {activeMetric === "tourist_arrival" && `🌴 Tourist Arrivals: ${(safeKpis.tourist_arrival / 1000).toFixed(0)}K visitors - ${safeKpis.tourist_arrival / 1000 < 500 ? "Below average" : "Steady flow"}`}
-          {activeMetric === "people" && `👥 People Affected: ${(safeKpis.people / 1000).toFixed(0)}K individuals directly impacted by climate disasters`}
-          {activeMetric === "population_growth" && `📈 Population Growth: ${safeKpis.population_growth > 0 ? `+${safeKpis.population_growth.toFixed(1)}%` : `${safeKpis.population_growth.toFixed(1)}%`} annually - affects infrastructure and service demand`}
-          {activeMetric === "tubercolosis_incidence" && `🩺 TB Incidence: ${safeKpis.tubercolosis_incidence.toFixed(0)} cases per 100,000 people - ${safeKpis.tubercolosis_incidence > 200 ? "Epidemic level" : safeKpis.tubercolosis_incidence > 100 ? "High burden" : "Near WHO elimination target"}`}
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-xl animate-fade-in">
+          {activeMetric === "temp" && `🌡️ Surface Temperature: ${safeKpis.temp > 0 ? `+${safeKpis.temp.toFixed(2)}°C` : `${safeKpis.temp.toFixed(2)}°C`} above baseline`}
+          {activeMetric === "sea_surface_temperature" && `🌊 Sea Surface Temperature: ${safeKpis.sea_surface_temperature.toFixed(2)}°C`}
+          {activeMetric === "rainfall" && `☔ Rainfall: ${safeKpis.rainfall.toFixed(0)}mm anomaly`}
+          {activeMetric === "sea" && `📈 Sea Level: ${(safeKpis.sea * 100).toFixed(0)}cm rise`}
         </div>
       )}
-
-      {/* Summary Narrative */}
-      <div className="mt-6 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200">
-        <div className="flex items-start gap-3">
-          <div className="text-2xl">📖</div>
-          <div>
-            <div className="font-semibold text-slate-800 text-sm">The Complete Climate Story for {selectedCountry}</div>
-            <div className="text-xs text-slate-600 mt-1 space-y-0.5">
-              <p>🌡️ <span className="font-medium">Climate Drivers:</span> {safeKpis.temp.toFixed(2)}°C surface anomaly • Sea level {safeKpis.sea > 0 ? `+${(safeKpis.sea * 100).toFixed(0)}cm` : `${(safeKpis.sea * 100).toFixed(0)}cm`} • {safeKpis.rainfall > 0 ? `+${safeKpis.rainfall.toFixed(0)}mm` : `${safeKpis.rainfall.toFixed(0)}mm`} rainfall anomaly</p>
-              <p>🌿 <span className="font-medium">Environmental Impact:</span> {(safeKpis.climate_altering_land / 1000).toFixed(0)}K ha land altered • {safeKpis.crop_yield.toFixed(1)} t/ha crops • {safeKpis.lifestock_yield.toFixed(1)} tons livestock</p>
-              <p>💰 <span className="font-medium">Economic Consequence:</span> ${(safeKpis.loss / 1e6).toFixed(1)}M losses • {(safeKpis.tourist_arrival / 1000).toFixed(0)}K tourist arrivals</p>
-              <p>👥 <span className="font-medium">Human Consequence:</span> {(safeKpis.people / 1000).toFixed(0)}K affected • Population {safeKpis.population_growth > 0 ? `+${safeKpis.population_growth.toFixed(1)}%` : `${safeKpis.population_growth.toFixed(1)}%`} • TB: {safeKpis.tubercolosis_incidence.toFixed(0)}/100k</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateX(-50%) translateY(10px); }
-          to { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.2s ease-out;
-        }
-      `}</style>
+      <style>{`@keyframes fade-in{from{opacity:0}to{opacity:1}}.animate-fade-in{animation:fade-in 0.2s ease-out}`}</style>
     </div>
   );
 };
@@ -685,40 +285,31 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
 // ============================================================================
 // MAIN DASHBOARD
 // ============================================================================
-
 export default function Home() {
   const [selectedCountry, setSelectedCountry] = useState("Fiji");
-  const [activeView, setActiveView] = useState<"alluvial" | "beeswarm">("alluvial");
+  const [activeView, setActiveView] = useState<"sankey" | "beeswarm">("sankey");
   const [isClient, setIsClient] = useState(false);
-  const [hasSelectedCountry, setHasSelectedCountry] = useState(true);
   
-  // Set isClient to true after mount to avoid hydration issues
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => { setIsClient(true); }, []);
   
   const countries = useMemo(() => {
-    const allCountries = new Set<string>();
-    surfaceTempAnomalies.forEach(d => allCountries.add(d.country));
-    rainfallAnomalies.forEach(d => allCountries.add(d.country));
-    seaLevelAnomalies.forEach(d => allCountries.add(d.country));
-    disasterEconomicLoss.forEach(d => allCountries.add(d.country));
-    affectedPersons.forEach(d => allCountries.add(d.country));
-    seaSurfaceTempAnomalies.forEach(d => allCountries.add(d.country));
-    crop_yield.forEach(d => allCountries.add(d.country));
-    tourist_arrival.forEach(d => allCountries.add(d.country));
-    climate_altering_land.forEach(d => allCountries.add(d.country));
-    lifestock_yield.forEach(d => allCountries.add(d.country));
-    population_growth.forEach(d => allCountries.add(d.country));
-    tubercolosis_incidence.forEach(d => allCountries.add(d.country));
-    return Array.from(allCountries).sort();
+    const all = new Set<string>();
+    surfaceTempAnomalies.forEach(d => all.add(d.country));
+    rainfallAnomalies.forEach(d => all.add(d.country));
+    seaLevelAnomalies.forEach(d => all.add(d.country));
+    disasterEconomicLoss.forEach(d => all.add(d.country));
+    affectedPersons.forEach(d => all.add(d.country));
+    seaSurfaceTempAnomalies.forEach(d => all.add(d.country));
+    crop_yield.forEach(d => all.add(d.country));
+    tourist_arrival.forEach(d => all.add(d.country));
+    climate_altering_land.forEach(d => all.add(d.country));
+    lifestock_yield.forEach(d => all.add(d.country));
+    population_growth.forEach(d => all.add(d.country));
+    return Array.from(all).sort();
   }, []);
   
-  // Ensure selectedCountry is valid
   useEffect(() => {
-    if (countries.length > 0 && !countries.includes(selectedCountry)) {
-      setSelectedCountry(countries[0]);
-    }
+    if (countries.length && !countries.includes(selectedCountry)) setSelectedCountry(countries[0]);
   }, [countries, selectedCountry]);
   
   const mapTimeSeries = useCallback((data: TimeSeriesPoint[]) => data.filter(d => d.country === selectedCountry), [selectedCountry]);
@@ -735,134 +326,48 @@ export default function Home() {
     climate_altering_land: mapTimeSeries(climate_altering_land),
     lifestock_yield: mapTimeSeries(lifestock_yield),
     population_growth: mapTimeSeries(population_growth),
-    tubercolosis_incidence: mapTimeSeries(tubercolosis_incidence),
   }), [mapTimeSeries]);
 
   const kpis = useMemo(() => ({
-    temp: dataMap.temp.at(-1)?.value ?? 0,
-    rainfall: dataMap.rainfall.at(-1)?.value ?? 0,
-    sea: dataMap.sea.at(-1)?.value ?? 0,
-    loss: dataMap.loss.at(-1)?.value ?? 0,
-    people: dataMap.people.at(-1)?.value ?? 0,
-    sea_surface_temperature: dataMap.sea_surface_temperature.at(-1)?.value ?? 0,
-    crop_yield: dataMap.crop_yield.at(-1)?.value ?? 0,
-    tourist_arrival: dataMap.tourist_arrival.at(-1)?.value ?? 0,
-    climate_altering_land: dataMap.climate_altering_land.at(-1)?.value ?? 0,
-    lifestock_yield: dataMap.lifestock_yield.at(-1)?.value ?? 0,
+    temp: dataMap.temp.at(-1)?.value ?? 0, rainfall: dataMap.rainfall.at(-1)?.value ?? 0,
+    sea: dataMap.sea.at(-1)?.value ?? 0, loss: dataMap.loss.at(-1)?.value ?? 0,
+    people: dataMap.people.at(-1)?.value ?? 0, sea_surface_temperature: dataMap.sea_surface_temperature.at(-1)?.value ?? 0,
+    crop_yield: dataMap.crop_yield.at(-1)?.value ?? 0, tourist_arrival: dataMap.tourist_arrival.at(-1)?.value ?? 0,
+    climate_altering_land: dataMap.climate_altering_land.at(-1)?.value ?? 0, lifestock_yield: dataMap.lifestock_yield.at(-1)?.value ?? 0,
     population_growth: dataMap.population_growth.at(-1)?.value ?? 0,
-    tubercolosis_incidence: dataMap.tubercolosis_incidence.at(-1)?.value ?? 0,
   }), [dataMap]);
   
   const deltas = useMemo(() => ({
-    temp: kpis.temp - (dataMap.temp.at(-2)?.value ?? 0),
-    rainfall: kpis.rainfall - (dataMap.rainfall.at(-2)?.value ?? 0),
-    sea: kpis.sea - (dataMap.sea.at(-2)?.value ?? 0),
-    loss: kpis.loss - (dataMap.loss.at(-2)?.value ?? 0),
-    people: kpis.people - (dataMap.people.at(-2)?.value ?? 0),
-    sea_surface_temperature: kpis.sea_surface_temperature - (dataMap.sea_surface_temperature.at(-2)?.value ?? 0),
-    crop_yield: kpis.crop_yield - (dataMap.crop_yield.at(-2)?.value ?? 0),
-    tourist_arrival: kpis.tourist_arrival - (dataMap.tourist_arrival.at(-2)?.value ?? 0),
-    climate_altering_land: kpis.climate_altering_land - (dataMap.climate_altering_land.at(-2)?.value ?? 0),
-    lifestock_yield: kpis.lifestock_yield - (dataMap.lifestock_yield.at(-2)?.value ?? 0),
+    temp: kpis.temp - (dataMap.temp.at(-2)?.value ?? 0), rainfall: kpis.rainfall - (dataMap.rainfall.at(-2)?.value ?? 0),
+    sea: kpis.sea - (dataMap.sea.at(-2)?.value ?? 0), loss: kpis.loss - (dataMap.loss.at(-2)?.value ?? 0),
+    people: kpis.people - (dataMap.people.at(-2)?.value ?? 0), sea_surface_temperature: kpis.sea_surface_temperature - (dataMap.sea_surface_temperature.at(-2)?.value ?? 0),
+    crop_yield: kpis.crop_yield - (dataMap.crop_yield.at(-2)?.value ?? 0), tourist_arrival: kpis.tourist_arrival - (dataMap.tourist_arrival.at(-2)?.value ?? 0),
+    climate_altering_land: kpis.climate_altering_land - (dataMap.climate_altering_land.at(-2)?.value ?? 0), lifestock_yield: kpis.lifestock_yield - (dataMap.lifestock_yield.at(-2)?.value ?? 0),
     population_growth: kpis.population_growth - (dataMap.population_growth.at(-2)?.value ?? 0),
-    tubercolosis_incidence: kpis.tubercolosis_incidence - (dataMap.tubercolosis_incidence.at(-2)?.value ?? 0),
   }), [kpis, dataMap]);
 
-  const tempTrend = dataMap.temp.length > 1 && dataMap.temp[0].value !== 0 
-    ? ((dataMap.temp[dataMap.temp.length - 1].value - dataMap.temp[0].value) / Math.abs(dataMap.temp[0].value)) * 100 
-    : 0;
-  const seaTrend = dataMap.sea.length > 1 && dataMap.sea[0].value !== 0
-    ? ((dataMap.sea[dataMap.sea.length - 1].value - dataMap.sea[0].value) / Math.abs(dataMap.sea[0].value)) * 100 
-    : 0;
+  const tempTrend = dataMap.temp.length > 1 && dataMap.temp[0].value !== 0 ? ((dataMap.temp[dataMap.temp.length - 1].value - dataMap.temp[0].value) / Math.abs(dataMap.temp[0].value)) * 100 : 0;
+  const seaTrend = dataMap.sea.length > 1 && dataMap.sea[0].value !== 0 ? ((dataMap.sea[dataMap.sea.length - 1].value - dataMap.sea[0].value) / Math.abs(dataMap.sea[0].value)) * 100 : 0;
   const lossTotal = dataMap.loss.reduce((sum, d) => sum + d.value, 0);
   const peopleTotal = dataMap.people.reduce((sum, d) => sum + d.value, 0);
 
   const regionalLossData = useMemo(() => {
     const latest = new Map<string, TimeSeriesPoint>();
-    disasterEconomicLoss.forEach(p => { 
-      const existing = latest.get(p.country); 
-      if (!existing || p.year > existing.year) latest.set(p.country, p); 
-    });
+    disasterEconomicLoss.forEach(p => { const e = latest.get(p.country); if (!e || p.year > e.year) latest.set(p.country, p); });
     return Array.from(latest.values()).sort((a, b) => b.value - a.value);
   }, []);
 
-  const regionalAffectedData = useMemo(() => {
-    const latest = new Map<string, TimeSeriesPoint>();
-    affectedPersons.forEach(p => { 
-      const existing = latest.get(p.country); 
-      if (!existing || p.year > existing.year) latest.set(p.country, p); 
-    });
-    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
-  }, []);
-
-    const cropYieldData = useMemo(() => {
-    const latest = new Map<string, TimeSeriesPoint>();
-    crop_yield.forEach(p => { 
-      const existing = latest.get(p.country); 
-      if (!existing || p.year > existing.year) latest.set(p.country, p); 
-    });
-    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
-  }, []);
-
-   const touristArrivalData = useMemo(() => {
-    const latest = new Map<string, TimeSeriesPoint>();
-    tourist_arrival.forEach(p => { 
-      const existing = latest.get(p.country); 
-      if (!existing || p.year > existing.year) latest.set(p.country, p); 
-    });
-    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
-  }, []);
-
-
-     const lifestockYieldData = useMemo(() => {
-    const latest = new Map<string, TimeSeriesPoint>();
-    lifestock_yield.forEach(p => { 
-      const existing = latest.get(p.country); 
-      if (!existing || p.year > existing.year) latest.set(p.country, p); 
-    });
-    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
-  }, []);
-
-    const climateAlteringLandData = useMemo(() => {
-    const latest = new Map<string, TimeSeriesPoint>();
-    climate_altering_land.forEach(p => { 
-      const existing = latest.get(p.country); 
-      if (!existing || p.year > existing.year) latest.set(p.country, p); 
-    });
-    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
-  }, []);
-
-      const populationData = useMemo(() => {
-    const latest = new Map<string, TimeSeriesPoint>();
-    population_growth.forEach(p => { 
-      const existing = latest.get(p.country); 
-      if (!existing || p.year > existing.year) latest.set(p.country, p); 
-    });
-    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
-  }, []);
-
-  // Prepare data for Time Series Dashboard
   const timeSeriesData = useMemo(() => {
-    const yearSet = new Set<number>();
-    
-    crop_yield.filter(d => d.country === selectedCountry).forEach(d => yearSet.add(d.year));
-    lifestock_yield.filter(d => d.country === selectedCountry).forEach(d => yearSet.add(d.year));
-    tourist_arrival.filter(d => d.country === selectedCountry).forEach(d => yearSet.add(d.year));
-    
-    const years = Array.from(yearSet).sort();
-    
-    return years.map(year => {
-      const cropData = crop_yield.find(d => d.country === selectedCountry && d.year === year);
-      const livestockData = lifestock_yield.find(d => d.country === selectedCountry && d.year === year);
-      const touristData = tourist_arrival.find(d => d.country === selectedCountry && d.year === year);
-      
-      return {
-        year,
-        cropYield: cropData?.value || 0,
-        livestockYield: livestockData?.value || 0,
-        touristArrivals: touristData?.value || 0
-      };
-    });
+    const years = new Set<number>();
+    crop_yield.filter(d => d.country === selectedCountry).forEach(d => years.add(d.year));
+    lifestock_yield.filter(d => d.country === selectedCountry).forEach(d => years.add(d.year));
+    tourist_arrival.filter(d => d.country === selectedCountry).forEach(d => years.add(d.year));
+    return Array.from(years).sort().map(year => ({
+      year,
+      cropYield: crop_yield.find(d => d.country === selectedCountry && d.year === year)?.value || 0,
+      livestockYield: lifestock_yield.find(d => d.country === selectedCountry && d.year === year)?.value || 0,
+      touristArrivals: tourist_arrival.find(d => d.country === selectedCountry && d.year === year)?.value || 0
+    }));
   }, [selectedCountry]);
 
   const climateFlowData = useMemo(() => {
@@ -882,317 +387,159 @@ export default function Home() {
       climate_altering_land: climate_altering_land.find(d => d.country === selectedCountry && d.year === year)?.value ?? 0,
       lifestock_yield: lifestock_yield.find(d => d.country === selectedCountry && d.year === year)?.value ?? 0,
       population_growth: population_growth.find(d => d.country === selectedCountry && d.year === year)?.value ?? 0,
-      tubercolosis_incidence: tubercolosis_incidence.find(d => d.country === selectedCountry && d.year === year)?.value ?? 0,
     }));
   }, [selectedCountry]);
+
+  const rankedData = useMemo(() => {
+    const economicLossMap = new Map<string, number>();
+    disasterEconomicLoss.forEach(d => economicLossMap.set(d.country, (economicLossMap.get(d.country) || 0) + d.value));
+    const cropYieldMap = new Map<string, number>();
+    crop_yield.forEach(d => cropYieldMap.set(d.country, (cropYieldMap.get(d.country) || 0) + d.value));
+    const touristMap = new Map<string, number>();
+    tourist_arrival.forEach(d => touristMap.set(d.country, (touristMap.get(d.country) || 0) + d.value));
+    const livestockMap = new Map<string, number>();
+    lifestock_yield.forEach(d => livestockMap.set(d.country, (livestockMap.get(d.country) || 0) + d.value));
+    const climateMap = new Map<string, number>();
+    climate_altering_land.forEach(d => climateMap.set(d.country, (climateMap.get(d.country) || 0) + d.value));
+    const populationMap = new Map<string, number>();
+    population_growth.forEach(d => populationMap.set(d.country, (populationMap.get(d.country) || 0) + d.value));
+    const affectedMap = new Map<string, number>();
+    affectedPersons.forEach(d => affectedMap.set(d.country, (affectedMap.get(d.country) || 0) + d.value));
+    
+    return {
+      economicLoss: Array.from(economicLossMap.entries()).map(([country, value]) => ({ country, value })),
+      cropYield: Array.from(cropYieldMap.entries()).map(([country, value]) => ({ country, value })),
+      touristArrivals: Array.from(touristMap.entries()).map(([country, value]) => ({ country, value })),
+      livestockYield: Array.from(livestockMap.entries()).map(([country, value]) => ({ country, value })),
+      climateAlteringLand: Array.from(climateMap.entries()).map(([country, value]) => ({ country, value })),
+      populationGrowth: Array.from(populationMap.entries()).map(([country, value]) => ({ country, value })),
+      affectedPersons: Array.from(affectedMap.entries()).map(([country, value]) => ({ country, value }))
+    };
+  }, []);
 
   const multiLineData = useMemo(() => buildMultiLineData().filter(d => d.country === selectedCountry), [selectedCountry]);
   const beeswarmData = useMemo(() => buildClimateRecords(), []);
   const chartWidth = 520;
   const hasData = dataMap.temp.length > 0 || dataMap.sea.length > 0 || dataMap.rainfall.length > 0;
 
-  // Prepare data for all metrics
-const rankedData = useMemo(() => {
-
-  // People affected by disasters - aggregated by country
-  const affectedPersonsMap = new Map<string, number>();
-  affectedPersons.forEach(d => {
-    affectedPersonsMap.set(d.country, (affectedPersonsMap.get(d.country) || 0) + d.value);
-  });
-  const affectedPersonsData = Array.from(affectedPersonsMap.entries()).map(([country, value]) => ({ country, value }));
-
-  // Economic Loss - aggregated by country
-  const economicLossMap = new Map<string, number>();
-  disasterEconomicLoss.forEach(d => {
-    economicLossMap.set(d.country, (economicLossMap.get(d.country) || 0) + d.value);
-  });
-  const economicLoss = Array.from(economicLossMap.entries()).map(([country, value]) => ({ country, value }));
-
-  // Crop Yield - aggregated by country
-  const cropYieldMap = new Map<string, number>();
-  crop_yield.forEach(d => {
-    cropYieldMap.set(d.country, (cropYieldMap.get(d.country) || 0) + d.value);
-  });
-  const cropYield = Array.from(cropYieldMap.entries()).map(([country, value]) => ({ country, value }));
-
-  // Tourist Arrivals - aggregated by country
-  const touristMap = new Map<string, number>();
-  tourist_arrival.forEach(d => {
-    touristMap.set(d.country, (touristMap.get(d.country) || 0) + d.value);
-  });
-  const touristArrivals = Array.from(touristMap.entries()).map(([country, value]) => ({ country, value }));
-
-  // Livestock Yield - aggregated by country
-  const livestockMap = new Map<string, number>();
-  lifestock_yield.forEach(d => {
-    livestockMap.set(d.country, (livestockMap.get(d.country) || 0) + d.value);
-  });
-  const livestockYield = Array.from(livestockMap.entries()).map(([country, value]) => ({ country, value }));
-
-  // Climate Altering Land - aggregated by country
-  const climateMap = new Map<string, number>();
-  climate_altering_land.forEach(d => {
-    climateMap.set(d.country, (climateMap.get(d.country) || 0) + d.value);
-  });
-  const climateAlteringLand = Array.from(climateMap.entries()).map(([country, value]) => ({ country, value }));
-
-  // Population Growth - aggregated by country (use latest value)
-  const populationMap = new Map<string, number>();
-  population_growth.forEach(d => {
-    populationMap.set(d.country, (populationMap.get(d.country) || 0) + d.value);
-  });
-  const populationGrowth = Array.from(populationMap.entries()).map(([country, value]) => ({ country, value }));
-
-  return {
-    economicLoss,
-    cropYield,
-    touristArrivals,
-    livestockYield,
-    climateAlteringLand,
-    populationGrowth,
-    affectedPersons
-  };
-}, []);
-
-  // Don't render data-dependent content on server
-  if (!isClient) {
-    return (
-      <main style={S.page}>
-        <div style={S.container}>
-          <div style={S.hero}>
-            <div style={S.kicker}>Pacific Community · SPC NMDI Data Platform</div>
-            <h1 style={S.h1}>The Pacific Climate Cascade</h1>
-            <p style={S.subhead}>Loading climate data...</p>
-            <LoadingSkeleton />
-          </div>
-        </div>
-      </main>
-    );
-  }
+  if (!isClient) return <main style={S.page}><div style={S.container}><LoadingSkeleton /></div></main>;
 
   return (
     <main style={S.page}>
       <div style={S.container}>
-        
-        {/* ========== HERO ========== */}
+        {/* HERO */}
         <div style={S.hero}>
           <div style={S.kicker}>Pacific Community · SPC NMDI Data Platform</div>
           <h1 style={S.h1}>The Pacific Climate Cascade</h1>
-          <p style={S.subhead}>
-            From rising temperatures to rising seas, from extreme rain to devastated communities — 
-            follow the chain of climate impacts across 20+ Pacific Island nations and territories.
-          </p>
-          <div style={S.pillRow}>
-            {countries.map(c => <CountryPill key={c} label={c} active={c === selectedCountry} onClick={() => setSelectedCountry(c)} />)}
-          </div>
-
-          <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginTop: "1rem" }}>
-            <div style={{ marginBottom: "0.4rem" }}>Data sources: 
-            <div style={{ marginBottom: "0.6rem" }}>
-            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.SST_ANOM.&pd=,&to[TIME_PERIOD]=false" target="_blank" rel="noopener noreferrer" style={{ marginRight: "8px" }}> Sea Surface Temperature Data</a>
-            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.RAIN_ANOM.&pd=,&to[TIME_PERIOD]=false" target="_blank" rel="noopener noreferrer" style={{ marginRight: "8px" }}>Rainfall Data</a>
-            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.SEA_LVL.&pd=,&to[TIME_PERIOD]=false" target="_blank" rel="noopener noreferrer" style={{ marginRight: "8px" }}>Sea Level Data</a>
-            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.ST_ANOM.&pd=,&to[TIME_PERIOD]=false" target="_blank" rel="noopener noreferrer" style={{ marginRight: "8px" }}>Surface Temperature Data</a>
-            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=ds%3ASPC2&df[id]=DF_SDG_11&df[ag]=SPC&df[vs]=3.0&dq=A.VC_DSR_AFFCT.........&pd=,&to[TIME_PERIOD]=false&lb=bt" target="_blank" rel="noopener noreferrer" style={{ marginRight: "8px" }}>Affected Persons Data</a>
-            <a href="https://stats.pacificdata.org/vis?lc=en&df[ds]=ds%3ASPC2&df[id]=DF_SDG_11&df[ag]=SPC&df[vs]=3.0&dq=A.VC_DSR_AALT...._T.....&pd=,&to[TIME_PERIOD]=false" target="_blank" rel="noopener noreferrer">Direct Disasters Economic Loss Data</a>
-            </div>
-          </div>    
+          <p style={S.subhead}>From rising temperatures to rising seas, from extreme rain to devastated communities — follow the chain of climate impacts across 20+ Pacific Island nations.</p>
+          <div style={S.pillRow}>{countries.map(c => <CountryPill key={c} label={c} active={c === selectedCountry} onClick={() => setSelectedCountry(c)} />)}</div>
         </div>
-      </div>
 
         {!hasData ? (
-          <div style={{ textAlign: "center", padding: "3rem", background: "#f8fafc", borderRadius: "1rem", marginBottom: "2rem" }}>
+          <div style={{ textAlign: "center", padding: "3rem", background: "#f8fafc", borderRadius: "1rem" }}>
             <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📭</div>
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.5rem" }}>No Climate Data Available</h3>
-            <p style={{ color: "#64748b" }}>Please select another Pacific Island nation from the list above.</p>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 600 }}>No Climate Data Available</h3>
           </div>
         ) : (
           <>
-            {/* ========== DOUGHNUT CLIMATE IMPACT DASHBOARD ========== */}
+            {/* CHAPTER 1: Doughnut Dashboard */}
             <div style={S.storySection}>
-              <DoughnutClimateDashboard 
-                height={260} 
-                kpis={kpis}
-                deltas={deltas} 
-                selectedCountry={selectedCountry}
-                isLoading={false}
-              />
+              <DoughnutClimateDashboard kpis={kpis} deltas={deltas} selectedCountry={selectedCountry} isLoading={false} />
             </div>
 
-            {/* ========== CHAPTER 2: The Drivers ========== */}
+            {/* CHAPTER 2: Climate Drivers */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
                 <div style={S.storyTitle}>🌡️ The Drivers of Change</div>
-                <div style={S.storySubtitle}>
-                  Surface temperatures in {selectedCountry} have <strong style={{ color: "#D85A30" }}>{tempTrend > 0 ? `risen ${tempTrend.toFixed(1)}%` : tempTrend < 0 ? `fallen ${Math.abs(tempTrend).toFixed(1)}%` : "remained stable"}</strong> over the recorded period. 
-                  This heat doesn't disappear — it warms oceans and fuels extreme rainfall.
-                </div>
-                <div style={S.storyInsight}>💡 Hotter air → warmer oceans → more energy for storms → heavier rain</div>
+                <div style={S.storySubtitle}>Surface temperatures have {tempTrend > 0 ? `risen ${tempTrend.toFixed(1)}%` : tempTrend < 0 ? `fallen ${Math.abs(tempTrend).toFixed(1)}%` : "remained stable"} over the recorded period.</div>
               </div>
               <div style={S.twoColumnGrid}>
-                <div style={S.chartPanel}>
-                  <div style={S.chartHead}><span style={S.chartIcon}>🌡️</span><span style={S.chartTitle}>Surface Temperature Anomaly</span><span style={S.chartInsight}>The starting point</span></div>
-                  <LineChart width={chartWidth} height={260} data={dataMap.temp} />
-                </div>
-                <div style={S.chartPanel}>
-                  <div style={S.chartHead}><span style={S.chartIcon}>🌊</span><span style={S.chartTitle}>Sea Level Anomaly</span><span style={S.chartInsight}>Thermal expansion + melting ice</span></div>
-                  <LineChart width={chartWidth} height={260} data={dataMap.sea} />
-                </div>
-                <div style={S.chartPanel}>
-                  <div style={S.chartHead}><span style={S.chartIcon}>🌊</span><span style={S.chartTitle}>Sea Surface Anomaly</span><span style={S.chartInsight}>Driver of marine heatwaves and ocean warming</span></div>
-                  <LineChart width={chartWidth} height={260} data={dataMap.sea_surface_temperature} />
-                </div>
-                <div style={S.chartPanel}>
-                  <div style={S.chartHead}><span style={S.chartIcon}>☔</span><span style={S.chartTitle}>Precipitation Anomaly</span><span style={S.chartInsight}>More extreme, less predictable</span></div>
-                  <LineChart width={chartWidth} height={260} data={dataMap.rainfall} />
-                </div>
+                <div style={S.chartPanel}><div style={S.chartHead}><span style={S.chartIcon}>🌡️</span><span style={S.chartTitle}>Surface Temperature</span></div><LineChart width={chartWidth} height={260} data={dataMap.temp} /></div>
+                <div style={S.chartPanel}><div style={S.chartHead}><span style={S.chartIcon}>🌊</span><span style={S.chartTitle}>Sea Level Anomaly</span></div><LineChart width={chartWidth} height={260} data={dataMap.sea} /></div>
+                <div style={S.chartPanel}><div style={S.chartHead}><span style={S.chartIcon}>🌊</span><span style={S.chartTitle}>Sea Surface Temperature</span></div><LineChart width={chartWidth} height={260} data={dataMap.sea_surface_temperature} /></div>
+                <div style={S.chartPanel}><div style={S.chartHead}><span style={S.chartIcon}>☔</span><span style={S.chartTitle}>Precipitation Anomaly</span></div><LineChart width={chartWidth} height={260} data={dataMap.rainfall} /></div>
               </div>
             </div>
 
-            {/* ========== CHAPTERS 3, 4, 5: Combined Impact Dashboard ========== */}
+            {/* CHAPTER 3: The Human, Economic & Socioeconomic Toll (Combined) */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
-                <div style={S.storyTitle}>💔 The Human, Economic & Socioeconomic Toll by Country</div>
-                <div style={S.storySubtitle}>
-                  Climate change cascades through every sector. Track economic losses, crop yields, livestock production, 
-                  and tourism across {selectedCountry}.
-                </div>
-                <div style={S.storyInsight}>💡 Each disaster has a price tag — and a human face. Climate affects food security, livelihoods, and economic stability.</div>
+                <div style={S.storyTitle}>💔 The Human, Economic & Socioeconomic Toll</div>
+                <div style={S.storySubtitle}>{selectedCountry} has suffered ${(lossTotal / 1e6).toFixed(0)}M in losses, impacted {(peopleTotal / 1000).toFixed(0)}K people, with cascading effects on food systems and tourism.</div>
               </div>
               
-              {/* Combined Card Container */}
-              <div className="space-y-6">
-                {/* Economic Loss & People Affected Row */}
-                <div style={S.twoColumnGrid}>
-                  <div style={S.chartPanel}>
-                    <div style={S.chartHead}>
-                      <span style={S.chartIcon}>💰</span>
-                      <span style={S.chartTitle}>Direct Disaster Economic Loss</span>
-                      <span style={S.chartInsight}>The financial burden</span>
-                    </div>
-                    <TrendLine 
-                      width={chartWidth} 
-                      height={260} 
-                      data={dataMap.loss} 
-                      dataType="loss" 
-                      setSelectedCountry={setSelectedCountry} 
-                    />
-                  </div>
-                  <div style={S.chartPanel}>
-                    <div style={S.chartHead}>
-                      <span style={S.chartIcon}>👥</span>
-                      <span style={S.chartTitle}>Number of People Affected</span>
-                      <span style={S.chartInsight}>Lives disrupted or destroyed</span>
-                    </div>
-                    <BubbleChart width={chartWidth} height={260} data={dataMap.people} />
-                  </div>
+              {/* Economic Loss & People Affected Row */}
+              <div style={S.twoColumnGrid}>
+                <div style={S.chartPanel}>
+                  <div style={S.chartHead}><span style={S.chartIcon}>💰</span><span style={S.chartTitle}>Economic Loss</span><span style={S.chartInsight}>Financial burden</span></div>
+                  <TrendLine width={chartWidth} height={260} data={dataMap.loss} dataType="loss" setSelectedCountry={setSelectedCountry} />
                 </div>
+                <div style={S.chartPanel}>
+                  <div style={S.chartHead}><span style={S.chartIcon}>👥</span><span style={S.chartTitle}>People Affected</span><span style={S.chartInsight}>Lives disrupted</span></div>
+                  <BubbleChart width={chartWidth} height={260} data={dataMap.people} />
+                </div>
+              </div>
 
-                {/* Time Series Dashboard - Crop Yield, Livestock, Tourism */}
+              {/* Crop Yield, Livestock & Tourism Trends */}
+              <div style={{ marginTop: "1.5rem" }}>
                 <div style={S.chartPanel}>
                   <div style={S.chartHead}>
                     <span style={S.chartIcon}>📊</span>
-                    <span style={S.chartTitle}>Impacts on Crop Yield, Livestock & Tourism Trends</span>
+                    <span style={S.chartTitle}>Crop Yield, Livestock & Tourism Trends</span>
                     <span style={S.chartInsight}>Socioeconomic indicators over time</span>
                   </div>
-                  <TimeSeriesDashboard 
-                    width={chartWidth * 2 + 20} 
-                    height={480} 
-                    data={timeSeriesData}
-                    selectedCountry={selectedCountry}
-                  />
+                  <TimeSeriesDashboard width={chartWidth * 2 + 20} height={480} data={timeSeriesData} selectedCountry={selectedCountry} />
                 </div>
               </div>
             </div>
 
-            {/* ========== CHAPTER 6: The Big Picture ========== */}
+            {/* CHAPTER 4: Regional Comparison */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
-                <div style={S.storyTitle}>🌏 A Regional Perspective</div>
-                <div style={S.storySubtitle}>
-                  {selectedCountry} doesn't exist in isolation. How does its burden compare to the {countries.length} other Pacific nations?
-                </div>
-              </div>
-              <div style={S.comparisonGrid}>
-                <div style={S.chartPanel}>
-                  <MultiMetricRankedDashboard 
-                    width={chartWidth * 2 + 20} 
-                    height={480} 
-                    data={rankedData}
-                    // selectedCountry={selectedCountry}
-                  />
-                </div>
-
-                
-              </div>
-            </div>
-
-            {/* ========== CHAPTER 7: The System ========== */}
-            <div style={S.storySection}>
-              <div style={S.storyHeader}>
-                <div style={S.storyTitle}>🔗 Tracing the Causal Chain</div>
-                <div style={S.storySubtitle}>Watch how climate drivers flow through environmental and economic impacts to ultimately affect people.</div>
+                <div style={S.storyTitle}>🌏 Regional Perspective</div>
+                <div style={S.storySubtitle}>How does {selectedCountry} compare to {countries.length} other Pacific nations?</div>
               </div>
               <div style={S.chartPanel}>
-                <div style={S.chartHead}><span style={S.chartIcon}>🔀</span><span style={S.chartTitle}>Climate Drivers → Environmental Impact → Economic Consequence → Human Consequence</span></div>
-                <TimeSankey width={chartWidth * 2 + 20} height={320} data={climateFlowData} selectedCountry={selectedCountry} />
+                <MultiMetricRankedDashboard width={chartWidth * 2 + 20} height={520} data={rankedData} />
               </div>
             </div>
 
-            {/* ========== CHAPTER 8: Explore Your Own Story ========== */}
+            {/* CHAPTER 5: Causal Chain Explorer */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
-                <div style={S.storyTitle}>🔬 Explore the Data Yourself</div>
-                <div style={S.storySubtitle}>Use these interactive tools to find your own insights across all {countries.length} Pacific nations.</div>
+                <div style={S.storyTitle}>🔬 Explore the Climate Cascade</div>
+                <div style={S.storySubtitle}>Toggle between Sankey flow diagram and beeswarm distribution.</div>
                 <div style={S.tabContainer}>
-                  <button onClick={() => setActiveView("alluvial")} style={S.tabButton(activeView === "alluvial")}>🔀 Alluvial Flow Diagram</button>
-                  <button onClick={() => setActiveView("beeswarm")} style={S.tabButton(activeView === "beeswarm")}>🐝 Beeswarm Distribution</button>
+                  <button onClick={() => setActiveView("sankey")} style={S.tabButton(activeView === "sankey")}>🔀 Sankey Flow</button>
+                  <button onClick={() => setActiveView("beeswarm")} style={S.tabButton(activeView === "beeswarm")}>🐝 Beeswarm</button>
                 </div>
               </div>
               <div style={S.chartPanel}>
-                {activeView === "alluvial" && <AlluvialDiagram width={chartWidth * 2 + 20} height={360} data={climateFlowData} />}
-                {activeView === "beeswarm" && <BeeswarmChart width={chartWidth * 2 + 20} height={360} data={beeswarmData} />}
+                {activeView === "sankey" && <TimeSankey width={chartWidth * 2 + 20} height={400} data={climateFlowData} selectedCountry={selectedCountry} />}
+                {activeView === "beeswarm" && <BeeswarmChart width={chartWidth * 2 + 20} height={500} data={beeswarmData} />}
               </div>
             </div>
 
-            {/* ========== CHAPTER 9: Full Timeline ========== */}
+            {/* CHAPTER 6: Full Timeline */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
-                <div style={S.storyTitle}>📈 A Complete Timeline</div>
-                <div style={S.storySubtitle}>All indicators on a single canvas — the full story of climate change in {selectedCountry}.</div>
+                <div style={S.storyTitle}>📈 Complete Timeline</div>
+                <div style={S.storySubtitle}>All indicators on a single canvas.</div>
               </div>
               <div style={S.chartPanel}>
-                <MultiLineChart width={chartWidth * 2 + 20} height={400} data={multiLineData} series={climateSeries} title="Climate Anomalies Over Time" yAxisLabel="Anomaly Value" selectedCountry={selectedCountry} />
+                <MultiLineChart width={chartWidth * 2 + 20} height={400} data={multiLineData} series={climateSeries} title="Climate Anomalies" yAxisLabel="Anomaly Value" selectedCountry={selectedCountry} />
               </div>
             </div>
 
-            {/* ========== CONCLUSION ========== */}
+            {/* CONCLUSION */}
             <div style={S.conclusion}>
               <div style={S.conclusionTitle}>🌿 The Evidence Is Unequivocal</div>
-              <div style={S.conclusionText}>
-                For <strong>{selectedCountry}</strong>, the data confirms the complete causal chain: 
-                <strong style={{ color: "#D85A30" }}> rising temperatures</strong> drive <strong style={{ color: "#2E86AB" }}>environmental changes</strong>, 
-                which create <strong style={{ color: "#EF9F27" }}>economic losses</strong> and ultimately 
-                <strong style={{ color: "#7F77DD" }}> affect human communities</strong>.
-                {seaTrend > 0 && ` Sea levels have risen ${seaTrend.toFixed(1)}% — and the trend is accelerating.`}
-              </div>
-              <div style={{ ...S.conclusionText, marginTop: "1rem", fontWeight: 500, color: "#0f172a" }}>
-                The question is no longer "Is climate change real?" but "How will we respond?"
-              </div>
-              <div style={{ ...S.conclusionText, marginTop: "1rem", fontSize: "0.85rem", color: "#64748b" }}>
-                📊 Tracking: Climate Drivers → Environmental Impact → Economic Consequence → Human Consequence<br />
-                🌏 {countries.length} Pacific Island nations and territories<br />
-                📅 Time span: 1850–2025 (175+ years of climate data)
-              </div>
+              <div style={S.conclusionText}>The data confirms the complete causal chain for {selectedCountry}. {seaTrend > 0 && `Sea levels have risen ${seaTrend.toFixed(1)}% — and the trend is accelerating.`}</div>
+              <div style={{ ...S.conclusionText, marginTop: "1rem", fontWeight: 500 }}>The question is no longer "Is climate change real?" but "How will we respond?"</div>
             </div>
           </>
         )}
-
-        <footer style={S.footer}>
-          🌊 Data Source: Pacific Community (SPC) · National Minimum Development Indicators (NMDI) · PDH.Stat Climate Projections
-          <br />
-          Covering {countries.length} Pacific Island countries and territories · A data storytelling project exploring the cascading impacts of climate change.
-        </footer>
+        <footer style={S.footer}>🌊 Data Source: Pacific Community (SPC) · Covering {countries.length} Pacific nations</footer>
       </div>
     </main>
   );
