@@ -28,10 +28,15 @@ jobs:
         run: npm ci
 
       - name: Build Next.js static site
-        run: npm run build
+        run: |
+          npm ci
+          npm run build
+          npx next export
 
       - name: Verify export output
-        run: ls -la out
+        run: |
+          ls -la
+          ls -la out
 
       - name: Upload static files
         uses: actions/upload-pages-artifact@v3
