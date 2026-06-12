@@ -5,6 +5,7 @@ import { seaSurfaceTempAnomalies } from "@/data/climate_drivers/sea_surface_temp
 
 export type ClimateRow = {
   year: number;
+  country: string;
   temperature?: number;
   rainfall?: number;
   seaLevel?: number;
@@ -12,12 +13,24 @@ export type ClimateRow = {
 };
 
 export function buildMultiLineData() {
-  const map = new Map<string, any>();
+  const map = new Map<string, ClimateRow>();
 
-  const merge = (arr: any[], key: string) => {
+  const merge = <K extends keyof Omit<ClimateRow, "year" | "country">>(
+    arr: any[],
+    key: K,
+  ) => {
+    if (!Array.isArray(arr)) return;
+
     arr.forEach((d) => {
+      if (!d) return; // ✅ prevent undefined entries
+
       const year = Number(d.year);
       const country = d.country ?? "GLOBAL";
+      const value = Number(d.value);
+
+      // ❌ skip invalid rows completely
+      if (!Number.isFinite(year)) return;
+      if (!Number.isFinite(value)) return;
 
       const id = `${country}-${year}`;
 
@@ -28,7 +41,10 @@ export function buildMultiLineData() {
         });
       }
 
-      map.get(id)[key] = Number(d.value ?? 0);
+      const entry = map.get(id);
+      if (!entry) return;
+
+      entry[key] = value;
     });
   };
 
@@ -36,7 +52,8 @@ export function buildMultiLineData() {
   merge(rainfallAnomalies, "rainfall");
   merge(seaLevelAnomalies, "seaLevel");
   merge(seaSurfaceTempAnomalies, "seaSurfaceTemperature");
-  return Array.from(map.values()).sort(
-    (a, b) => a.year - b.year
-  );
+
+  return Array.from(map.values())
+    .filter((d): d is ClimateRow => Boolean(d && Number.isFinite(d.year)))
+    .sort((a, b) => a.year - b.year);
 }
