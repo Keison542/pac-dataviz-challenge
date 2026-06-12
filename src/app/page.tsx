@@ -23,21 +23,6 @@ import TimeSankey from "@/dataviz/sankey/TimeSankey";
 import BeeswarmChart from "@/dataviz/beeswarm/BeeswarmChart";
 import { buildClimateRecords } from "@/lib/mergedClimateRecord";
 
-useEffect(() => {
-  console.log("BUILD CHECK");
-
-  const test = (name: string, arr: any) => {
-    console.log(name, Array.isArray(arr), arr?.length);
-    console.log(
-      name + " BAD ROWS:",
-      (arr || []).filter((d) => !d || typeof d !== "object" || !("year" in d))
-    );
-  };
-
-  test("buildMultiLineData", buildMultiLineData());
-  test("mergedClimateRecord", buildClimateRecords());
-}, []);
-
 // ============================================================================
 // TYPES
 // ============================================================================
