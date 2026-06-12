@@ -27,6 +27,8 @@ import { lifestock_yield } from "@/data/environmental_impact/lifestock_yield";
 import { population_growth } from "@/data/human_consequence/population_growth";
 import {tubercolosis_incidence} from "@/data/human_consequence/tubercolosis_incidence";
 import { TimeSeriesDashboard } from "@/dataviz/bubbleChart/TimeSeries";
+import {MultiMetricRankedDashboard } from "@/dataviz/barplot/BarChart";
+
 
 // ============================================================================
 // TYPES
@@ -793,6 +795,52 @@ export default function Home() {
     return Array.from(latest.values()).sort((a, b) => b.value - a.value);
   }, []);
 
+    const cropYieldData = useMemo(() => {
+    const latest = new Map<string, TimeSeriesPoint>();
+    crop_yield.forEach(p => { 
+      const existing = latest.get(p.country); 
+      if (!existing || p.year > existing.year) latest.set(p.country, p); 
+    });
+    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
+  }, []);
+
+   const touristArrivalData = useMemo(() => {
+    const latest = new Map<string, TimeSeriesPoint>();
+    tourist_arrival.forEach(p => { 
+      const existing = latest.get(p.country); 
+      if (!existing || p.year > existing.year) latest.set(p.country, p); 
+    });
+    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
+  }, []);
+
+
+     const lifestockYieldData = useMemo(() => {
+    const latest = new Map<string, TimeSeriesPoint>();
+    lifestock_yield.forEach(p => { 
+      const existing = latest.get(p.country); 
+      if (!existing || p.year > existing.year) latest.set(p.country, p); 
+    });
+    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
+  }, []);
+
+    const climateAlteringLandData = useMemo(() => {
+    const latest = new Map<string, TimeSeriesPoint>();
+    climate_altering_land.forEach(p => { 
+      const existing = latest.get(p.country); 
+      if (!existing || p.year > existing.year) latest.set(p.country, p); 
+    });
+    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
+  }, []);
+
+      const populationData = useMemo(() => {
+    const latest = new Map<string, TimeSeriesPoint>();
+    population_growth.forEach(p => { 
+      const existing = latest.get(p.country); 
+      if (!existing || p.year > existing.year) latest.set(p.country, p); 
+    });
+    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
+  }, []);
+
   // Prepare data for Time Series Dashboard
   const timeSeriesData = useMemo(() => {
     const yearSet = new Set<number>();
@@ -842,6 +890,69 @@ export default function Home() {
   const beeswarmData = useMemo(() => buildClimateRecords(), []);
   const chartWidth = 520;
   const hasData = dataMap.temp.length > 0 || dataMap.sea.length > 0 || dataMap.rainfall.length > 0;
+
+  // Prepare data for all metrics
+const rankedData = useMemo(() => {
+
+  // People affected by disasters - aggregated by country
+  const affectedPersonsMap = new Map<string, number>();
+  affectedPersons.forEach(d => {
+    affectedPersonsMap.set(d.country, (affectedPersonsMap.get(d.country) || 0) + d.value);
+  });
+  const affectedPersonsData = Array.from(affectedPersonsMap.entries()).map(([country, value]) => ({ country, value }));
+
+  // Economic Loss - aggregated by country
+  const economicLossMap = new Map<string, number>();
+  disasterEconomicLoss.forEach(d => {
+    economicLossMap.set(d.country, (economicLossMap.get(d.country) || 0) + d.value);
+  });
+  const economicLoss = Array.from(economicLossMap.entries()).map(([country, value]) => ({ country, value }));
+
+  // Crop Yield - aggregated by country
+  const cropYieldMap = new Map<string, number>();
+  crop_yield.forEach(d => {
+    cropYieldMap.set(d.country, (cropYieldMap.get(d.country) || 0) + d.value);
+  });
+  const cropYield = Array.from(cropYieldMap.entries()).map(([country, value]) => ({ country, value }));
+
+  // Tourist Arrivals - aggregated by country
+  const touristMap = new Map<string, number>();
+  tourist_arrival.forEach(d => {
+    touristMap.set(d.country, (touristMap.get(d.country) || 0) + d.value);
+  });
+  const touristArrivals = Array.from(touristMap.entries()).map(([country, value]) => ({ country, value }));
+
+  // Livestock Yield - aggregated by country
+  const livestockMap = new Map<string, number>();
+  lifestock_yield.forEach(d => {
+    livestockMap.set(d.country, (livestockMap.get(d.country) || 0) + d.value);
+  });
+  const livestockYield = Array.from(livestockMap.entries()).map(([country, value]) => ({ country, value }));
+
+  // Climate Altering Land - aggregated by country
+  const climateMap = new Map<string, number>();
+  climate_altering_land.forEach(d => {
+    climateMap.set(d.country, (climateMap.get(d.country) || 0) + d.value);
+  });
+  const climateAlteringLand = Array.from(climateMap.entries()).map(([country, value]) => ({ country, value }));
+
+  // Population Growth - aggregated by country (use latest value)
+  const populationMap = new Map<string, number>();
+  population_growth.forEach(d => {
+    populationMap.set(d.country, (populationMap.get(d.country) || 0) + d.value);
+  });
+  const populationGrowth = Array.from(populationMap.entries()).map(([country, value]) => ({ country, value }));
+
+  return {
+    economicLoss,
+    cropYield,
+    touristArrivals,
+    livestockYield,
+    climateAlteringLand,
+    populationGrowth,
+    affectedPersons
+  };
+}, []);
 
   // Don't render data-dependent content on server
   if (!isClient) {
@@ -1004,13 +1115,15 @@ export default function Home() {
               </div>
               <div style={S.comparisonGrid}>
                 <div style={S.chartPanel}>
-                  <div style={S.chartHead}><span style={S.chartIcon}>🏆</span><span style={S.chartTitle}>Economic Loss by Country</span><span style={S.chartInsight}>Who bears the highest cost?</span></div>
-                  <RankedBarChart width={chartWidth} height={400} data={regionalLossData} />
+                  <MultiMetricRankedDashboard 
+                    width={chartWidth * 2 + 20} 
+                    height={480} 
+                    data={rankedData}
+                    // selectedCountry={selectedCountry}
+                  />
                 </div>
-                <div style={S.chartPanel}>
-                  <div style={S.chartHead}><span style={S.chartIcon}>📊</span><span style={S.chartTitle}>People Affected by Country</span><span style={S.chartInsight}>Where is the human toll greatest?</span></div>
-                  <CountryComparison data={regionalAffectedData} />
-                </div>
+
+                
               </div>
             </div>
 
