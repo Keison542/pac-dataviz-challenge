@@ -17,7 +17,7 @@ import { tourist_arrival } from "@/data/economic_consequence/tourist_arrival";
 import { climate_altering_land } from "@/data/environmental_impact/climate_altering_land";
 import { lifestock_yield } from "@/data/environmental_impact/lifestock_yield";
 import { population_growth } from "@/data/human_consequence/population_growth";
-import { TimeSeriesDashboard } from "@/dataviz/bubbleChart/TimeSeries";
+import TimeSeriesDashboard from "@/dataviz/bubbleChart/TimeSeries";
 import { MultiMetricRankedDashboard } from "@/dataviz/barplot/BarChart";
 import TimeSankey from "@/dataviz/sankey/TimeSankey";
 import BeeswarmChart from "@/dataviz/beeswarm/BeeswarmChart";
@@ -127,24 +127,19 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
     return val !== undefined && val !== null ? val : 0;
   };
 
-  const getDelta = (key: string) => {
-    const delta = safeDeltas[key];
-    return delta !== undefined && delta !== null ? delta : 0;
-  };
-
   const metrics = [
-    { key: "temp", value: getMetricValue("temp"), delta: getDelta("temp") },
-    { key: "sea_surface_temperature", value: getMetricValue("sea_surface_temperature"), delta: getDelta("sea_surface_temperature") },
-    { key: "rainfall", value: getMetricValue("rainfall"), delta: getDelta("rainfall") },
-    { key: "sea", value: getMetricValue("sea"), delta: getDelta("sea") },
-    { key: "climate_altering_land", value: getMetricValue("climate_altering_land"), delta: getDelta("climate_altering_land") },
-    { key: "crop_yield", value: getMetricValue("crop_yield"), delta: getDelta("crop_yield") },
-    { key: "lifestock_yield", value: getMetricValue("lifestock_yield"), delta: getDelta("lifestock_yield") },
-    { key: "loss", value: getMetricValue("loss"), delta: getDelta("loss") },
-    { key: "tourist_arrival", value: getMetricValue("tourist_arrival"), delta: getDelta("tourist_arrival") },
-    { key: "people", value: getMetricValue("people"), delta: getDelta("people") },
-    { key: "population_growth", value: getMetricValue("population_growth"), delta: getDelta("population_growth") },
-    { key: "tubercolosis_incidence", value: getMetricValue("tubercolosis_incidence"), delta: getDelta("tubercolosis_incidence") },
+    { key: "temp", value: getMetricValue("temp"), delta: getMetricValue("temp") },
+    { key: "sea_surface_temperature", value: getMetricValue("sea_surface_temperature"), delta: getMetricValue("sea_surface_temperature") },
+    { key: "rainfall", value: getMetricValue("rainfall"), delta: getMetricValue("rainfall") },
+    { key: "sea", value: getMetricValue("sea"), delta: getMetricValue("sea") },
+    { key: "climate_altering_land", value: getMetricValue("climate_altering_land"), delta: getMetricValue("climate_altering_land") },
+    { key: "crop_yield", value: getMetricValue("crop_yield"), delta: getMetricValue("crop_yield") },
+    { key: "lifestock_yield", value: getMetricValue("lifestock_yield"), delta: getMetricValue("lifestock_yield") },
+    { key: "loss", value: getMetricValue("loss"), delta: getMetricValue("loss") },
+    { key: "tourist_arrival", value: getMetricValue("tourist_arrival"), delta: getMetricValue("tourist_arrival") },
+    { key: "people", value: getMetricValue("people"), delta: getMetricValue("people") },
+    { key: "population_growth", value: getMetricValue("population_growth"), delta: getMetricValue("population_growth") },
+    { key: "tubercolosis_incidence", value: getMetricValue("tubercolosis_incidence"), delta: getMetricValue("tubercolosis_incidence") },
   ];
 
   return (
@@ -153,6 +148,7 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
         <span className="text-sm font-medium text-slate-600">📍 {selectedCountry} at a Glance</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Column 1: Climate Drivers */}
         <div className="bg-orange-50 rounded-xl border border-orange-200 p-3">
           <div className="bg-orange-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
             <span className="text-white text-sm font-semibold">🌡️ Climate Drivers</span>
@@ -180,6 +176,7 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
             })}
           </div>
         </div>
+        {/* Column 2: Environmental */}
         <div className="bg-teal-50 rounded-xl border border-teal-200 p-3">
           <div className="bg-teal-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
             <span className="text-white text-sm font-semibold">🌿 Environmental</span>
@@ -208,6 +205,7 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
             })}
           </div>
         </div>
+        {/* Column 3: Economic */}
         <div className="bg-amber-50 rounded-xl border border-amber-200 p-3">
           <div className="bg-amber-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
             <span className="text-white text-sm font-semibold">💰 Economic</span>
@@ -240,6 +238,7 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
             </div>
           </div>
         </div>
+        {/* Column 4: Human */}
         <div className="bg-purple-50 rounded-xl border border-purple-200 p-3">
           <div className="bg-purple-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
             <span className="text-white text-sm font-semibold">👥 Human</span>
@@ -272,9 +271,6 @@ const DoughnutClimateDashboard = ({ kpis, deltas, selectedCountry, isLoading }: 
       {activeMetric && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-xl animate-fade-in">
           {activeMetric === "temp" && `🌡️ Surface Temperature: ${safeKpis.temp > 0 ? `+${safeKpis.temp.toFixed(2)}°C` : `${safeKpis.temp.toFixed(2)}°C`} above baseline`}
-          {activeMetric === "sea_surface_temperature" && `🌊 Sea Surface Temperature: ${safeKpis.sea_surface_temperature.toFixed(2)}°C`}
-          {activeMetric === "rainfall" && `☔ Rainfall: ${safeKpis.rainfall.toFixed(0)}mm anomaly`}
-          {activeMetric === "sea" && `📈 Sea Level: ${(safeKpis.sea * 100).toFixed(0)}cm rise`}
         </div>
       )}
       <style>{`@keyframes fade-in{from{opacity:0}to{opacity:1}}.animate-fade-in{animation:fade-in 0.2s ease-out}`}</style>
@@ -350,12 +346,6 @@ export default function Home() {
   const seaTrend = dataMap.sea.length > 1 && dataMap.sea[0].value !== 0 ? ((dataMap.sea[dataMap.sea.length - 1].value - dataMap.sea[0].value) / Math.abs(dataMap.sea[0].value)) * 100 : 0;
   const lossTotal = dataMap.loss.reduce((sum, d) => sum + d.value, 0);
   const peopleTotal = dataMap.people.reduce((sum, d) => sum + d.value, 0);
-
-  const regionalLossData = useMemo(() => {
-    const latest = new Map<string, TimeSeriesPoint>();
-    disasterEconomicLoss.forEach(p => { const e = latest.get(p.country); if (!e || p.year > e.year) latest.set(p.country, p); });
-    return Array.from(latest.values()).sort((a, b) => b.value - a.value);
-  }, []);
 
   const timeSeriesData = useMemo(() => {
     const years = new Set<number>();
@@ -461,32 +451,29 @@ export default function Home() {
               </div>
             </div>
 
-            {/* CHAPTER 3: The Human, Economic & Socioeconomic Toll (Combined) */}
+            {/* CHAPTER 3: The Human, Economic & Socioeconomic Toll */}
             <div style={S.storySection}>
               <div style={S.storyHeader}>
                 <div style={S.storyTitle}>💔 The Human, Economic & Socioeconomic Toll</div>
-                <div style={S.storySubtitle}>{selectedCountry} has suffered ${(lossTotal / 1e6).toFixed(0)}M in losses, impacted {(peopleTotal / 1000).toFixed(0)}K people, with cascading effects on food systems and tourism.</div>
+                <div style={S.storySubtitle}>{selectedCountry} has suffered ${(lossTotal / 1e6).toFixed(0)}M in losses and impacted {(peopleTotal / 1000).toFixed(0)}K people.</div>
               </div>
               
-              {/* Economic Loss & People Affected Row */}
               <div style={S.twoColumnGrid}>
                 <div style={S.chartPanel}>
-                  <div style={S.chartHead}><span style={S.chartIcon}>💰</span><span style={S.chartTitle}>Economic Loss</span><span style={S.chartInsight}>Financial burden</span></div>
+                  <div style={S.chartHead}><span style={S.chartIcon}>💰</span><span style={S.chartTitle}>Economic Loss</span></div>
                   <TrendLine width={chartWidth} height={260} data={dataMap.loss} dataType="loss" setSelectedCountry={setSelectedCountry} />
                 </div>
                 <div style={S.chartPanel}>
-                  <div style={S.chartHead}><span style={S.chartIcon}>👥</span><span style={S.chartTitle}>People Affected</span><span style={S.chartInsight}>Lives disrupted</span></div>
+                  <div style={S.chartHead}><span style={S.chartIcon}>👥</span><span style={S.chartTitle}>People Affected</span></div>
                   <BubbleChart width={chartWidth} height={260} data={dataMap.people} />
                 </div>
               </div>
 
-              {/* Crop Yield, Livestock & Tourism Trends */}
               <div style={{ marginTop: "1.5rem" }}>
                 <div style={S.chartPanel}>
                   <div style={S.chartHead}>
                     <span style={S.chartIcon}>📊</span>
                     <span style={S.chartTitle}>Crop Yield, Livestock & Tourism Trends</span>
-                    <span style={S.chartInsight}>Socioeconomic indicators over time</span>
                   </div>
                   <TimeSeriesDashboard width={chartWidth * 2 + 20} height={480} data={timeSeriesData} selectedCountry={selectedCountry} />
                 </div>
