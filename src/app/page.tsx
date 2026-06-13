@@ -160,7 +160,7 @@ export default function Home() {
         <footer className="text-center pt-8 mt-8 border-t border-slate-200 text-xs text-slate-400">
           <div className="flex flex-col items-center gap-2">
             <p>
-              Covering {countries.length} Pacific Island countries and territories · A data storytelling project for the <strong className="text-cyan-600">Pacific Dataviz Challenge 2026</strong>
+              Covering {countries.length} Pacific Island countries and territories · A data visualization submission for the Pacific Dataviz Challenge 2026
             </p>
           </div>
         </footer>

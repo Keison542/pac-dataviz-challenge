@@ -17,7 +17,7 @@ export function CausalChainSection({ climateFlowData, beeswarmData, selectedCoun
       <div className="text-center mb-6">
         <div className="text-[1.75rem] font-semibold mb-3 text-slate-900">🔗 Tracing the Causal Chain</div>
         <div className="text-sm text-slate-500 max-w-[680px] mx-auto">
-          Toggle between Sankey flow diagram and beeswarm distribution to explore the complete climate cascade.
+          Toggle between causal chain flow diagram and its distribution to explore the complete climate cascade.
         </div>
         <div className="flex gap-4 justify-center mt-4">
           <button 
@@ -33,7 +33,7 @@ export function CausalChainSection({ climateFlowData, beeswarmData, selectedCoun
               cursor: "pointer",
             }}
           >
-            🔀 Sankey Flow Diagram
+            🔀 Flow Diagram
           </button>
           <button 
             onClick={() => setActiveView("beeswarm")} 
@@ -48,7 +48,7 @@ export function CausalChainSection({ climateFlowData, beeswarmData, selectedCoun
               cursor: "pointer",
             }}
           >
-            🐝 Beeswarm Distribution
+            🐝 Climate Cascade Distribution
           </button>
         </div>
       </div>
