@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { scaleLinear } from "d3-scale";
 import { line, curveMonotoneX } from "d3-shape";
-import { LineItem } from "@/dataviz/lineChart/LineItem";
+import { LineItem } from "@/vizualization/lineChart/LineItem";
 
 const MARGIN = {
   top: 40,

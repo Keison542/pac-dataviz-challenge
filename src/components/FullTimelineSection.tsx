@@ -1,5 +1,5 @@
-import { MultiLineChart } from "@/dataviz/lineChart/MultiLineChart";
-import { climateSeries } from "@/data/climate_drivers/climateSeries";
+import { MultiLineChart } from "@/vizualization/lineChart/MultiLineChart";
+import { climateSeries } from "@/climatedata/climate_drivers/climateSeries";
 
 interface FullTimelineSectionProps {
   selectedCountry: string;

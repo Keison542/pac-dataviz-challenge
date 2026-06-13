@@ -4,7 +4,7 @@
 import { scaleLinear } from "d3-scale";
 import { line, curveCardinal, area } from "d3-shape";
 import { useMemo, useState, useCallback } from "react";
-import { LineItem } from "@/dataviz/lineChart/LineItem";
+import { LineItem } from "@/vizualization/lineChart/LineItem";
 
 type DataPoint = {
   year: number;

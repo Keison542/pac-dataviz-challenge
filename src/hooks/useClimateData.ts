@@ -1,16 +1,16 @@
 import { useMemo, useCallback, useState } from "react";
-import { surfaceTempAnomalies } from "@/data/climate_drivers/surface_temp_anomalies";
-import { rainfallAnomalies } from "@/data/climate_drivers/rainfall_anomalies";
-import { seaLevelAnomalies } from "@/data/climate_drivers/sea_level_anomalies";
-import { disasterEconomicLoss } from "@/data/economic_consequence/direct_disaster_economic_loss";
-import { affectedPersons } from "@/data/human_consequence/number_of_persons_affected";
-import { seaSurfaceTempAnomalies } from "@/data/climate_drivers/sea_surface_temp_anomalies";
-import { crop_yield } from "@/data/environmental_impact/crop_yield";
-import { tourist_arrival } from "@/data/economic_consequence/tourist_arrival";
-import { climate_altering_land } from "@/data/environmental_impact/climate_altering_land";
-import { lifestock_yield } from "@/data/environmental_impact/lifestock_yield";
-import { population_growth } from "@/data/human_consequence/population_growth";
-import { buildMultiLineData } from "@/data/climate_drivers/buildMultiLineData";
+import { surfaceTempAnomalies } from "@/climatedata/climate_drivers/surface_temp_anomalies";
+import { rainfallAnomalies } from "@/climatedata/climate_drivers/rainfall_anomalies";
+import { seaLevelAnomalies } from "@/climatedata/climate_drivers/sea_level_anomalies";
+import { disasterEconomicLoss } from "@/climatedata/economic_consequence/direct_disaster_economic_loss";
+import { affectedPersons } from "@/climatedata/human_consequence/number_of_persons_affected";
+import { seaSurfaceTempAnomalies } from "@/climatedata/climate_drivers/sea_surface_temp_anomalies";
+import { crop_yield } from "@/climatedata/environmental_impact/crop_yield";
+import { tourist_arrival } from "@/climatedata/economic_consequence/tourist_arrival";
+import { climate_altering_land } from "@/climatedata/environmental_impact/climate_altering_land";
+import { lifestock_yield } from "@/climatedata/environmental_impact/lifestock_yield";
+import { population_growth } from "@/climatedata/human_consequence/population_growth";
+import { buildMultiLineData } from "@/climatedata/climate_drivers/buildMultiLineData";
 import { buildClimateRecords } from "@/lib/mergedClimateRecord";
 
 interface TimeSeriesPoint { country: string; year: number; value: number; }

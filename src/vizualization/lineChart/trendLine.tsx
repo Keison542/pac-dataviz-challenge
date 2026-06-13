@@ -3,8 +3,8 @@
 import { scaleLinear, scaleBand } from "d3-scale";
 import { useMemo, useState, useCallback, useRef } from "react";
 import { line, curveCardinal } from "d3-shape";
-import { LineItem } from "@/dataviz/lineChart/LineItem";
-import type { InteractionData } from "@/dataviz/lineChart/types/interaction";
+import { LineItem } from "@/vizualization/lineChart/LineItem";
+import type { InteractionData } from "@/vizualization/lineChart/types/interaction";
 
 const MARGIN = { top: 60, right: 60, bottom: 100, left: 120 };
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { DisasterLossRecord } from "@/data/economic_consequence/direct_disaster_economic_loss";
-import { AffectedPeopleRecord } from "@/data/human_consequence/number_of_persons_affected";
+import { DisasterLossRecord } from "@/climatedata/economic_consequence/direct_disaster_economic_loss";
+import { AffectedPeopleRecord } from "@/climatedata/human_consequence/number_of_persons_affected";
 import { sexColorScale, climateColorScale } from "@/lib/utils";
 import { scaleLinear } from "d3-scale";
 import { line, area, curveMonotoneX } from "d3-shape";

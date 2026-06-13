@@ -1,4 +1,4 @@
-import { MultiMetricRankedDashboard } from "@/dataviz/barplot/BarChart";
+import { MultiMetricRankedDashboard } from "@/vizualization/barplot/BarChart";
 
 interface RegionalComparisonSectionProps {
   selectedCountry: string;

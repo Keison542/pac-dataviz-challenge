@@ -1,6 +1,6 @@
 import { useState } from "react";
-import TimeSankey from "@/dataviz/sankey/TimeSankey";
-import BeeswarmChart from "@/dataviz/beeswarm/BeeswarmChart";
+import TimeSankey from "@/vizualization/sankey/TimeSankey";
+import BeeswarmChart from "@/vizualization/beeswarm/BeeswarmChart";
 
 interface CausalChainSectionProps {
   climateFlowData: any[];

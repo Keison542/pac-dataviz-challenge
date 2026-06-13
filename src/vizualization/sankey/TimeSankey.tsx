@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
-import { LineItem } from "@/dataviz/lineChart/LineItem";
+import { LineItem } from "@/vizualization/lineChart/LineItem";
 
 type Props = {
   width: number;

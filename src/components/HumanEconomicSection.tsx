@@ -1,6 +1,6 @@
-import { TrendLine } from "@/dataviz/lineChart/trendLine";
-import { BubbleChart } from "@/dataviz/bubbleChart/BubbleChart";
-import TimeSeriesDashboard from "@/dataviz/bubbleChart/TimeSeries";
+import { TrendLine } from "@/vizualization/lineChart/trendLine";
+import { BubbleChart } from "@/vizualization/bubbleChart/BubbleChart";
+import TimeSeriesDashboard from "@/vizualization/bubbleChart/TimeSeries";
 
 interface HumanEconomicSectionProps {
   selectedCountry: string;

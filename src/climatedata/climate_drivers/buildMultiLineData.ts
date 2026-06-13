@@ -1,7 +1,7 @@
-import { surfaceTempAnomalies } from "@/data/climate_drivers/surface_temp_anomalies";
-import { rainfallAnomalies } from "@/data/climate_drivers/rainfall_anomalies";
-import { seaLevelAnomalies } from "@/data/climate_drivers/sea_level_anomalies";
-import { seaSurfaceTempAnomalies } from "@/data/climate_drivers/sea_surface_temp_anomalies";
+import { surfaceTempAnomalies } from "@/climatedata/climate_drivers/surface_temp_anomalies";
+import { rainfallAnomalies } from "@/climatedata/climate_drivers/rainfall_anomalies";
+import { seaLevelAnomalies } from "@/climatedata/climate_drivers/sea_level_anomalies";
+import { seaSurfaceTempAnomalies } from "@/climatedata/climate_drivers/sea_surface_temp_anomalies";
 
 export type ClimateRow = {
   year: number;

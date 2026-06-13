@@ -1,4 +1,4 @@
-import { LineChart } from "@/dataviz/lineChart/LineChart";
+import { LineChart } from "@/vizualization/lineChart/LineChart";
 
 interface ClimateDriversSectionProps {
   dataMap: any;
