@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import * as d3 from "d3";
+import { animated, useSpring } from "@react-spring/web";
 import { ClimateRecord } from "@/lib/mergedClimateRecord";
 
 type Props = {
@@ -40,6 +41,49 @@ const CATEGORY_META = [
   { key: "Population Growth", color: "#ec4898", label: "Population Growth (%)", icon: "📈", description: "Demographic trends", dataKey: "populationGrowth" },
 ];
 
+// Animated circle component with spring effects
+const AnimatedCircle = ({ cx, cy, r, fill, fillOpacity, stroke, strokeWidth, onMouseEnter, onMouseLeave, isHovered }: any) => {
+  const springProps = useSpring({
+    r: isHovered ? r + 3 : r,
+    fillOpacity: isHovered ? 1 : fillOpacity,
+    strokeWidth: isHovered ? 3 : strokeWidth,
+    config: { tension: 200, friction: 20 },
+  });
+
+  const glowSpring = useSpring({
+    opacity: isHovered ? 0.3 : 0,
+    config: { tension: 200, friction: 20 },
+  });
+
+  return (
+    <>
+      {/* Glow effect on hover */}
+      {isHovered && (
+        <animated.circle
+          cx={cx}
+          cy={cy}
+          r={r + 6}
+          fill={fill}
+          opacity={glowSpring.opacity}
+          style={{ filter: "blur(4px)" }}
+        />
+      )}
+      <animated.circle
+        cx={cx}
+        cy={cy}
+        r={springProps.r}
+        fill={fill}
+        fillOpacity={springProps.fillOpacity}
+        stroke={stroke}
+        strokeWidth={springProps.strokeWidth}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        className="cursor-pointer transition-all duration-150"
+      />
+    </>
+  );
+};
+
 export default function BeeswarmChart({ 
   width, 
   height, 
@@ -52,6 +96,7 @@ export default function BeeswarmChart({
   const [activeCategories, setActiveCategories] = useState<string[]>(
     CATEGORY_META.map(d => d.key)
   );
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
 
   const simulationRef = useRef<d3.Simulation<Node, undefined> | null>(null);
 
@@ -311,22 +356,42 @@ export default function BeeswarmChart({
 
       {/* Category Breakdown Cards */}
       <div className="mb-5 grid grid-cols-4 gap-2">
-        <div className="text-center p-1.5 bg-orange-50 rounded-lg">
+        <div 
+          className="text-center p-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-md"
+          style={{ backgroundColor: hoveredCategory === "driver" ? "#fff7ed" : "#fff7ed" }}
+          onMouseEnter={() => setHoveredCategory("driver")}
+          onMouseLeave={() => setHoveredCategory(null)}
+        >
           <span className="text-sm">🌡️</span>
           <div className="text-xs font-bold text-orange-700">{driverCount}</div>
           <div className="text-[9px] text-slate-400">Climate Drivers</div>
         </div>
-        <div className="text-center p-1.5 bg-emerald-50 rounded-lg">
+        <div 
+          className="text-center p-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-md"
+          style={{ backgroundColor: hoveredCategory === "environmental" ? "#ecfdf5" : "#ecfdf5" }}
+          onMouseEnter={() => setHoveredCategory("environmental")}
+          onMouseLeave={() => setHoveredCategory(null)}
+        >
           <span className="text-sm">🌿</span>
           <div className="text-xs font-bold text-emerald-700">{environmentalCount}</div>
           <div className="text-[9px] text-slate-400">Environmental</div>
         </div>
-        <div className="text-center p-1.5 bg-amber-50 rounded-lg">
+        <div 
+          className="text-center p-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-md"
+          style={{ backgroundColor: hoveredCategory === "economic" ? "#fffbeb" : "#fffbeb" }}
+          onMouseEnter={() => setHoveredCategory("economic")}
+          onMouseLeave={() => setHoveredCategory(null)}
+        >
           <span className="text-sm">💰</span>
           <div className="text-xs font-bold text-amber-700">{economicCount}</div>
           <div className="text-[9px] text-slate-400">Economic</div>
         </div>
-        <div className="text-center p-1.5 bg-rose-50 rounded-lg">
+        <div 
+          className="text-center p-1.5 rounded-lg transition-all duration-200 cursor-pointer hover:shadow-md"
+          style={{ backgroundColor: hoveredCategory === "human" ? "#fff1f2" : "#fff1f2" }}
+          onMouseEnter={() => setHoveredCategory("human")}
+          onMouseLeave={() => setHoveredCategory(null)}
+        >
           <span className="text-sm">👥</span>
           <div className="text-xs font-bold text-rose-700">{humanCount}</div>
           <div className="text-[9px] text-slate-400">Human</div>
@@ -344,7 +409,7 @@ export default function BeeswarmChart({
           <span className="font-bold text-emerald-600"> environmental impacts</span> (🌾🐄🌍), 
           <span className="font-bold text-amber-600"> economic consequences</span> (💰✈️), and 
           <span className="font-bold text-rose-600"> human outcomes</span> (👥📈). 
-          Larger dots indicate more severe impacts.
+          Larger dots indicate more severe impacts. <span className="font-semibold text-slate-800">Hover over dots to see details — they pulse and glow!</span>
         </p>
       </div>
 
@@ -353,6 +418,10 @@ export default function BeeswarmChart({
         <defs>
           <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
             <feDropShadow dx="0" dy="1" stdDeviation="2" floodOpacity="0.15" />
+          </filter>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
         </defs>
 
@@ -415,34 +484,66 @@ export default function BeeswarmChart({
           );
         })}
 
-        {/* Nodes */}
+        {/* Nodes with animated effects */}
         <g filter="url(#shadow)">
           {nodes.map(d => {
             const isHovered = hovered?.id === d.id;
+            const isCategoryHovered = hoveredCategory !== null && (
+              (hoveredCategory === "driver" && driverCategories.includes(d.category)) ||
+              (hoveredCategory === "environmental" && environmentalCategories.includes(d.category)) ||
+              (hoveredCategory === "economic" && economicCategories.includes(d.category)) ||
+              (hoveredCategory === "human" && humanCategories.includes(d.category))
+            );
+            const shouldHighlight = isHovered || isCategoryHovered;
+            const baseRadius = rScale(d.value);
+            const finalRadius = shouldHighlight ? baseRadius + 3 : baseRadius;
+            
             return (
-              <circle
-                key={d.id}
-                cx={d.x ?? 0}
-                cy={d.y ?? 0}
-                r={rScale(d.value)}
-                fill={colorScale(d.category)}
-                fillOpacity={hovered && !isHovered ? 0.2 : 0.85}
-                stroke={isHovered ? "#0f172a" : "none"}
-                strokeWidth={isHovered ? 2 : 0}
-                className="cursor-pointer transition-all duration-150"
-                onMouseEnter={() => setHovered(d)}
-                onMouseLeave={() => setHovered(null)}
-              />
+              <g key={d.id}>
+                {/* Glow effect on hover */}
+                {isHovered && (
+                  <circle
+                    cx={d.x ?? 0}
+                    cy={d.y ?? 0}
+                    r={finalRadius + 6}
+                    fill={colorScale(d.category)}
+                    opacity={0.3}
+                    style={{ filter: "blur(6px)" }}
+                  />
+                )}
+                <circle
+                  cx={d.x ?? 0}
+                  cy={d.y ?? 0}
+                  r={finalRadius}
+                  fill={colorScale(d.category)}
+                  fillOpacity={shouldHighlight ? 1 : (hovered && !isHovered ? 0.2 : 0.85)}
+                  stroke={isHovered ? "#0f172a" : "none"}
+                  strokeWidth={isHovered ? 2.5 : 0}
+                  className="cursor-pointer transition-all duration-200"
+                  style={{
+                    filter: isHovered ? "url(#glow)" : "none",
+                    transition: "r 0.2s ease, fill-opacity 0.2s ease"
+                  }}
+                  onMouseEnter={() => setHovered(d)}
+                  onMouseLeave={() => setHovered(null)}
+                />
+              </g>
             );
           })}
         </g>
       </svg>
 
-      {/* Legend - Clickable Toggles */}
+      {/* Legend - Clickable Toggles with hover effects */}
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
         {CATEGORY_META.map(cat => {
           const active = activeCategories.includes(cat.key);
           const count = categoryCounts[cat.key] || 0;
+          const isCategoryHovered = hoveredCategory !== null && (
+            (hoveredCategory === "driver" && driverCategories.includes(cat.key)) ||
+            (hoveredCategory === "environmental" && environmentalCategories.includes(cat.key)) ||
+            (hoveredCategory === "economic" && economicCategories.includes(cat.key)) ||
+            (hoveredCategory === "human" && humanCategories.includes(cat.key))
+          );
 
           return (
             <button
@@ -450,9 +551,13 @@ export default function BeeswarmChart({
               onClick={() => toggleCategory(cat.key)}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all duration-150 ${
                 active 
-                  ? "bg-slate-100 text-slate-700" 
+                  ? isCategoryHovered ? "shadow-md scale-105" : "bg-slate-100 text-slate-700"
                   : "bg-slate-50 text-slate-400"
               }`}
+              style={{
+                transform: isCategoryHovered ? "scale(1.02)" : "scale(1)",
+                transition: "all 0.2s ease"
+              }}
             >
               <span
                 className="w-2 h-2 rounded-full"
@@ -468,18 +573,18 @@ export default function BeeswarmChart({
         })}
       </div>
 
-      {/* Tooltip */}
+      {/* Tooltip with animation */}
       {hovered && (
         <div
-          className="fixed pointer-events-none bg-white border border-slate-200 shadow-lg px-3 py-2 rounded-lg z-50"
+          className="fixed pointer-events-none bg-white border border-slate-200 shadow-xl px-3 py-2 rounded-lg z-50 animate-in fade-in zoom-in duration-200"
           style={{
             left: (hovered.x ?? 0) + 20,
-            top: (hovered.y ?? 0) - 45,
+            top: (hovered.y ?? 0) - 50,
           }}
         >
           <div className="flex items-center gap-2 mb-1">
             <div 
-              className="w-2 h-2 rounded-full" 
+              className="w-2 h-2 rounded-full animate-pulse" 
               style={{ backgroundColor: colorScale(hovered.category) }}
             />
             <span className="text-[10px] font-semibold text-slate-700 uppercase tracking-wide">
@@ -489,8 +594,11 @@ export default function BeeswarmChart({
           <div className="text-xs font-bold text-slate-800">
             {hovered.country} • {hovered.year}
           </div>
-          <div className="text-[11px] text-slate-600 mt-0.5">
+          <div className="text-[11px] text-slate-600 mt-0.5 font-mono">
             {formatValue(hovered.value, hovered.category)}
+          </div>
+          <div className="text-[9px] text-slate-400 mt-1">
+            {hovered.value > 1000 ? "Severe impact" : hovered.value > 100 ? "Moderate impact" : "Measured impact"}
           </div>
         </div>
       )}
@@ -498,7 +606,7 @@ export default function BeeswarmChart({
       {/* Footer Insight */}
       <div className="mt-4 pt-3 border-t border-slate-100">
         <p className="text-xs text-slate-500 text-center leading-relaxed">
-          📊 Hover over any dot for details · Click legend to filter categories · 
+          📊 Hover over any dot for details — they glow and pulse on hover · Click legend to filter categories · 
           Dot size = magnitude of impact · Vertical position = country · Horizontal = decade · 
           Complete cascade: Climate Drivers → Environmental → Economic → Human Impacts
         </p>

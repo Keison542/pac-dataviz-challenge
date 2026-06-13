@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
+import { LineItem } from "@/dataviz/lineChart/LineItem";
 
 type Props = {
   width: number;
@@ -45,6 +46,14 @@ const NODE_COLOR: Record<string, string> = {
   "Tourist Arrivals": "#14b8a6",
 };
 
+const NODE_CATEGORY_COLOR: Record<string, string> = {
+  driver: "#f97316",
+  environmental: "#10b981",
+  disaster: "#a855f7",
+  economic: "#f59e0b",
+  human: "#ef4444",
+};
+
 function normalize(v: number, multiplier: number = 1) {
   return Math.min(Math.max(Math.abs(v) * multiplier, 0.3), 30);
 }
@@ -58,6 +67,7 @@ export default function TimeSankey({
   insight = "This diagram traces the complete causal chain from climate drivers to environmental, economic, and human impacts. Thicker lines indicate stronger connections.",
 }: Props) {
   const [hover, setHover] = useState<any>(null);
+  const [hoveredLinkIndex, setHoveredLinkIndex] = useState<number | null>(null);
 
   const processed = useMemo(() => {
     const filtered = data.filter(d => d.country === selectedCountry);
@@ -93,42 +103,48 @@ export default function TimeSankey({
       source: nodes.findIndex(n => n.name === "Surface Temperature"),
       target: nodes.findIndex(n => n.name === "Crop Yield"),
       value: normalize(Math.abs(latest.temp) * 0.8),
-      label: "Heat stress reduces crop productivity"
+      label: "Heat stress reduces crop productivity",
+      color: "#10b981"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Rainfall"),
       target: nodes.findIndex(n => n.name === "Crop Yield"),
       value: normalize(Math.abs(latest.rainfall) * 0.6),
-      label: "Rainfall variability affects harvests"
+      label: "Rainfall variability affects harvests",
+      color: "#10b981"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Surface Temperature"),
       target: nodes.findIndex(n => n.name === "Livestock Yield"),
       value: normalize(Math.abs(latest.temp) * 0.7),
-      label: "Heat stress reduces livestock production"
+      label: "Heat stress reduces livestock production",
+      color: "#f59e0b"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Rainfall"),
       target: nodes.findIndex(n => n.name === "Livestock Yield"),
       value: normalize(Math.abs(latest.rainfall) * 0.5),
-      label: "Drought affects grazing lands"
+      label: "Drought affects grazing lands",
+      color: "#f59e0b"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Surface Temperature"),
       target: nodes.findIndex(n => n.name === "Climate Altering Land"),
       value: normalize(Math.abs(latest.temp) * 0.6),
-      label: "Temperature shifts alter ecosystems"
+      label: "Temperature shifts alter ecosystems",
+      color: "#8b5cf6"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Rainfall"),
       target: nodes.findIndex(n => n.name === "Climate Altering Land"),
       value: normalize(Math.abs(latest.rainfall) * 0.5),
-      label: "Precipitation changes affect land cover"
+      label: "Precipitation changes affect land cover",
+      color: "#8b5cf6"
     });
 
     // Climate Drivers → Disasters
@@ -136,21 +152,24 @@ export default function TimeSankey({
       source: nodes.findIndex(n => n.name === "Sea Surface Temperature"),
       target: nodes.findIndex(n => n.name === "Disasters"),
       value: normalize(latest.sea_surface_temperature * 1.2),
-      label: "Warm oceans fuel cyclones"
+      label: "Warm oceans fuel cyclones",
+      color: "#a855f7"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Sea Level"),
       target: nodes.findIndex(n => n.name === "Disasters"),
       value: normalize(latest.sea * 1.5),
-      label: "Sea level rise increases coastal flooding"
+      label: "Sea level rise increases coastal flooding",
+      color: "#a855f7"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Rainfall"),
       target: nodes.findIndex(n => n.name === "Disasters"),
       value: normalize(Math.abs(latest.rainfall) * 0.8),
-      label: "Extreme precipitation causes flooding"
+      label: "Extreme precipitation causes flooding",
+      color: "#a855f7"
     });
 
     // Environmental Impact → Economic Loss
@@ -158,21 +177,24 @@ export default function TimeSankey({
       source: nodes.findIndex(n => n.name === "Crop Yield"),
       target: nodes.findIndex(n => n.name === "Economic Loss"),
       value: normalize(latest.crop_yield * 0.3),
-      label: "Crop failure causes economic damage"
+      label: "Crop failure causes economic damage",
+      color: "#f59e0b"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Livestock Yield"),
       target: nodes.findIndex(n => n.name === "Economic Loss"),
       value: normalize(latest.lifestock_yield * 0.25),
-      label: "Livestock loss affects livelihoods"
+      label: "Livestock loss affects livelihoods",
+      color: "#f59e0b"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Climate Altering Land"),
       target: nodes.findIndex(n => n.name === "Economic Loss"),
       value: normalize(latest.climate_altering_land * 0.2),
-      label: "Land degradation reduces economic value"
+      label: "Land degradation reduces economic value",
+      color: "#f59e0b"
     });
 
     // Disasters → Economic Loss
@@ -180,14 +202,16 @@ export default function TimeSankey({
       source: nodes.findIndex(n => n.name === "Disasters"),
       target: nodes.findIndex(n => n.name === "Economic Loss"),
       value: normalize(latest.loss * 0.3),
-      label: "Disasters cause infrastructure damage"
+      label: "Disasters cause infrastructure damage",
+      color: "#f59e0b"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Disasters"),
       target: nodes.findIndex(n => n.name === "Tourist Arrivals"),
       value: normalize(latest.loss * 0.2),
-      label: "Disasters deter tourism"
+      label: "Disasters deter tourism",
+      color: "#14b8a6"
     });
 
     // Economic Loss → Human Impacts
@@ -195,14 +219,16 @@ export default function TimeSankey({
       source: nodes.findIndex(n => n.name === "Economic Loss"),
       target: nodes.findIndex(n => n.name === "People Affected"),
       value: normalize(latest.people * 0.1),
-      label: "Economic hardship displaces communities"
+      label: "Economic hardship displaces communities",
+      color: "#ef4444"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Economic Loss"),
       target: nodes.findIndex(n => n.name === "Population Growth"),
       value: normalize(Math.abs(latest.population_growth) * 0.15),
-      label: "Economic stress affects migration"
+      label: "Economic stress affects migration",
+      color: "#ec4898"
     });
 
     // Climate Drivers → Direct Human Impacts
@@ -210,14 +236,16 @@ export default function TimeSankey({
       source: nodes.findIndex(n => n.name === "Surface Temperature"),
       target: nodes.findIndex(n => n.name === "Tourist Arrivals"),
       value: normalize(Math.abs(latest.temp) * 0.5),
-      label: "Temperature affects tourism patterns"
+      label: "Temperature affects tourism patterns",
+      color: "#14b8a6"
     });
     
     links.push({
       source: nodes.findIndex(n => n.name === "Rainfall"),
       target: nodes.findIndex(n => n.name === "Tourist Arrivals"),
       value: normalize(Math.abs(latest.rainfall) * 0.4),
-      label: "Rainfall affects travel decisions"
+      label: "Rainfall affects travel decisions",
+      color: "#14b8a6"
     });
 
     return { nodes, links };
@@ -360,32 +388,39 @@ export default function TimeSankey({
         {/* Background */}
         <rect x={5} y={35} width={width - 10} height={height - 45} fill="#fafbfc" rx={8} />
 
-        {/* LINKS */}
+        {/* LINKS - Using LineItem for better hover effects */}
         <g>
           {sankeyData.links.map((link: any, i: number) => {
-            const isHovered = hover?.type === "link" && hover.index === i;
+            const pathData = sankeyLinkHorizontal()(link);
             const isStrongest = strongestLink && link === strongestLink;
+            const linkColor = processed.links[i]?.color || "#a855f7";
+            const isHovered = hoveredLinkIndex === i;
+            
             return (
-              <path
+              <LineItem
                 key={i}
-                d={sankeyLinkHorizontal()(link) || ""}
-                stroke="#a855f7"
-                strokeOpacity={isHovered ? 0.9 : (isStrongest ? 0.7 : 0.3)}
-                strokeWidth={Math.max(1.5, isStrongest ? link.width * 1.3 : link.width || 1.5)}
-                fill="none"
-                cursor="pointer"
-                onMouseEnter={() => setHover({ type: "link", index: i, data: link })}
-                onMouseLeave={() => setHover(null)}
+                path={pathData || ""}
+                color={linkColor}
+                opacity={isHovered ? 0.9 : (isStrongest ? 0.7 : 0.3)}
+                strokeWidth={Math.max(1.5, isStrongest ? (link.width || 1.5) * 1.3 : (link.width || 1.5))}
+                onHover={(hovered: boolean) => {
+                  setHoveredLinkIndex(hovered ? i : null);
+                  if (hovered) {
+                    setHover({ type: "link", index: i, data: link });
+                  } else if (!hovered && hover?.type === "link") {
+                    setHover(null);
+                  }
+                }}
               />
             );
           })}
         </g>
 
-        {/* NODES */}
+        {/* NODES - Enhanced with glow effects */}
         <g>
           {sankeyData.nodes.map((node: any, i: number) => {
             const isHovered = hover?.type === "node" && hover.data?.name === node.name;
-            const nodeColor = NODE_COLOR[node.name] || "#94a3b8";
+            const nodeColor = NODE_COLOR[node.name] || NODE_CATEGORY_COLOR[node.category] || "#94a3b8";
             
             return (
               <g
@@ -395,6 +430,18 @@ export default function TimeSankey({
                 onMouseEnter={() => setHover({ type: "node", data: node })}
                 onMouseLeave={() => setHover(null)}
               >
+                {/* Glow effect for hovered node */}
+                {isHovered && (
+                  <rect
+                    width={node.x1 - node.x0}
+                    height={node.y1 - node.y0}
+                    fill={nodeColor}
+                    opacity={0.2}
+                    rx={8}
+                    style={{ filter: "blur(6px)" }}
+                  />
+                )}
+                
                 <rect
                   width={node.x1 - node.x0}
                   height={node.y1 - node.y0}
@@ -413,7 +460,7 @@ export default function TimeSankey({
                   dominantBaseline="middle"
                   fontSize={10}
                   fill="#1e293b"
-                  fontWeight={600}
+                  fontWeight={isHovered ? 700 : 600}
                 >
                   {node.name}
                 </text>
@@ -438,10 +485,10 @@ export default function TimeSankey({
         {/* Category labels at the top */}
         <g>
           {[
-            { x: 140, label: "🌡️ Climate Drivers" },
-            { x: 340, label: "🌿 Environmental" },
-            { x: 540, label: "💰 Economic" },
-            { x: 740, label: "👥 Human" },
+            { x: 140, label: "🌡️ Climate Drivers", color: "#f97316" },
+            { x: 340, label: "🌿 Environmental", color: "#10b981" },
+            { x: 540, label: "💰 Economic", color: "#f59e0b" },
+            { x: 740, label: "👥 Human", color: "#ef4444" },
           ].map((item) => (
             <text
               key={item.label}
@@ -449,7 +496,7 @@ export default function TimeSankey({
               y={48}
               textAnchor="middle"
               fontSize={9}
-              fill="#94a3b8"
+              fill={item.color}
               fontWeight="600"
               letterSpacing="0.05em"
             >
@@ -460,7 +507,7 @@ export default function TimeSankey({
 
         {/* Tooltip */}
         {hover && (
-          <foreignObject x={20} y={70} width={320} height={180}>
+          <foreignObject x={20} y={70} width={320} height={200}>
             <div
               style={{
                 background: "#ffffff",
@@ -477,7 +524,7 @@ export default function TimeSankey({
                   <div className="flex items-center gap-2 mb-2">
                     <div 
                       className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: NODE_COLOR[hover.data.name] || "#94a3b8" }}
+                      style={{ backgroundColor: NODE_COLOR[hover.data.name] || NODE_CATEGORY_COLOR[hover.data.category] || "#94a3b8" }}
                     />
                     <strong className="text-slate-800">{hover.data.name}</strong>
                   </div>
@@ -513,6 +560,9 @@ export default function TimeSankey({
                   <div className="text-slate-500 text-[10px] mt-2">
                     {hover.data.label || "Relationship magnitude based on historical data"}
                   </div>
+                  <div className="text-slate-400 text-[9px] mt-2 pt-1 border-t border-slate-100">
+                    Hover over links to see causal pathways
+                  </div>
                 </>
               )}
             </div>
@@ -524,7 +574,7 @@ export default function TimeSankey({
       <div className="mt-4 pt-3 border-t border-slate-100">
         <p className="text-xs text-slate-500 text-center leading-relaxed">
           📊 Hover over any link or node to explore the complete causal chain · 
-          Thicker lines indicate stronger relationships · 
+          Thicker lines indicate stronger relationships · Lines glow on hover for better visibility · 
           Full pathway: Climate Drivers → Environmental → Economic → Human Impacts
         </p>
       </div>

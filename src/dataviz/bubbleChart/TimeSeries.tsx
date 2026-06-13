@@ -3,7 +3,8 @@
 
 import { scaleLinear } from "d3-scale";
 import { line, curveCardinal, area } from "d3-shape";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
+import { LineItem } from "@/dataviz/lineChart/LineItem";
 
 type DataPoint = {
   year: number;
@@ -80,11 +81,12 @@ export function TimeSeriesDashboard({
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(
     new Set(METRICS.map((m) => m.key))
   );
+  const [lineHoverTimer, setLineHoverTimer] = useState<NodeJS.Timeout | null>(null);
 
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
-  const toggleMetric = (key: string) => {
+  const toggleMetric = useCallback((key: string) => {
     const newVisible = new Set(visibleMetrics);
     if (newVisible.has(key)) {
       newVisible.delete(key);
@@ -92,7 +94,37 @@ export function TimeSeriesDashboard({
       newVisible.add(key);
     }
     setVisibleMetrics(newVisible);
-  };
+  }, [visibleMetrics]);
+
+  const handleLineHover = useCallback((key: string | null, isHovered: boolean) => {
+    if (lineHoverTimer) {
+      clearTimeout(lineHoverTimer);
+    }
+    
+    if (isHovered) {
+      setHoveredMetric(key);
+    } else {
+      // Small delay to allow point hover to take precedence
+      const timer = setTimeout(() => {
+        if (hoveredPoint === null) {
+          setHoveredMetric(null);
+        }
+      }, 50);
+      setLineHoverTimer(timer);
+    }
+  }, [hoveredPoint, lineHoverTimer]);
+
+  const handlePointHover = useCallback((point: { metric: string; year: number; value: number } | null) => {
+    if (lineHoverTimer) {
+      clearTimeout(lineHoverTimer);
+    }
+    setHoveredPoint(point);
+    if (point) {
+      setHoveredMetric(point.metric);
+    } else {
+      setHoveredMetric(null);
+    }
+  }, [lineHoverTimer]);
 
   // Calculate series data with safe value handling
   const seriesData = useMemo(() => {
@@ -293,7 +325,7 @@ export function TimeSeriesDashboard({
     <div className="w-full">
       {/* Key Findings Summary Cards */}
       <div className="mb-5 grid grid-cols-3 gap-2">
-        <div className="text-center p-2 bg-emerald-50 rounded-lg">
+        <div className="text-center p-2 bg-emerald-50 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-lg font-bold text-emerald-700">
             {formatNumber(totalCropYield)} t/ha
           </div>
@@ -302,7 +334,7 @@ export function TimeSeriesDashboard({
             Peak: {formatNumber(peakCrop)} t/ha ({peakCropYear})
           </div>
         </div>
-        <div className="text-center p-2 bg-amber-50 rounded-lg">
+        <div className="text-center p-2 bg-amber-50 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-lg font-bold text-amber-700">
             {formatNumber(totalLivestock)} tons
           </div>
@@ -311,7 +343,7 @@ export function TimeSeriesDashboard({
             Peak: {formatNumber(peakLivestock)} tons ({peakLivestockYear})
           </div>
         </div>
-        <div className="text-center p-2 bg-teal-50 rounded-lg">
+        <div className="text-center p-2 bg-teal-50 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-lg font-bold text-teal-700">
             {formatNumber(totalTourist)}
           </div>
@@ -327,18 +359,23 @@ export function TimeSeriesDashboard({
         {METRICS.map((metric) => {
           const isVisible = visibleMetrics.has(metric.key);
           const metricData = seriesData.find((m) => m.key === metric.key);
+          const isHovered = hoveredMetric === metric.key;
 
           return (
             <button
               key={metric.key}
               onClick={() => toggleMetric(metric.key)}
+              onMouseEnter={() => setHoveredMetric(metric.key)}
+              onMouseLeave={() => setHoveredMetric(null)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 isVisible ? "shadow-sm" : "opacity-50 grayscale"
               }`}
               style={{
                 backgroundColor: isVisible ? `${metric.color}15` : "#f1f5f9",
-                color: isVisible ? metric.color : "#64748b",
+                color: isVisible ? (isHovered ? metric.color : metric.color) : "#64748b",
                 border: `1px solid ${isVisible ? metric.color : "#e2e8f0"}`,
+                transform: isHovered && isVisible ? "scale(1.02)" : "scale(1)",
+                transition: "all 0.2s ease"
               }}
             >
               <span className="text-sm">{metric.icon}</span>
@@ -384,10 +421,6 @@ export function TimeSeriesDashboard({
                 <stop offset="100%" stopColor={metric.color} stopOpacity="0.0" />
               </linearGradient>
             ))}
-            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2.5" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
           </defs>
 
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
@@ -432,23 +465,20 @@ export function TimeSeriesDashboard({
               );
             })}
 
-            {/* Trend Lines */}
+            {/* Trend Lines using LineItem component with stable hover */}
             {METRICS.map((metric) => {
               if (!visibleMetrics.has(metric.key)) return null;
-              const isHovered = hoveredMetric === metric.key;
+              
               return (
-                <path
+                <LineItem
                   key={`line-${metric.key}`}
-                  d={linePaths[metric.key]}
-                  fill="none"
-                  stroke={metric.color}
-                  strokeWidth={isHovered ? 3.5 : 2.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  filter={isHovered ? "url(#glow)" : "none"}
-                  className="transition-all duration-200 cursor-pointer"
-                  onMouseEnter={() => setHoveredMetric(metric.key)}
-                  onMouseLeave={() => setHoveredMetric(null)}
+                  path={linePaths[metric.key]}
+                  color={metric.color}
+                  opacity={0.85}
+                  strokeWidth={2.5}
+                  onHover={(hovered) => {
+                    handleLineHover(metric.key, hovered);
+                  }}
                 />
               );
             })}
@@ -473,7 +503,7 @@ export function TimeSeriesDashboard({
 
                   return (
                     <g key={`point-${metric.key}-${point.year}`}>
-                      {isMax && (
+                      {isMax && !isActive && (
                         <circle
                           cx={cx}
                           cy={cy}
@@ -492,14 +522,20 @@ export function TimeSeriesDashboard({
                         stroke="#fff"
                         strokeWidth={2.5}
                         className="transition-all duration-200 cursor-pointer"
+                        style={{
+                          filter: isActive ? `drop-shadow(0 0 8px ${metric.color})` : "none",
+                          transition: "all 0.2s ease"
+                        }}
                         onMouseEnter={() =>
-                          setHoveredPoint({
+                          handlePointHover({
                             metric: metric.key,
                             year: point.year,
                             value,
                           })
                         }
-                        onMouseLeave={() => setHoveredPoint(null)}
+                        onMouseLeave={() =>
+                          handlePointHover(null)
+                        }
                       />
                       {isMax && (
                         <text
@@ -619,10 +655,10 @@ export function TimeSeriesDashboard({
       {/* Tooltip */}
       {hoveredPoint && (
         <div
-          className="fixed pointer-events-none bg-white border border-slate-200 shadow-xl px-4 py-2.5 rounded-lg z-50"
+          className="fixed pointer-events-none bg-white border border-slate-200 shadow-xl px-4 py-2.5 rounded-lg z-50 animate-in fade-in zoom-in duration-200"
           style={{
             left: xScale(hoveredPoint.year) + MARGIN.left + 15,
-            top: yScale(hoveredPoint.value) + MARGIN.top - 50,
+            top: yScale(hoveredPoint.value) + MARGIN.top - 55,
           }}
         >
           <div className="flex items-center gap-2 mb-1.5">
@@ -638,14 +674,16 @@ export function TimeSeriesDashboard({
               {hoveredPoint.year}
             </span>
           </div>
-          <div className="text-lg font-bold text-slate-800">
+          <div className="text-lg font-bold text-slate-800 tabular-nums">
             {METRICS.find((m) => m.key === hoveredPoint.metric)?.format(
               hoveredPoint.value
             )}
             {METRICS.find((m) => m.key === hoveredPoint.metric)?.unit}
           </div>
           <div className="text-[10px] text-slate-400 mt-1">
-            {METRICS.find((m) => m.key === hoveredPoint.metric)?.label.toLowerCase()} value
+            {hoveredPoint.value > 1000000 ? "Extreme impact" : 
+             hoveredPoint.value > 10000 ? "Major impact" : 
+             hoveredPoint.value > 100 ? "Significant impact" : "Measured impact"}
           </div>
         </div>
       )}
@@ -660,7 +698,7 @@ export function TimeSeriesDashboard({
             <span className="font-medium text-teal-600"> Tourism</span> peaked at {formatNumber(peakTourist)} ({peakTouristYear})
           </p>
           <p className="text-[10px] text-slate-400">
-            💡 Click legend items to show/hide metrics · Hover over lines for exact values
+            💡 Click legend items to show/hide metrics · Hover over lines or points for details
           </p>
         </div>
       </div>

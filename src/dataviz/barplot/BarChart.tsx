@@ -2,6 +2,7 @@
 
 import { scaleBand, scaleLinear } from "d3-scale";
 import { useMemo, useState } from "react";
+import { animated, useSpring } from "@react-spring/web";
 
 type RecordType = {
   country: string;
@@ -152,8 +153,54 @@ const METRIC_CONFIGS = {
   }
 };
 
+// Animated bar component with spring effects
+const AnimatedBar = ({ width, height, y, fill, rx, onMouseEnter, onMouseLeave, isHovered }: any) => {
+  const springProps = useSpring({
+    width: width,
+    opacity: isHovered ? 0.95 : 0.85,
+    config: { tension: 200, friction: 20 },
+  });
+
+  const glowSpring = useSpring({
+    opacity: isHovered ? 0.3 : 0,
+    config: { tension: 200, friction: 20 },
+  });
+
+  return (
+    <>
+      {/* Glow effect on hover */}
+      {isHovered && (
+        <animated.rect
+          x={0}
+          y={y - 2}
+          width={width + 8}
+          height={height + 4}
+          rx={rx + 2}
+          fill={fill}
+          opacity={glowSpring.opacity}
+          style={{ filter: "blur(8px)" }}
+        />
+      )}
+      <animated.rect
+        x={0}
+        y={y}
+        width={springProps.width}
+        height={height}
+        fill={fill}
+        rx={rx}
+        opacity={springProps.opacity}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        className="transition-all duration-200 cursor-pointer"
+      />
+    </>
+  );
+};
+
 export function MultiMetricRankedDashboard({ width, height, data, selectedCountry }: Props) {
   const [selectedMetric, setSelectedMetric] = useState<keyof typeof METRIC_CONFIGS>("economicLoss");
+  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+  const [hoveredMetricBtn, setHoveredMetricBtn] = useState<string | null>(null);
 
   const currentMetric = METRIC_CONFIGS[selectedMetric];
   const currentData = data[selectedMetric];
@@ -215,23 +262,29 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
 
   return (
     <div className="w-full">
-      {/* Metric Selector - Single Row (Scrollable if needed) */}
+      {/* Metric Selector - Single Row with hover effects */}
       <div className="mb-4 overflow-x-auto">
         <div className="flex gap-2 min-w-max pb-2">
           {(Object.keys(METRIC_CONFIGS) as Array<keyof typeof METRIC_CONFIGS>).map(key => {
             const config = METRIC_CONFIGS[key];
             const isActive = selectedMetric === key;
+            const isHovered = hoveredMetricBtn === key;
+            
             return (
               <button
                 key={key}
                 onClick={() => setSelectedMetric(key)}
+                onMouseEnter={() => setHoveredMetricBtn(key)}
+                onMouseLeave={() => setHoveredMetricBtn(null)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                   isActive ? 'shadow-sm' : 'opacity-70 grayscale'
                 }`}
                 style={{
                   backgroundColor: isActive ? `${config.color}15` : '#f1f5f9',
                   color: isActive ? config.color : '#64748b',
-                  border: `1px solid ${isActive ? config.color : '#e2e8f0'}`
+                  border: `1px solid ${isActive ? config.color : '#e2e8f0'}`,
+                  transform: isHovered && !isActive ? 'scale(1.02)' : 'scale(1)',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 <span className="text-sm">{config.icon}</span>
@@ -250,33 +303,33 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
       {/* Header with Storytelling */}
       <div className="mb-4">
         <h3 className="text-base font-semibold text-slate-800 mb-1">{currentMetric.title}</h3>
-        <div className="p-3 bg-slate-50 rounded-lg border-l-4" style={{ borderColor: currentMetric.color }}>
+        <div className="p-3 bg-slate-50 rounded-lg border-l-4 transition-all duration-200" style={{ borderColor: currentMetric.color }}>
           <p className="text-xs text-slate-600 leading-relaxed">
             <span className="font-semibold text-slate-800">💡 Story Insight:</span> {currentMetric.insight}
           </p>
         </div>
       </div>
 
-      {/* Key Findings Summary Cards */}
+      {/* Key Findings Summary Cards with hover effects */}
       {topCountry && totalSum > 0 && (
         <div className="mb-5 grid grid-cols-4 gap-2">
-          <div className="text-center p-2 rounded-lg" style={{ backgroundColor: `${currentMetric.color}10` }}>
+          <div className="text-center p-2 rounded-lg transition-all duration-200 hover:shadow-md" style={{ backgroundColor: `${currentMetric.color}10` }}>
             <div className="text-lg font-bold" style={{ color: currentMetric.color }}>{topPercentage}%</div>
             <div className="text-xs text-slate-500">from top nation</div>
           </div>
-          <div className="text-center p-2 bg-emerald-50 rounded-lg">
+          <div className="text-center p-2 bg-emerald-50 rounded-lg transition-all duration-200 hover:shadow-md">
             <div className="text-lg font-bold text-emerald-700">
               {topVsSecond >= 0 ? `${topVsSecond.toFixed(0)}%` : `${Math.abs(topVsSecond).toFixed(0)}%`}
             </div>
             <div className="text-xs text-slate-500">higher than 2nd</div>
           </div>
-          <div className="text-center p-2 bg-purple-50 rounded-lg">
+          <div className="text-center p-2 bg-purple-50 rounded-lg transition-all duration-200 hover:shadow-md">
             <div className="text-lg font-bold text-purple-700">
               {top3Percentage.toFixed(0)}%
             </div>
             <div className="text-xs text-slate-500">from top 3 nations</div>
           </div>
-          <div className="text-center p-2 bg-amber-50 rounded-lg">
+          <div className="text-center p-2 bg-amber-50 rounded-lg transition-all duration-200 hover:shadow-md">
             <div className="text-lg font-bold text-amber-700">
               {totalCountries}
             </div>
@@ -287,7 +340,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
 
       {/* Narrative Paragraph */}
       {topCountry && totalSum > 0 && (
-        <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
+        <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100 transition-all duration-200 hover:shadow-sm">
           <p className="text-sm text-slate-700 leading-relaxed">
             <span className="font-bold text-slate-900">{topCountry.country}</span> leads with{' '}
             <span className="font-bold" style={{ color: currentMetric.color }}>{currentMetric.format(topCountry.value)}</span> — 
@@ -347,12 +400,13 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
             </text>
           ))}
 
-          {/* Bars */}
+          {/* Bars with animated effects */}
           {ranked.map((d, i) => {
             const y = yScale(d.country)!;
             const isTop = i === 0;
             const isSecond = i === 1;
             const isThird = i === 2;
+            const isHovered = hoveredCountry === d.country;
             
             let barColor;
             if (isTop) barColor = "url(#topBarGradient)";
@@ -362,15 +416,15 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
             
             return (
               <g key={d.country}>
-                {/* Bar */}
-                <rect
-                  x={0}
-                  y={y}
+                <AnimatedBar
                   width={xScale(d.value)}
                   height={yScale.bandwidth()}
+                  y={y}
                   fill={barColor}
                   rx={4}
-                  className="transition-all duration-500 hover:opacity-90"
+                  isHovered={isHovered}
+                  onMouseEnter={() => setHoveredCountry(d.country)}
+                  onMouseLeave={() => setHoveredCountry(null)}
                 />
                 
                 {/* Value label on bar (if wide enough) */}
@@ -382,21 +436,27 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
                     dominantBaseline="middle"
                     fontSize={11}
                     fill="#ffffff"
-                    fontWeight={600}
+                    fontWeight={isHovered ? 700 : 600}
+                    className="transition-all duration-200"
                   >
                     {currentMetric.formatNumber(d.value)}
                   </text>
                 )}
 
-                {/* Country label */}
+                {/* Country label with hover effect */}
                 <text
                   x={-12}
                   y={y + yScale.bandwidth() / 2}
                   textAnchor="end"
                   dominantBaseline="middle"
                   fontSize={11}
-                  fill={isTop ? "#be123c" : isSecond ? "#ea580c" : isThird ? "#d97706" : "#475569"}
-                  fontWeight={isTop || isSecond || isThird ? 600 : 500}
+                  fill={isTop ? "#be123c" : isSecond ? "#ea580c" : isThird ? "#d97706" : (isHovered ? currentMetric.color : "#475569")}
+                  fontWeight={isTop || isSecond || isThird || isHovered ? 600 : 500}
+                  className="transition-all duration-200 cursor-pointer"
+                  style={{
+                    transform: isHovered ? "translateX(-2px)" : "translateX(0)",
+                    transition: "transform 0.2s ease"
+                  }}
                 >
                   {d.country}
                   {isTop && <tspan className="text-red-500"> 👑</tspan>}
@@ -411,8 +471,9 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
                     y={y + yScale.bandwidth() / 2}
                     dominantBaseline="middle"
                     fontSize={11}
-                    fill={isTop ? "#be123c" : isSecond ? "#ea580c" : isThird ? "#d97706" : "#334155"}
-                    fontWeight={isTop || isSecond || isThird ? 600 : 500}
+                    fill={isTop ? "#be123c" : isSecond ? "#ea580c" : isThird ? "#d97706" : (isHovered ? currentMetric.color : "#334155")}
+                    fontWeight={isTop || isSecond || isThird || isHovered ? 600 : 500}
+                    className="transition-all duration-200"
                   >
                     {currentMetric.formatNumber(d.value)}
                   </text>
@@ -442,6 +503,9 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
             📊 <span className="font-medium">Distribution insight:</span> The top 3 countries ({ranked.slice(0, 3).map(d => d.country).join(", ")}) 
             account for <span className="font-semibold">{top3Percentage.toFixed(1)}%</span> of the total {currentMetric.formatNumber(totalSum)} {currentMetric.unit}.
             {bottomCountry && ` The lowest among all is ${bottomCountry.country} with ${currentMetric.formatNumber(bottomCountry.value)}.`}
+          </p>
+          <p className="text-[9px] text-slate-400 text-center mt-1">
+            💡 Hover over any bar to see it glow · Click on metric icons to switch views
           </p>
         </div>
       )}

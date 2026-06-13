@@ -1,19 +1,12 @@
+"use client";
+
 import { scaleLinear, scaleBand } from "d3-scale";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback, useRef } from "react";
 import { line, curveCardinal } from "d3-shape";
+import { LineItem } from "@/dataviz/lineChart/LineItem";
 import type { InteractionData } from "@/dataviz/lineChart/types/interaction";
 
-const MARGIN = { top: 60, right: 60, bottom: 100, left: 120 }; // Increased left margin from 100 to 120
-
-// ─────────────────────────────────────────────────────────────
-// UNIFIED DATA SCHEMA (IMPORTANT)
-// Every chart now expects this shape:
-// {
-//   country: string;
-//   year: number;
-//   value: number;
-// }
-// ─────────────────────────────────────────────────────────────
+const MARGIN = { top: 60, right: 60, bottom: 100, left: 120 };
 
 export type UnifiedDatum = {
   country: string;
@@ -48,10 +41,9 @@ export const TrendLine = ({
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
   const [hovered, setHovered] = useState<InteractionData | null>(null);
+  const [isLineHovered, setIsLineHovered] = useState(false);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ─────────────────────────────────────────────
-  // NORMALIZED STACK KEYS (year or country)
-  // ─────────────────────────────────────────────
   const stackKeys = useMemo(() => {
     return Array.from(
       new Set(data.map((d) => d[stackBy]))
@@ -60,32 +52,23 @@ export const TrendLine = ({
 
   const hasData = data.length > 0 && stackKeys.length > 0;
 
-  // ─────────────────────────────────────────────
-  // AGGREGATED TREND DATA (UNIFIED LOGIC)
-  // ─────────────────────────────────────────────
   const trendData = useMemo(() => {
     const map = new Map<number, number>();
-
     data.forEach((d) => {
       const key = d.year;
       map.set(key, (map.get(key) ?? 0) + (d.value || 0));
     });
-
     return Array.from(map.entries())
       .map(([year, total]) => ({ year, total }))
       .sort((a, b) => a.year - b.year);
   }, [data]);
 
-  // ─────────────────────────────────────────────
-  // SAFE METRICS
-  // ─────────────────────────────────────────────
   const totalLoss = useMemo(
     () => data.reduce((sum, d) => sum + (d.value || 0), 0),
     [data]
   );
 
-  const averageLoss =
-    trendData.length > 0 ? totalLoss / trendData.length : 0;
+  const averageLoss = trendData.length > 0 ? totalLoss / trendData.length : 0;
 
   const worstYear = trendData.reduce(
     (worst, cur) => (cur.total > (worst?.total ?? 0) ? cur : worst),
@@ -104,9 +87,6 @@ export const TrendLine = ({
     return first === 0 ? 0 : ((last - first) / first) * 100;
   }, [trendData]);
 
-  // ─────────────────────────────────────────────
-  // FORMATTING
-  // ─────────────────────────────────────────────
   const formatCompact = (v: number) => {
     if (v >= 1e9) return `${(v / 1e9).toFixed(1)}B`;
     if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
@@ -116,9 +96,6 @@ export const TrendLine = ({
 
   const formatTick = (v: number) => `$${formatCompact(v)}`;
 
-  // ─────────────────────────────────────────────
-  // SCALES
-  // ─────────────────────────────────────────────
   const xScale = useMemo(
     () =>
       scaleLinear()
@@ -138,9 +115,6 @@ export const TrendLine = ({
     [trendData, boundsHeight]
   );
 
-  // ─────────────────────────────────────────────
-  // CURVED LINE & AREA
-  // ─────────────────────────────────────────────
   const linePath = useMemo(() => {
     return (
       line<{ year: number; total: number }>()
@@ -164,9 +138,6 @@ export const TrendLine = ({
     return `${linePart} L ${xScale(lastPoint.year)} ${boundsHeight} L ${xScale(firstPoint.year)} ${boundsHeight} Z`;
   }, [trendData, xScale, yScale, boundsHeight]);
 
-  // ─────────────────────────────────────────────
-  // AXIS TICKS
-  // ─────────────────────────────────────────────
   const xAxisTicks = useMemo(() => {
     const years = trendData.map(d => d.year);
     const maxTicks = Math.max(5, Math.min(10, Math.floor(boundsWidth / 70)));
@@ -184,9 +155,47 @@ export const TrendLine = ({
     return ticks;
   }, [trendData]);
 
-  // ─────────────────────────────────────────────
-  // EMPTY STATE
-  // ─────────────────────────────────────────────
+  // Clear any pending timer
+  const clearHoverTimer = useCallback(() => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  }, []);
+
+  // Handle point hover
+  const handlePointHover = useCallback((point: InteractionData | null) => {
+    clearHoverTimer();
+    
+    if (point) {
+      setHovered(point);
+    } else {
+      // If line is not hovered, clear immediately
+      if (!isLineHovered) {
+        setHovered(null);
+      } else {
+        // Small delay to allow line hover to take over
+        hoverTimerRef.current = setTimeout(() => {
+          if (!isLineHovered) {
+            setHovered(null);
+          }
+          hoverTimerRef.current = null;
+        }, 100);
+      }
+    }
+  }, [isLineHovered, clearHoverTimer]);
+
+  // Handle line hover
+  const handleLineHover = useCallback((hovered: boolean) => {
+    clearHoverTimer();
+    setIsLineHovered(hovered);
+    
+    if (hovered) {
+      // When line is hovered, don't show point tooltip
+      setHovered(null);
+    }
+  }, [clearHoverTimer]);
+
   if (!hasData) {
     return (
       <div
@@ -204,12 +213,8 @@ export const TrendLine = ({
     );
   }
 
-  // ─────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────
   return (
     <div className="w-full font-sans">
-      {/* HEADER with Story Insight */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-slate-800 mb-2">{title}</h3>
         <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-cyan-500">
@@ -219,22 +224,21 @@ export const TrendLine = ({
         </div>
       </div>
 
-      {/* METRICS CARDS */}
       <div className="mb-6 grid grid-cols-4 gap-3">
-        <div className="text-center p-3 bg-cyan-50 rounded-lg border border-cyan-100">
+        <div className="text-center p-3 bg-cyan-50 rounded-lg border border-cyan-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-xl font-bold text-cyan-700">{formatTick(totalLoss)}</div>
           <div className="text-xs text-slate-500 mt-1">Total Economic Loss</div>
         </div>
-        <div className="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+        <div className="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-xl font-bold text-emerald-700">{formatTick(averageLoss)}</div>
           <div className="text-xs text-slate-500 mt-1">Annual Average</div>
         </div>
-        <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-100">
+        <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-xl font-bold text-amber-700">{worstYear?.year || "—"}</div>
           <div className="text-xs text-slate-500 mt-1">Worst Year</div>
           <div className="text-[11px] text-amber-600 font-medium">{worstYear ? formatCompact(worstYear.total) : "—"}</div>
         </div>
-        <div className="text-center p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+        <div className="text-center p-3 bg-indigo-50 rounded-lg border border-indigo-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className={`text-xl font-bold ${growthRate > 0 ? 'text-red-600' : 'text-green-600'}`}>
             {growthRate > 0 ? '+' : ''}{growthRate.toFixed(1)}%
           </div>
@@ -243,11 +247,9 @@ export const TrendLine = ({
         </div>
       </div>
 
-      {/* CHART */}
       <div className="relative">
         <svg width={width} height={height} className="overflow-visible">
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-            {/* Grid lines - horizontal */}
             {yAxisTicks.map((v, i) => (
               <line
                 key={`grid-y-${i}`}
@@ -261,7 +263,6 @@ export const TrendLine = ({
               />
             ))}
 
-            {/* Grid lines - vertical */}
             {xAxisTicks.map((year, i) => (
               <line
                 key={`grid-x-${i}`}
@@ -275,56 +276,44 @@ export const TrendLine = ({
               />
             ))}
 
-            {/* Area under the curve */}
             <path 
               d={areaPath} 
               fill="url(#areaGradient)" 
               opacity="0.3"
             />
 
-            {/* Gradient definition */}
             <defs>
               <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6"/>
                 <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.0"/>
               </linearGradient>
-              
-              {/* Glow filter */}
-              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-              </filter>
             </defs>
 
-            {/* Curved trend line */}
-            <path
-              d={linePath}
-              fill="none"
-              stroke="#06b6d4"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#glow)"
+            <LineItem
+              path={linePath}
+              color="#06b6d4"
+              opacity={0.85}
+              strokeWidth={3.5}
+              onHover={handleLineHover}
             />
 
-            {/* Data points */}
             {trendData.map((d, i) => {
               const isWorstYear = worstYear && d.year === worstYear.year;
               const isBestYear = bestYear && d.year === bestYear.year;
-              const pointRadius = isWorstYear ? 9 : isBestYear ? 7 : 5;
+              const isHovered = hovered?.label === `${d.year}`;
+              const pointRadius = isHovered ? 10 : (isWorstYear ? 9 : isBestYear ? 7 : 5);
               const pointColor = isWorstYear ? "#f59e0b" : isBestYear ? "#10b981" : "#06b6d4";
               
               return (
                 <g key={i}>
-                  {/* Outer glow for important points */}
-                  {(isWorstYear || isBestYear) && (
+                  {(isWorstYear || isBestYear) && !isHovered && !isLineHovered && (
                     <circle
                       cx={xScale(d.year)}
                       cy={yScale(d.total)}
                       r={pointRadius + 3}
                       fill="none"
                       stroke={pointColor}
-                      strokeWidth="1"
+                      strokeWidth="1.5"
                       opacity="0.3"
                     />
                   )}
@@ -336,28 +325,35 @@ export const TrendLine = ({
                     fill={pointColor}
                     stroke="#fff"
                     strokeWidth={2.5}
-                    className="transition-all duration-200"
-                    onMouseEnter={() => {
-                      setHovered({
-                        x: xScale(d.year),
-                        y: yScale(d.total),
-                        value: d.total,
-                        label: `${d.year}`,
-                      });
+                    className="cursor-pointer transition-all duration-200"
+                    style={{
+                      transform: isHovered ? "scale(1.15)" : "scale(1)",
+                      transition: "transform 0.2s ease",
+                      filter: isHovered ? `drop-shadow(0 0 6px ${pointColor})` : "none"
                     }}
-                    onMouseLeave={() => setHovered(null)}
+                    onMouseEnter={() => handlePointHover({
+                      x: xScale(d.year),
+                      y: yScale(d.total),
+                      value: d.total,
+                      label: `${d.year}`,
+                    })}
+                    onMouseLeave={() => handlePointHover(null)}
                   />
                   
-                  {/* Value label for key points */}
                   {(isWorstYear || isBestYear || i === 0 || i === trendData.length - 1) && (
                     <text
                       x={xScale(d.year)}
                       y={yScale(d.total) - (isWorstYear ? 22 : 15)}
                       textAnchor="middle"
-                      fontSize={isWorstYear ? "12" : "11"}
-                      fill={isWorstYear ? "#d97706" : "#475569"}
-                      fontWeight={isWorstYear ? "700" : "600"}
-                      className="whitespace-nowrap"
+                      fontSize={isHovered ? "12" : (isWorstYear ? "11" : "10")}
+                      fill={pointColor}
+                      fontWeight={isWorstYear ? "800" : "600"}
+                      className="whitespace-nowrap transition-all duration-200 pointer-events-none"
+                      style={{
+                        opacity: isLineHovered ? 0.5 : 1,
+                        transform: isHovered ? "scale(1.05)" : "scale(1)",
+                        transition: "all 0.2s ease"
+                      }}
                     >
                       {formatCompact(d.total)}
                     </text>
@@ -366,7 +362,6 @@ export const TrendLine = ({
               );
             })}
 
-            {/* X-axis labels */}
             {xAxisTicks.map((year, i) => (
               <g key={`x-axis-${i}`}>
                 <line
@@ -390,7 +385,6 @@ export const TrendLine = ({
               </g>
             ))}
 
-            {/* Y-axis labels - moved further left to prevent overlap */}
             {yAxisTicks.map((v, i) => (
               <g key={`y-axis-${i}`}>
                 <line
@@ -415,7 +409,6 @@ export const TrendLine = ({
               </g>
             ))}
 
-            {/* Axis Titles - repositioned Y-axis title to avoid overlap */}
             <text 
               x={boundsWidth / 2} 
               y={boundsHeight + 48} 
@@ -437,7 +430,6 @@ export const TrendLine = ({
               Total Economic Loss (USD)
             </text>
 
-            {/* Peak year annotation */}
             {worstYear && (
               <g>
                 <line
@@ -473,7 +465,6 @@ export const TrendLine = ({
               </g>
             )}
 
-            {/* Trend arrow annotation */}
             {trendData.length > 1 && (
               <g>
                 <path
@@ -514,32 +505,36 @@ export const TrendLine = ({
         </svg>
       </div>
 
-      {/* TOOLTIP */}
-      {hovered && (
+      {hovered && !isLineHovered && (
         <div
-          className="fixed pointer-events-none bg-white border border-slate-200 shadow-xl px-4 py-2.5 rounded-lg z-50"
+          className="fixed pointer-events-none bg-white border border-slate-200 shadow-xl px-4 py-2.5 rounded-lg z-50 animate-in fade-in zoom-in duration-200"
           style={{
             left: hovered.x + MARGIN.left + 15,
-            top: hovered.y + MARGIN.top - 50,
+            top: hovered.y + MARGIN.top - 55,
           }}
         >
           <div className="flex items-center gap-2 mb-1.5">
-            <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
+            <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
             <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
               Year {hovered.label}
             </span>
           </div>
-          <div className="text-lg font-bold text-slate-800">
+          <div className="text-lg font-bold text-slate-800 tabular-nums">
             {formatTick(Number(hovered.value) || 0)}
           </div>
-          <div className="text-[10px] text-slate-400 mt-1">Total economic loss</div>
+          <div className="text-[10px] text-slate-400 mt-1">
+            {hovered.value > 1000000000 ? "Extreme loss year" : 
+             hovered.value > 100000000 ? "Major disaster year" : 
+             hovered.value > 10000000 ? "Significant impact year" : "Measured impact year"}
+          </div>
         </div>
       )}
 
-      {/* MERGED FOOTER - Combined Trend Analysis & Data Summary */}
-      {/* <div className="mt-6 pt-4 border-t border-slate-200"> */}
-        {/* <div className="bg-slate-50 rounded-lg p-4"> */}
-          
+      <div className="mt-6 pt-4 border-t border-slate-200">
+        <div className="bg-slate-50 rounded-lg p-4 transition-all duration-200 hover:shadow-sm">
+          <div className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+            <span>📊</span> Trend Analysis & Data Summary
+          </div>
           <div className="space-y-2 text-sm text-slate-600">
             <p className="leading-relaxed">
               Over the <span className="font-semibold text-slate-700">{trendData.length}-year period</span> ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
@@ -558,11 +553,11 @@ export const TrendLine = ({
               The smooth curved line helps visualize the overall trend pattern over time.
             </p>
             <div className="pt-2 text-xs text-slate-500 border-t border-slate-200 mt-2">
-              <span className="font-medium text-slate-600">Data coverage:</span> {trendData.length} years of recorded losses analyzed
+              <span className="font-medium text-slate-600">Data coverage:</span> {trendData.length} years of recorded losses analyzed · Hover over points or the line for details
             </div>
           </div>
         </div>
-      // </div>
-    // </div>
+      </div>
+    </div>
   );
 };

@@ -19,9 +19,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
-  // REQUIRED for GitHub Pages
-  basePath: `/${repo}`,
-  assetPrefix: `/${repo}/`,
+  // Comment these out for local development
+  // basePath: `/${repo}`,
+  // assetPrefix: `/${repo}/`,
 };
 
 export default nextConfig;

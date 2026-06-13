@@ -1,9 +1,11 @@
+"use client";
+
 import { DisasterLossRecord } from "@/data/economic_consequence/direct_disaster_economic_loss";
 import { AffectedPeopleRecord } from "@/data/human_consequence/number_of_persons_affected";
 import { sexColorScale, climateColorScale } from "@/lib/utils";
 import { scaleLinear } from "d3-scale";
 import { line, area, curveMonotoneX } from "d3-shape";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { CircleItem } from "./CircleItem";
 import { LineItem } from "./LineItem";
 import { InteractionData } from "./types/interaction";
@@ -81,7 +83,12 @@ export const LineChart = ({
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
+  const [isLineHovered, setIsLineHovered] = useState(false);
   const [animate, setAnimate] = useState(false);
+  
+  // Refs for hover management
+  const pointHoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lineHoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const hasData = data.length > 0;
 
@@ -114,6 +121,57 @@ export const LineChart = ({
   }, [data, hasData]);
 
   const isClimateData = !(data.length > 0 && "Sex" in data[0]);
+
+  // Clear all timers
+  const clearTimers = useCallback(() => {
+    if (pointHoverTimerRef.current) {
+      clearTimeout(pointHoverTimerRef.current);
+      pointHoverTimerRef.current = null;
+    }
+    if (lineHoverTimerRef.current) {
+      clearTimeout(lineHoverTimerRef.current);
+      lineHoverTimerRef.current = null;
+    }
+  }, []);
+
+  // Handle point hover
+  const handlePointEnter = useCallback((x: number, y: number, value: number, year: number, category: string) => {
+    clearTimers();
+    setHoveredPoint({ x, y, value, year, category });
+    if (setHoveredDataPoint) {
+      setHoveredDataPoint({
+        x: x + MARGIN.left,
+        y: y + MARGIN.top,
+        label: `${selectedCountry ?? "Global"} • ${year}`,
+        value,
+      });
+    }
+  }, [setHoveredDataPoint, selectedCountry, clearTimers]);
+
+  const handlePointLeave = useCallback(() => {
+    clearTimers();
+    pointHoverTimerRef.current = setTimeout(() => {
+      setHoveredPoint(null);
+      setHoveredDataPoint?.(null);
+      pointHoverTimerRef.current = null;
+    }, 50);
+  }, [setHoveredDataPoint, clearTimers]);
+
+  // Handle line hover
+  const handleLineHover = useCallback((hovered: boolean) => {
+    clearTimers();
+    
+    if (hovered) {
+      setIsLineHovered(true);
+      setHoveredPoint(null);
+      setHoveredDataPoint?.(null);
+    } else {
+      lineHoverTimerRef.current = setTimeout(() => {
+        setIsLineHovered(false);
+        lineHoverTimerRef.current = null;
+      }, 50);
+    }
+  }, [setHoveredDataPoint, clearTimers]);
 
   // Empty state
   if (!hasData) {
@@ -159,23 +217,6 @@ export const LineChart = ({
     .y0(boundsHeight)
     .y1(d => yScale(d.value))
     .curve(curveMonotoneX);
-
-  const handlePointHover = (x: number, y: number, value: number, year: number, category: string) => {
-    setHoveredPoint({ x, y, value, year, category });
-    if (setHoveredDataPoint) {
-      setHoveredDataPoint({
-        x: x + MARGIN.left,
-        y: y + MARGIN.top,
-        label: `${selectedCountry ?? "Global"} • ${year}`,
-        value,
-      });
-    }
-  };
-
-  const handlePointLeave = () => {
-    setHoveredPoint(null);
-    setHoveredDataPoint?.(null);
-  };
 
   // Get color for the line
   const getLineColor = () => {
@@ -308,24 +349,25 @@ export const LineChart = ({
             />
           )}
 
-          {/* Main Line */}
+          {/* Main Line using LineItem */}
           <LineItem
             path={lineBuilder(processedData) || ""}
             color="url(#lineGradient)"
             strokeWidth={isClimateData ? 3.5 : 3}
             opacity={animate ? 1 : 0}
+            onHover={handleLineHover}
           />
 
           {/* Data Points */}
           {processedData.map((d, i) => {
             const x = xScale(d.year);
             const y = yScale(d.value);
-            const isHovered = hoveredPoint?.year === d.year;
+            const isPointHovered = hoveredPoint?.year === d.year;
             const isMax = d.value === maxValue;
             const isMin = d.value === minValue;
 
             const showPoint = isClimateData 
-              ? (isHovered || isMax || isMin || i % 3 === 0 || i === 0 || i === processedData.length - 1)
+              ? (isPointHovered || isMax || isMin || i % 3 === 0 || i === 0 || i === processedData.length - 1)
               : true;
 
             if (!showPoint) return null;
@@ -335,20 +377,20 @@ export const LineChart = ({
                 <CircleItem
                   x={x}
                   y={y}
-                  r={isHovered ? 7 : (isMax || isMin ? 5.5 : 4)}
+                  r={isPointHovered ? 8 : (isMax || isMin ? 6 : 4.5)}
                   color={isMax ? "#f59e0b" : isMin ? "#3b82f6" : lineColor}
-                  opacity={1}
-                  onMouseEnter={() => handlePointHover(x, y, d.value, d.year, d.category)}
+                  opacity={isLineHovered && !isPointHovered ? 0.4 : 1}
+                  onMouseEnter={() => handlePointEnter(x, y, d.value, d.year, d.category)}
                   onMouseLeave={handlePointLeave}
-                  isSelected={isHovered}
+                  isSelected={isPointHovered}
                 />
-                {isHovered && (
+                {isPointHovered && !isLineHovered && (
                   <circle
                     cx={x} cy={y}
-                    r={10}
+                    r={12}
                     fill="none"
                     stroke={lineColor}
-                    strokeOpacity="0.4"
+                    strokeOpacity="0.3"
                     strokeWidth="2"
                   />
                 )}
@@ -408,13 +450,13 @@ export const LineChart = ({
         </g>
       </svg>
 
-      {/* Tooltip */}
-      {hoveredPoint && (
+      {/* Tooltip - Only show when line is not hovered */}
+      {hoveredPoint && !isLineHovered && (
         <div
-          className="absolute pointer-events-none bg-white border border-slate-200 shadow-lg px-4 py-2 rounded-lg z-50"
+          className="fixed pointer-events-none bg-white border border-slate-200 shadow-lg px-4 py-2 rounded-lg z-50"
           style={{
             left: hoveredPoint.x + MARGIN.left + 20,
-            top: hoveredPoint.y + MARGIN.top - 35,
+            top: hoveredPoint.y + MARGIN.top - 40,
           }}
         >
           <div className="flex items-center gap-2 mb-1">

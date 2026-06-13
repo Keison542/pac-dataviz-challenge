@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { scaleLinear } from "d3-scale";
 import { line, curveMonotoneX } from "d3-shape";
+import { LineItem } from "@/dataviz/lineChart/LineItem";
 
 const MARGIN = {
   top: 40,
@@ -48,17 +49,17 @@ export function MultiLineChart({
   const [animate, setAnimate] = useState(false);
   const [activeSeries, setActiveSeries] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"regional" | "country">("regional");
+  const [hoveredLine, setHoveredLine] = useState<string | null>(null);
 
   const safeData = Array.isArray(data) ? data : [];
   const safeSeries = Array.isArray(series) ? series : [];
 
-  // Initialize all series as active - FIXED: only run once when safeSeries changes
+  // Initialize all series as active
   useEffect(() => {
     if (safeSeries.length > 0 && activeSeries.size === 0) {
       setActiveSeries(new Set(safeSeries.map(s => s.key)));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [safeSeries]); // Removed activeSeries.size from deps to prevent loop
+  }, [safeSeries]);
 
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
@@ -92,7 +93,7 @@ export function MultiLineChart({
     });
   }, []);
 
-  // Process data based on view mode, then standardize - using useMemo with proper dependencies
+  // Process data based on view mode, then standardize
   const processedData = useMemo(() => {
     let rawData: DataRow[];
     
@@ -174,16 +175,16 @@ export function MultiLineChart({
       .range([boundsHeight, 0]);
   }, [allValues, boundsHeight]);
 
-  // Animation - FIXED: only depend on processedData length
+  // Animation
   useEffect(() => {
     if (processedData.length > 0) {
       setAnimate(false);
       const timer = setTimeout(() => setAnimate(true), 100);
       return () => clearTimeout(timer);
     }
-  }, [processedData.length]); // Only depend on length, not the whole array
+  }, [processedData.length]);
 
-  // Calculate story insights - FIXED: use useMemo with proper dependencies
+  // Calculate story insights
   const firstYear = years[0];
   const lastYear = years[years.length - 1];
   const baselineYear = firstYear;
@@ -235,6 +236,22 @@ export function MultiLineChart({
     const sign = value > 0 ? "+" : "";
     return `${sign}${value.toFixed(2)}`;
   }, []);
+
+  // Generate line paths for each visible series
+  const linePaths = useMemo(() => {
+    const paths: Record<string, string> = {};
+    
+    visibleSeries.forEach(s => {
+      const lineGenerator = line<any>()
+        .x((d) => xScale?.(d.year) ?? 0)
+        .y((d) => yScale(Number(d?.[s.key] ?? 0)))
+        .curve(curveMonotoneX);
+      
+      paths[s.key] = lineGenerator(processedData) || "";
+    });
+    
+    return paths;
+  }, [processedData, xScale, yScale, visibleSeries]);
 
   if (!processedData.length || !safeSeries.length || !xScale) {
     return (
@@ -356,6 +373,7 @@ export function MultiLineChart({
         </defs>
 
         <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+          {/* Horizontal grid lines */}
           {yScale.ticks(6).map((tick, i) => (
             <line 
               key={`y-${i}`} 
@@ -365,9 +383,11 @@ export function MultiLineChart({
               y2={yScale(tick)} 
               stroke="#e2e8f0" 
               strokeWidth={0.8}
+              strokeDasharray="4 4"
             />
           ))}
           
+          {/* Vertical grid lines */}
           {xScale.ticks(8).map((tick, i) => (
             <line 
               key={`x-${i}`} 
@@ -377,9 +397,11 @@ export function MultiLineChart({
               y2={boundsHeight} 
               stroke="#e2e8f0" 
               strokeWidth={0.8}
+              strokeDasharray="4 4"
             />
           ))}
 
+          {/* Zero baseline */}
           <line 
             x1={0} 
             x2={boundsWidth} 
@@ -390,25 +412,26 @@ export function MultiLineChart({
             strokeDasharray="none"
           />
 
+          {/* Lines using LineItem component for enhanced hover effects */}
           {visibleSeries.map((s) => {
-            const lineGenerator = line<any>()
-              .x((d) => xScale(d.year))
-              .y((d) => yScale(Number(d?.[s.key] ?? 0)))
-              .curve(curveMonotoneX);
-
+            const pathData = linePaths[s.key];
+            const isHoveredLine = hoveredLine === s.key;
+            
             return (
-              <path
+              <LineItem
                 key={s.key}
-                d={lineGenerator(processedData) ?? ""}
-                fill="none"
-                stroke={s.color}
+                path={pathData}
+                color={s.color}
+                opacity={animate ? 0.9 : 0}
                 strokeWidth={2.5}
-                strokeOpacity={animate ? 1 : 0}
-                style={{ transition: "stroke-opacity 0.5s ease" }}
+                onHover={(hovered: boolean) => {
+                  setHoveredLine(hovered ? s.key : null);
+                }}
               />
             );
           })}
 
+          {/* Data points */}
           {visibleSeries.map((s) =>
             processedData.map((row, i) => {
               const value = row?.[s.key];
@@ -418,7 +441,8 @@ export function MultiLineChart({
               const y = yScale(Number(value));
               const isHovered = hovered?.year === row.year && hovered?.key === s.key;
               const isFirstOrLast = i === 0 || i === processedData.length - 1;
-              const showPoint = isHovered || isFirstOrLast || i % 3 === 0;
+              const isLineHovered = hoveredLine === s.key;
+              const showPoint = isHovered || isFirstOrLast || i % 3 === 0 || isLineHovered;
 
               if (!showPoint) return null;
 
@@ -427,11 +451,15 @@ export function MultiLineChart({
                   key={`${s.key}-${i}`}
                   cx={x}
                   cy={y}
-                  r={isHovered ? 6 : 3.5}
+                  r={isHovered ? 7 : (isLineHovered ? 5 : 3.5)}
                   fill={s.color}
                   stroke="#ffffff"
                   strokeWidth={2}
                   className="cursor-pointer transition-all duration-150"
+                  style={{
+                    filter: isHovered ? "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" : "none",
+                    transition: "r 0.2s ease, filter 0.2s ease"
+                  }}
                   onMouseEnter={() => setHovered({ 
                     x, y, year: row.year, 
                     value: value, 
@@ -444,6 +472,7 @@ export function MultiLineChart({
             })
           )}
 
+          {/* X-axis labels */}
           {xScale.ticks(8).map((tick) => (
             <text 
               key={`xt-${tick}`} 
@@ -457,6 +486,7 @@ export function MultiLineChart({
             </text>
           ))}
 
+          {/* Y-axis labels */}
           {yScale.ticks(6).map((tick) => (
             <text 
               key={`yt-${tick}`} 
@@ -470,6 +500,7 @@ export function MultiLineChart({
             </text>
           ))}
 
+          {/* Axis titles */}
           <text 
             x={boundsWidth / 2} 
             y={boundsHeight + 45} 
@@ -491,12 +522,14 @@ export function MultiLineChart({
             {yAxisLabel}
           </text>
 
+          {/* Legend */}
           <g transform={`translate(${boundsWidth + 20}, 0)`}>
             <text x="0" y="-8" fill="#64748b" fontSize={10} fontWeight="600" letterSpacing="0.05em">
               SHOW/HIDE
             </text>
             {safeSeries.map((s, i) => {
               const isActive = activeSeries.has(s.key);
+              const isLineHovered = hoveredLine === s.key;
               const trend = seriesTrends[s.key];
               const trendIcon = trend?.direction === "↑ rising" ? "📈" : trend?.direction === "↓ falling" ? "📉" : "➡️";
               const changeValue = trend?.change || 0;
@@ -515,13 +548,15 @@ export function MultiLineChart({
                     rx="2" 
                     fill={s.color} 
                     opacity={isActive ? 1 : 0.3} 
+                    className="transition-opacity duration-150"
                   />
                   <text 
                     x="20" 
                     y="10" 
-                    fill={isActive ? "#334155" : "#94a3b8"} 
+                    fill={isActive ? (isLineHovered ? s.color : "#334155") : "#94a3b8"} 
                     fontSize={10} 
-                    fontWeight={isActive ? "500" : "400"}
+                    fontWeight={isLineHovered ? "600" : (isActive ? "500" : "400")}
+                    className="transition-all duration-150"
                   >
                     {displayLabel}
                   </text>
@@ -542,16 +577,17 @@ export function MultiLineChart({
         </g>
       </svg>
 
+      {/* Enhanced Tooltip */}
       {hovered && (
         <div
-          className="absolute pointer-events-none bg-white border border-slate-200 shadow-lg px-4 py-2 rounded-lg z-50"
+          className="fixed pointer-events-none bg-white border border-slate-200 shadow-xl px-4 py-2.5 rounded-lg z-50"
           style={{ 
             left: hovered.x + MARGIN.left + 15, 
-            top: hovered.y + MARGIN.top - 45,
+            top: hovered.y + MARGIN.top - 55,
             transition: "all 0.1s ease"
           }}
         >
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1.5">
             <div 
               className="w-2 h-2 rounded-full" 
               style={{ backgroundColor: hovered.key ? safeSeries.find(s => s.key === hovered.key)?.color : "#D85A30" }}
@@ -563,19 +599,21 @@ export function MultiLineChart({
           <div className="text-lg font-bold text-slate-800 tabular-nums">
             {hovered.value > 0 ? `+${hovered.value.toFixed(2)}` : hovered.value.toFixed(2)}
           </div>
-          <div className="text-xs text-slate-400 mt-0.5">
+          <div className="text-[10px] text-slate-400 mt-1">
             {viewMode === "country" && selectedCountry !== "the selected country" ? selectedCountry : "Regional Average"} • {hovered.year}
-            <br />
-            <span className="text-slate-300">(deviation from {baselineYearDisplay} baseline)</span>
+          </div>
+          <div className="text-[9px] text-slate-300 mt-0.5">
+            (deviation from {baselineYearDisplay} baseline)
           </div>
         </div>
       )}
 
+      {/* Footer */}
       <div className="mt-4 pt-3 border-t border-slate-100">
         <p className="text-xs text-slate-500 text-center leading-relaxed">
           📊 <span className="font-medium">Standardized anomaly values</span> (baseline {baselineYearDisplay} = 0) allow direct comparison of trends across different indicators · 
           Toggle between <span className="font-medium">Regional Average</span> and <span className="font-medium">{selectedCountry !== "the selected country" ? selectedCountry : "selected country"}</span> · 
-          Hover for exact values
+          Hover lines for emphasis and exact values
         </p>
       </div>
     </div>
