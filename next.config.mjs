@@ -7,6 +7,9 @@ const nextConfig = {
 
   trailingSlash: true,
 
+  basePath: `/${repo}`,
+  assetPrefix: `/${repo}/`,
+
   images: {
     unoptimized: true,
   },
@@ -18,10 +21,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-
-  // Comment these out for local development
-  // basePath: `/${repo}`,
-  // assetPrefix: `/${repo}/`,
 };
 
 export default nextConfig;
