@@ -20,7 +20,6 @@ const thresholds: Record<string, any> = {
   tourist_arrival: { max: 1e6, unit: "K", label: "Tourist Arrivals", icon: "🌴", color: "#F5A623", isReversed: false, multiplier: 0.001, displayUnit: "K" },
   people: { max: 1e5, unit: "K", label: "People Affected", icon: "👥", color: "#7F77DD", isReversed: true, multiplier: 0.001, displayUnit: "K" },
   population_growth: { max: 3, unit: "%", label: "Population Growth", icon: "📈", color: "#9C27B0", isReversed: false },
-  tubercolosis_incidence: { max: 500, unit: "/100k", label: "TB Incidence", icon: "🩺", color: "#E91E63", isReversed: true },
 };
 
 export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: DoughnutClimateDashboardProps) {
@@ -31,7 +30,6 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
     temp: 0, sea_surface_temperature: 0, rainfall: 0, sea: 0, 
     climate_altering_land: 0, crop_yield: 0, lifestock_yield: 0, 
     loss: 0, tourist_arrival: 0, people: 0, population_growth: 0, 
-    tubercolosis_incidence: 0 
   };
 
   const getMetricValue = (key: string) => safeKpis[key] ?? 0;
@@ -48,7 +46,6 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
     { key: "tourist_arrival", value: getMetricValue("tourist_arrival") },
     { key: "people", value: getMetricValue("people") },
     { key: "population_growth", value: getMetricValue("population_growth") },
-    { key: "tubercolosis_incidence", value: getMetricValue("tubercolosis_incidence") },
   ];
 
   const clearHoverTimer = () => {
@@ -165,7 +162,7 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
             <span className="text-white text-sm font-semibold">👥 Human</span>
           </div>
           <div className="space-y-3">
-            {metrics.slice(9, 12).map((m, i) => <MetricCircle key={m.key} m={m} index={i} group="human" />)}
+            {metrics.slice(9, 11).map((m, i) => <MetricCircle key={m.key} m={m} index={i} group="human" />)}
           </div>
         </div>
       </div>
@@ -184,7 +181,6 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
           {activeMetric === "tourist_arrival" && `🌴 Tourist Arrivals: ${(getSafeValue("tourist_arrival") / 1000).toFixed(0)}K visitors`}
           {activeMetric === "people" && `👥 People Affected: ${(getSafeValue("people") / 1000).toFixed(0)}K individuals impacted`}
           {activeMetric === "population_growth" && `📈 Population Growth: ${getSafeValue("population_growth").toFixed(1)}% annually`}
-          {activeMetric === "tubercolosis_incidence" && `🩺 TB Incidence: ${getSafeValue("tubercolosis_incidence").toFixed(0)} cases per 100,000`}
         </div>
       )}
     </div>
