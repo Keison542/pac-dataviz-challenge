@@ -9,17 +9,17 @@ interface DoughnutClimateDashboardProps {
 }
 
 const thresholds: Record<string, any> = {
-  temp: { max: 2.0, unit: "°C", label: "Surface Temp", icon: "🌡️", color: "#D85A30", isReversed: false },
-  sea_surface_temperature: { max: 2.0, unit: "°C", label: "Sea Surface Temp", icon: "🌊", color: "#2AA7FF", isReversed: false },
-  rainfall: { max: 200, unit: "mm", label: "Rainfall", icon: "☔", color: "#2E86AB", isReversed: false },
-  sea: { max: 0.5, unit: "cm", label: "Sea Level", icon: "📈", color: "#185FA5", isReversed: false, multiplier: 100 },
-  climate_altering_land: { max: 100000, unit: "ha", label: "Land Cover", icon: "🌱", color: "#2E86AB", isReversed: false, multiplier: 0.001, displayUnit: "K ha" },
-  crop_yield: { max: 10, unit: "t/ha", label: "Crop Yield", icon: "🌾", color: "#3D9970", isReversed: true },
-  lifestock_yield: { max: 20, unit: "t", label: "Livestock", icon: "🐄", color: "#FFC107", isReversed: true },
-  loss: { max: 1e8, unit: "M USD", label: "Economic Loss", icon: "💰", color: "#EF9F27", isReversed: true, multiplier: 1e-6, displayUnit: "M" },
-  tourist_arrival: { max: 1e6, unit: "K", label: "Tourist Arrivals", icon: "🌴", color: "#F5A623", isReversed: false, multiplier: 0.001, displayUnit: "K" },
-  people: { max: 1e5, unit: "K", label: "People Affected", icon: "👥", color: "#7F77DD", isReversed: true, multiplier: 0.001, displayUnit: "K" },
-  population_growth: { max: 3, unit: "%", label: "Population Growth", icon: "📈", color: "#9C27B0", isReversed: false },
+  temp: { max: 2.0, unit: "°C", label: "Surface Temp", icon: "", color: "#D85A30", isReversed: false },
+  sea_surface_temperature: { max: 2.0, unit: "°C", label: "Sea Surface Temp", icon: "", color: "#2AA7FF", isReversed: false },
+  rainfall: { max: 200, unit: "mm", label: "Rainfall", icon: "", color: "#2E86AB", isReversed: false },
+  sea: { max: 0.5, unit: "cm", label: "Sea Level", icon: "", color: "#185FA5", isReversed: false, multiplier: 100 },
+  climate_altering_land: { max: 100000, unit: "ha", label: "Land Cover", icon: "", color: "#2E86AB", isReversed: false, multiplier: 0.001, displayUnit: "K ha" },
+  crop_yield: { max: 10, unit: "t/ha", label: "Crop Yield", icon: "", color: "#3D9970", isReversed: true },
+  lifestock_yield: { max: 20, unit: "t", label: "Livestock", icon: "", color: "#FFC107", isReversed: true },
+  loss: { max: 1e8, unit: "M USD", label: "Economic Loss", icon: "", color: "#EF9F27", isReversed: true, multiplier: 1e-6, displayUnit: "M" },
+  tourist_arrival: { max: 1e6, unit: "K", label: "Tourist Arrivals", icon: "", color: "#F5A623", isReversed: false, multiplier: 0.001, displayUnit: "K" },
+  people: { max: 1e5, unit: "K", label: "People Affected", icon: "", color: "#7F77DD", isReversed: true, multiplier: 0.001, displayUnit: "K" },
+  population_growth: { max: 3, unit: "%", label: "Population Growth", icon: "", color: "#9C27B0", isReversed: false },
 };
 
 export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: DoughnutClimateDashboardProps) {
@@ -119,13 +119,13 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
   return (
     <div className="w-full max-w-6xl mx-auto mb-12">
       <div className="text-center mb-6">
-        <span className="text-sm font-medium text-slate-600">📍 {selectedCountry} at a Glance</span>
+        <span className="text-sm font-medium text-slate-600">{selectedCountry} at a Glance</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* CLIMATE DRIVERS */}
         <div className="bg-orange-50 rounded-xl border border-orange-200 p-3">
           <div className="bg-orange-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
-            <span className="text-white text-sm font-semibold">🌡️ Climate Drivers</span>
+            <span className="text-white text-sm font-semibold">Climate Drivers</span>
           </div>
           <div className="space-y-3">
             {metrics.slice(0, 4).map((m, i) => <MetricCircle key={m.key} m={m} index={i} group="climate" />)}
@@ -135,7 +135,7 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
         {/* ENVIRONMENTAL IMPACT */}
         <div className="bg-teal-50 rounded-xl border border-teal-200 p-3">
           <div className="bg-teal-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
-            <span className="text-white text-sm font-semibold">🌿 Environmental Impacts</span>
+            <span className="text-white text-sm font-semibold"> Environmental Impacts</span>
           </div>
           <div className="space-y-3">
             {metrics.slice(4, 7).map((m, i) => <MetricCircle key={m.key} m={m} index={i} group="environmental" />)}
@@ -145,7 +145,7 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
         {/* ECONOMIC CONSEQUENCE */}
         <div className="bg-amber-50 rounded-xl border border-amber-200 p-3">
           <div className="bg-amber-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
-            <span className="text-white text-sm font-semibold">💰 Economic Impacts</span>
+            <span className="text-white text-sm font-semibold"> Economic Impacts</span>
           </div>
           <div className="space-y-3">
             {metrics.slice(7, 9).map((m, i) => <MetricCircle key={m.key} m={m} index={i} group="economic" />)}
@@ -159,7 +159,7 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
         {/* HUMAN CONSEQUENCE */}
         <div className="bg-purple-50 rounded-xl border border-purple-200 p-3">
           <div className="bg-purple-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
-            <span className="text-white text-sm font-semibold">👥 Human Impacts</span>
+            <span className="text-white text-sm font-semibold">Human Impacts</span>
           </div>
           <div className="space-y-3">
             {metrics.slice(9, 11).map((m, i) => <MetricCircle key={m.key} m={m} index={i} group="human" />)}
@@ -170,16 +170,16 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
       {/* Tooltip */}
       {activeMetric && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 text-white text-xs px-4 py-2 rounded-lg shadow-xl">
-          {activeMetric === "temp" && `🌡️ Surface Temperature: ${getSafeValue("temp") > 0 ? `+${getSafeValue("temp").toFixed(2)}°C` : `${getSafeValue("temp").toFixed(2)}°C`} above pre-industrial baseline`}
-          {activeMetric === "sea_surface_temperature" && `🌊 Sea Surface Temperature: ${getSafeValue("sea_surface_temperature").toFixed(2)}°C - affects marine ecosystems`}
-          {activeMetric === "rainfall" && `☔ Rainfall Anomaly: ${getSafeValue("rainfall").toFixed(0)}mm - affects water security`}
-          {activeMetric === "sea" && `📈 Sea Level Rise: ${(getSafeValue("sea") * 100).toFixed(0)}cm - threatens coastal communities`}
-          {activeMetric === "climate_altering_land" && `🌱 Land Cover Change: ${(getSafeValue("climate_altering_land") / 1000).toFixed(0)}K ha altered`}
-          {activeMetric === "crop_yield" && `🌾 Crop Yield: ${getSafeValue("crop_yield").toFixed(1)} t/ha - food security indicator`}
+          {activeMetric === "temp" && `Surface Temperature: ${getSafeValue("temp") > 0 ? `+${getSafeValue("temp").toFixed(2)}°C` : `${getSafeValue("temp").toFixed(2)}°C`} above pre-industrial baseline`}
+          {activeMetric === "sea_surface_temperature" && `Sea Surface Temperature: ${getSafeValue("sea_surface_temperature").toFixed(2)}°C - affects marine ecosystems`}
+          {activeMetric === "rainfall" && `Rainfall Anomaly: ${getSafeValue("rainfall").toFixed(0)}mm - affects water security`}
+          {activeMetric === "sea" && `Sea Level Rise: ${(getSafeValue("sea") * 100).toFixed(0)}cm - threatens coastal communities`}
+          {activeMetric === "climate_altering_land" && ` Land Cover Change: ${(getSafeValue("climate_altering_land") / 1000).toFixed(0)}K ha altered`}
+          {activeMetric === "crop_yield" && ` Crop Yield: ${getSafeValue("crop_yield").toFixed(1)} t/ha - food security indicator`}
           {activeMetric === "lifestock_yield" && `🐄 Livestock Yield: ${getSafeValue("lifestock_yield").toFixed(1)} tons - agricultural output`}
-          {activeMetric === "loss" && `💰 Economic Loss: $${(getSafeValue("loss") / 1e6).toFixed(1)}M in disaster damages`}
-          {activeMetric === "tourist_arrival" && `🌴 Tourist Arrivals: ${(getSafeValue("tourist_arrival") / 1000).toFixed(0)}K visitors`}
-          {activeMetric === "people" && `👥 People Affected: ${(getSafeValue("people") / 1000).toFixed(0)}K individuals impacted`}
+          {activeMetric === "loss" && ` Economic Loss: $${(getSafeValue("loss") / 1e6).toFixed(1)}M in disaster damages`}
+          {activeMetric === "tourist_arrival" && ` Tourist Arrivals: ${(getSafeValue("tourist_arrival") / 1000).toFixed(0)}K visitors`}
+          {activeMetric === "people" && ` People Affected: ${(getSafeValue("people") / 1000).toFixed(0)}K individuals impacted`}
           {activeMetric === "population_growth" && `📈 Population Growth: ${getSafeValue("population_growth").toFixed(1)}% annually`}
         </div>
       )}
