@@ -403,7 +403,7 @@ export function BubbleChart({
                   }}
                 >
                   {country}
-                  {isLargestCountry && " 👑"}
+                  {isLargestCountry && " "}
                 </text>
               </g>
             );
