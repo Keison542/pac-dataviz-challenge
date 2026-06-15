@@ -75,16 +75,16 @@ export default function Home() {
           backgroundPosition: "center 30%",
           opacity: 0.15
         }} />
-        <div className="absolute bottom-10 right-10 text-white/10 text-8xl">⛵</div>
-        <div className="absolute top-20 left-10 text-white/10 text-6xl rotate-12">🌊</div>
-        <div className="absolute bottom-20 left-1/4 text-white/10 text-5xl -rotate-12">🌴</div>
+        <div className="absolute bottom-10 right-10 text-white/10 text-8xl"></div>
+        <div className="absolute top-20 left-10 text-white/10 text-6xl rotate-12"></div>
+        <div className="absolute bottom-20 left-1/4 text-white/10 text-5xl -rotate-12"></div>
       </div>
 
       <div className="relative z-2 max-w-[1200px] mx-auto px-6 py-8">
         {/* Pacific Dataviz Challenge Badge */}
         <div className="relative z-10 mb-4 flex justify-center">
           <div className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-600 to-teal-600 text-white px-4 py-2 rounded-full shadow-lg">
-            <span className="text-sm">🏆</span>
+            <span className="text-sm"></span>
             <span className="text-xs font-semibold tracking-wide">Pacific Dataviz Challenge 2026 Official Submission</span>
             <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">Climate Theme</span>
           </div>
@@ -143,7 +143,7 @@ export default function Home() {
 
         {!hasClimateData && !hasEconomicData && !hasHumanData && !hasSocioeconomicData && !hasRegionalData && !hasCausalData && !hasTimelineData && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="text-6xl mb-4 opacity-30">🌊</div>
+            <div className="text-6xl mb-4 opacity-30"></div>
             <h3 className="text-xl font-semibold text-slate-700 mb-2">No Climate Data Available</h3>
             <p className="text-sm text-slate-400 max-w-md">
               No climate impact data is currently available for {selectedCountry}. 
