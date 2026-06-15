@@ -303,11 +303,9 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
       {/* Header with Storytelling */}
       <div className="mb-4">
         <h3 className="text-base font-semibold text-slate-800 mb-1">{currentMetric.title}</h3>
-        <div className="p-3 bg-slate-50 rounded-lg border-l-4 transition-all duration-200" style={{ borderColor: currentMetric.color }}>
           <p className="text-xs text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800">Story Insight:</span> {currentMetric.insight}
+             {currentMetric.insight}
           </p>
-        </div>
       </div>
 
       {/* Key Findings Summary Cards with hover effects */}
@@ -503,9 +501,6 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
             <span className="font-medium">Distribution insight:</span> The top 3 countries ({ranked.slice(0, 3).map(d => d.country).join(", ")}) 
             account for <span className="font-semibold">{top3Percentage.toFixed(1)}%</span> of the total {currentMetric.formatNumber(totalSum)} {currentMetric.unit}.
             {bottomCountry && ` The lowest among all is ${bottomCountry.country} with ${currentMetric.formatNumber(bottomCountry.value)}.`}
-          </p>
-          <p className="text-[9px] text-slate-400 text-center mt-1">
-            Hover over any bar to see it glow · Click on metric icons to switch views
           </p>
         </div>
       )}
