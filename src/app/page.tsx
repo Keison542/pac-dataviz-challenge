@@ -6,7 +6,6 @@ import { ClimateDriversSection } from "@/components/ClimateDriversSection";
 import { HumanEconomicSection } from "@/components/HumanEconomicSection";
 import { RegionalComparisonSection } from "@/components/RegionalComparisonSection";
 import { CausalChainSection } from "@/components/CausalChainSection";
-import { FullTimelineSection } from "@/components/FullTimelineSection";
 import { Conclusion } from "@/components/Conclusion";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { useClimateData } from "@/hooks/useClimateData";
@@ -130,11 +129,7 @@ export default function Home() {
         )}
 
         {hasTimelineData && (
-          <FullTimelineSection 
-            selectedCountry={selectedCountry}
-            multiLineData={multiLineData}
-            chartWidth={chartWidth}
-          />
+          
         )}
 
         {(hasClimateData || hasEconomicData || hasHumanData || hasSocioeconomicData || hasRegionalData || hasCausalData || hasTimelineData) && (
