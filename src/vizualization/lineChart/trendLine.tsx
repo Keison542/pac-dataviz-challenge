@@ -34,7 +34,6 @@ export const TrendLine = ({
   setSelectedCountry,
   highlightedYear,
   stackBy = "year",
-  title = "Direct Disaster Economic Loss Trends",
   insight = "The trend line reveals how disaster economic losses have evolved over time.",
 }: Props) => {
   const boundsWidth = width - MARGIN.left - MARGIN.right;
@@ -216,7 +215,6 @@ export const TrendLine = ({
   return (
     <div className="w-full font-sans">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-slate-800 mb-2">{title}</h3>
           <p className="text-sm text-slate-600 leading-relaxed">
             {insight}
           </p>
