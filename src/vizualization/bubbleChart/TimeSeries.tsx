@@ -687,21 +687,6 @@ export function TimeSeriesDashboard({
           </div>
         </div>
       )}
-
-      {/* Footer */}
-      <div className="mt-4 pt-3 border-t border-slate-100">
-        <div className="text-xs text-slate-500 text-center leading-relaxed space-y-1">
-          <p>
-            Data across {data.length} years · 
-            <span className="font-medium text-emerald-600"> Crop Yield</span> peaked at {formatNumber(peakCrop)} t/ha ({peakCropYear}) · 
-            <span className="font-medium text-amber-600"> Livestock</span> peaked at {formatNumber(peakLivestock)} tons ({peakLivestockYear}) · 
-            <span className="font-medium text-teal-600"> Tourism</span> peaked at {formatNumber(peakTourist)} ({peakTouristYear})
-          </p>
-          <p className="text-[10px] text-slate-400">
-            Click legend items to show/hide metrics · Hover over lines or points for details
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
