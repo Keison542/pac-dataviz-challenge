@@ -363,10 +363,6 @@ export default function TimeSankey({
       </div>
 
       <svg width={width} height={height} className="overflow-visible">
-        {/* Instruction text */}
-        <text x={20} y={22} fontSize={10} fill="#64748b" fontWeight="500">
-          Complete causal flow: Climate Drivers → Environmental → Economic → Human | Thicker lines = stronger influence
-        </text>
 
         {/* Background */}
         <rect x={5} y={35} width={width - 10} height={height - 45} fill="#fafbfc" rx={8} />
