@@ -473,14 +473,6 @@ export const LineChart = ({
           </div>
         </div>
       )}
-
-      {/* Footer Insight */}
-      <div className="mt-4 pt-3 border-t border-slate-100">
-        <p className="text-xs text-slate-500 text-center leading-relaxed">
-          Hover over any point for details · {percentChange > 0 ? ' Rising trend detected' : percentChange < 0 ? 'Declining trend detected' : 'Stable trend detected'} · 
-          Peak: {maxYear} ({valueFormatter ? valueFormatter(maxValue) : formatNumber(maxValue)})
-        </p>
-      </div>
     </div>
   );
 };
