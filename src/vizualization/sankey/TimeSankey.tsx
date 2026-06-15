@@ -342,13 +342,10 @@ export default function TimeSankey({
       {strongestLink && (
         <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
           <p className="text-sm text-slate-700 leading-relaxed">
-            The climate impact cascade in <span className="font-bold text-slate-900">{selectedCountry}</span> flows through 
-            <span className="font-bold text-orange-600"> {driverCount} climate drivers</span> → 
-            <span className="font-bold text-emerald-600"> {environmentalCount} environmental impacts</span> → 
-            <span className="font-bold text-amber-600"> {economicCount} economic consequences</span> → 
-            <span className="font-bold text-rose-600"> {humanCount} human outcomes</span>.
-            The strongest causal link is from <span className="font-bold text-orange-600">{strongestLink.source?.name}</span> to 
-            <span className="font-bold text-purple-600"> {strongestLink.target?.name}</span> (strength: {Math.round(strongestLink.value)}), 
+            The climate impact cascade in {selectedCountry} flows through {driverCount} climate drivers → 
+            {environmentalCount} environmental impacts → {economicCount} economic consequences → {humanCount} human outcomes.
+            The strongest causal link is from {strongestLink.source?.name} to 
+            {strongestLink.target?.name} (strength: {Math.round(strongestLink.value)}), 
             highlighting the critical role of climate drivers in shaping disaster risk and downstream impacts.
           </p>
         </div>
