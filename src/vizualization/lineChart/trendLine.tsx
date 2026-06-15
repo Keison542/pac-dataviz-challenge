@@ -552,9 +552,7 @@ export const TrendLine = ({
               at <span className="font-semibold text-emerald-600">{bestYear ? formatCompact(bestYear.total) : "—"}</span>.
               The smooth curved line helps visualize the overall trend pattern over time.
             </p>
-            <div className="pt-2 text-xs text-slate-500 border-t border-slate-200 mt-2">
-              <span className="font-medium text-slate-600">Data coverage:</span> {trendData.length} years of recorded losses analyzed · Hover over points or the line for details
-            </div>
+            
           </div>
         </div>
       </div>
