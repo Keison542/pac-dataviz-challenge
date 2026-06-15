@@ -35,7 +35,7 @@ const METRIC_CONFIGS = {
   economicLoss: {
     title: "Economic Loss by Country",
     insight: "Who bears the highest financial burden from disasters?",
-    icon: "💰",
+    icon: "",
     color: "#0891b2",
     gradientStart: "#0891b2",
     gradientEnd: "#06b6d4",
@@ -56,7 +56,7 @@ const METRIC_CONFIGS = {
   cropYield: {
     title: "Crop Yield Impact by Country",
     insight: "Which nations face the greatest agricultural productivity loss?",
-    icon: "🌾",
+    icon: "",
     color: "#10b981",
     gradientStart: "#059669",
     gradientEnd: "#10b981",
@@ -67,7 +67,7 @@ const METRIC_CONFIGS = {
   touristArrivals: {
     title: "Tourist Arrivals by Country",
     insight: "Which tourism-dependent economies are most vulnerable?",
-    icon: "✈️",
+    icon: "",
     color: "#14b8a6",
     gradientStart: "#0d9488",
     gradientEnd: "#14b8a6",
@@ -86,7 +86,7 @@ const METRIC_CONFIGS = {
   livestockYield: {
     title: "Livestock Yield by Country",
     insight: "Which nations face livestock production challenges?",
-    icon: "🐄",
+    icon: "",
     color: "#f59e0b",
     gradientStart: "#d97706",
     gradientEnd: "#f59e0b",
@@ -105,7 +105,7 @@ const METRIC_CONFIGS = {
   climateAlteringLand: {
     title: "Climate-Altering Land by Country",
     insight: "Which nations have the most land affected by climate change?",
-    icon: "🌍",
+    icon: "",
     color: "#8b5cf6",
     gradientStart: "#7c3aed",
     gradientEnd: "#8b5cf6",
@@ -124,7 +124,7 @@ const METRIC_CONFIGS = {
   populationGrowth: {
     title: "Population Growth by Country",
     insight: "Which nations have the highest population growth rates?",
-    icon: "👥",
+    icon: "",
     color: "#ec4898",
     gradientStart: "#db2777",
     gradientEnd: "#ec4898",
@@ -135,7 +135,7 @@ const METRIC_CONFIGS = {
   affectedPersons: {
     title: "People Affected by Country",
     insight: "Which nations have the highest number of people affected by climate disasters?",
-    icon: "🆘",
+    icon: "",
     color: "#ef4444",
     gradientStart: "#dc2626",
     gradientEnd: "#ef4444",
@@ -250,7 +250,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white" style={{ width, height }}>
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">📊</div>
+          <div className="text-4xl mb-3 opacity-30"></div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             No data available for this metric
@@ -305,7 +305,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
         <h3 className="text-base font-semibold text-slate-800 mb-1">{currentMetric.title}</h3>
         <div className="p-3 bg-slate-50 rounded-lg border-l-4 transition-all duration-200" style={{ borderColor: currentMetric.color }}>
           <p className="text-xs text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800">💡 Story Insight:</span> {currentMetric.insight}
+            <span className="font-semibold text-slate-800">Story Insight:</span> {currentMetric.insight}
           </p>
         </div>
       </div>
@@ -459,9 +459,9 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
                   }}
                 >
                   {d.country}
-                  {isTop && <tspan className="text-red-500"> 👑</tspan>}
-                  {isSecond && <tspan className="text-orange-500"> 🥈</tspan>}
-                  {isThird && <tspan className="text-amber-500"> 🥉</tspan>}
+                  {isTop && <tspan className="text-red-500"> </tspan>}
+                  {isSecond && <tspan className="text-orange-500"> </tspan>}
+                  {isThird && <tspan className="text-amber-500"> </tspan>}
                 </text>
 
                 {/* Value label outside bar (if bar is too narrow) */}
@@ -500,12 +500,12 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
       {ranked.length > 0 && (
         <div className="mt-4 pt-3 border-t border-slate-100">
           <p className="text-xs text-slate-500 text-center leading-relaxed">
-            📊 <span className="font-medium">Distribution insight:</span> The top 3 countries ({ranked.slice(0, 3).map(d => d.country).join(", ")}) 
+            <span className="font-medium">Distribution insight:</span> The top 3 countries ({ranked.slice(0, 3).map(d => d.country).join(", ")}) 
             account for <span className="font-semibold">{top3Percentage.toFixed(1)}%</span> of the total {currentMetric.formatNumber(totalSum)} {currentMetric.unit}.
             {bottomCountry && ` The lowest among all is ${bottomCountry.country} with ${currentMetric.formatNumber(bottomCountry.value)}.`}
           </p>
           <p className="text-[9px] text-slate-400 text-center mt-1">
-            💡 Hover over any bar to see it glow · Click on metric icons to switch views
+            Hover over any bar to see it glow · Click on metric icons to switch views
           </p>
         </div>
       )}
