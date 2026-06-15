@@ -32,7 +32,7 @@ export function HumanEconomicSection({
         <div className="text-sm text-slate-500 max-w-[680px] mx-auto">
           {selectedCountry} has suffered ${(lossTotal / 1e6).toFixed(0)}M in losses and impacted {(peopleTotal / 1000).toFixed(0)}K people.
         </div>
-        <div className="text-sm text-[#D85A30] mt-2 font-medium">Each disaster has a price tag — and a human face. Climate affects food security, livelihoods, and economic stability.</div>
+        <div className="text-sm mt-2 font-medium">Each disaster has a price tag — and a human face. Climate affects food security, livelihoods, and economic stability.</div>
       </div>
       
       {(hasEconomicData || hasHumanData) && (
