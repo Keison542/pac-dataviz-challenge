@@ -293,7 +293,7 @@ export default function BeeswarmChart({
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white" style={{ width, height }}>
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">🐝</div>
+          <div className="text-4xl mb-3 opacity-30"></div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">No climate impact data available</p>
         </div>
@@ -305,7 +305,7 @@ export default function BeeswarmChart({
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white" style={{ width, height }}>
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">🐝</div>
+          <div className="text-4xl mb-3 opacity-30"></div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data for Selected Filters</h3>
           <p className="text-xs text-slate-400 max-w-xs">Try enabling more categories in the legend</p>
         </div>
@@ -382,7 +382,7 @@ export default function BeeswarmChart({
           onMouseEnter={() => setHoveredCategory("economic")}
           onMouseLeave={() => setHoveredCategory(null)}
         >
-          <span className="text-sm">💰</span>
+          <span className="text-sm"></span>
           <div className="text-xs font-bold text-amber-700">{economicCount}</div>
           <div className="text-[9px] text-slate-400">Economic</div>
         </div>
