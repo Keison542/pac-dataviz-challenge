@@ -260,7 +260,7 @@ export function MultiLineChart({
         style={{ width, height }}
       >
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">📈</div>
+          <div className="text-4xl mb-3 opacity-30"></div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             {viewMode === "country" && selectedCountry && selectedCountry !== "the selected country"
@@ -292,7 +292,7 @@ export function MultiLineChart({
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              🌏 Regional Average
+               Regional Average
             </button>
             <button
               onClick={() => setViewMode("country")}
@@ -309,7 +309,7 @@ export function MultiLineChart({
         
         <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-blue-500">
           <p className="text-xs text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800">💡 Story Insight:</span> {insight}
+            <span className="font-semibold text-slate-800">Story Insight:</span> {insight}
           </p>
         </div>
       </div>
@@ -358,7 +358,7 @@ export function MultiLineChart({
 
       <div className="mb-2 text-right">
         <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded">
-          📊 Values show deviation from {baselineYearDisplay} baseline (0 = no anomaly)
+          Values show deviation from {baselineYearDisplay} baseline (0 = no anomaly)
         </span>
       </div>
 
@@ -611,7 +611,7 @@ export function MultiLineChart({
       {/* Footer */}
       <div className="mt-4 pt-3 border-t border-slate-100">
         <p className="text-xs text-slate-500 text-center leading-relaxed">
-          📊 <span className="font-medium">Standardized anomaly values</span> (baseline {baselineYearDisplay} = 0) allow direct comparison of trends across different indicators · 
+          <span className="font-medium">Standardized anomaly values</span> (baseline {baselineYearDisplay} = 0) allow direct comparison of trends across different indicators · 
           Toggle between <span className="font-medium">Regional Average</span> and <span className="font-medium">{selectedCountry !== "the selected country" ? selectedCountry : "selected country"}</span> · 
           Hover lines for emphasis and exact values
         </p>
