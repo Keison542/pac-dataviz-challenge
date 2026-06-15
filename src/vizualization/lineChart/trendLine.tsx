@@ -217,11 +217,9 @@ export const TrendLine = ({
     <div className="w-full font-sans">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-slate-800 mb-2">{title}</h3>
-        <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-cyan-500">
           <p className="text-sm text-slate-600 leading-relaxed">
             {insight}
           </p>
-        </div>
       </div>
 
       <div className="mb-6 grid grid-cols-4 gap-3">
