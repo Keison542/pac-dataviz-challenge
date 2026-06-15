@@ -284,7 +284,7 @@ export default function TimeSankey({
         style={{ width, height }}
       >
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">🔀</div>
+          <div className="text-4xl mb-3 opacity-30"></div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Flow Data</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             No climate flow data available for {selectedCountry}
@@ -301,7 +301,7 @@ export default function TimeSankey({
         <h3 className="text-base font-semibold text-slate-800 mb-1">{title}</h3>
         <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-purple-500">
           <p className="text-xs text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800">💡 Story Insight:</span> {insight}
+            <span className="font-semibold text-slate-800"> Story Insight:</span> {insight}
           </p>
         </div>
       </div>
@@ -358,7 +358,7 @@ export default function TimeSankey({
 
       {/* Legend */}
       <div className="mb-3 flex flex-wrap items-center gap-4 text-xs">
-        <span className="text-slate-500">📊 Flow strength = line thickness</span>
+        <span className="text-slate-500">Flow strength = line thickness</span>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-orange-500"></div>
@@ -382,7 +382,7 @@ export default function TimeSankey({
       <svg width={width} height={height} className="overflow-visible">
         {/* Instruction text */}
         <text x={20} y={22} fontSize={10} fill="#64748b" fontWeight="500">
-          ⚡ Complete causal flow: Climate Drivers → Environmental → Economic → Human | Thicker lines = stronger influence
+           Complete causal flow: Climate Drivers → Environmental → Economic → Human | Thicker lines = stronger influence
         </text>
 
         {/* Background */}
@@ -485,10 +485,10 @@ export default function TimeSankey({
         {/* Category labels at the top */}
         <g>
           {[
-            { x: 140, label: "🌡️ Climate Drivers", color: "#f97316" },
-            { x: 340, label: "🌿 Environmental", color: "#10b981" },
-            { x: 540, label: "💰 Economic", color: "#f59e0b" },
-            { x: 740, label: "👥 Human", color: "#ef4444" },
+            { x: 140, label: " Climate Drivers", color: "#f97316" },
+            { x: 340, label: " Environmental", color: "#10b981" },
+            { x: 540, label: " Economic", color: "#f59e0b" },
+            { x: 740, label: " Human", color: "#ef4444" },
           ].map((item) => (
             <text
               key={item.label}
@@ -532,18 +532,18 @@ export default function TimeSankey({
                     Impact score: <span className="font-semibold text-slate-800">{Math.round(hover.data.value)}</span>
                   </div>
                   <div className="text-slate-400 text-[10px] mt-2">
-                    {hover.data.name === "Surface Temperature" && "🌡️ Land and air temperature anomaly - affects agriculture, ecosystems, and human health"}
-                    {hover.data.name === "Sea Surface Temperature" && "🌊 Ocean surface warming - fuels cyclones and marine heatwaves"}
-                    {hover.data.name === "Sea Level" && "📈 Rising sea levels from thermal expansion - threatens coastal communities"}
-                    {hover.data.name === "Rainfall" && "☔ Extreme precipitation events - causes flooding and landslides"}
-                    {hover.data.name === "Crop Yield" && "🌾 Agricultural productivity - affected by temperature and rainfall changes"}
-                    {hover.data.name === "Livestock Yield" && "🐄 Livestock production - heat stress reduces meat and dairy output"}
-                    {hover.data.name === "Climate Altering Land" && "🌍 Land cover changes - affects carbon storage and biodiversity"}
-                    {hover.data.name === "Disasters" && "🌀 Cyclones, floods, storm surges - direct climate impacts"}
-                    {hover.data.name === "Economic Loss" && "💰 Infrastructure and economic damage from disasters"}
-                    {hover.data.name === "Tourist Arrivals" && "✈️ Tourism-dependent economies - vulnerable to climate disruptions"}
-                    {hover.data.name === "People Affected" && "👥 Human displacement and livelihood impacts"}
-                    {hover.data.name === "Population Growth" && "📈 Demographic trends - affected by migration and economic conditions"}
+                    {hover.data.name === "Surface Temperature" && " Land and air temperature anomaly - affects agriculture, ecosystems, and human health"}
+                    {hover.data.name === "Sea Surface Temperature" && " Ocean surface warming - fuels cyclones and marine heatwaves"}
+                    {hover.data.name === "Sea Level" && " Rising sea levels from thermal expansion - threatens coastal communities"}
+                    {hover.data.name === "Rainfall" && " Extreme precipitation events - causes flooding and landslides"}
+                    {hover.data.name === "Crop Yield" && "Agricultural productivity - affected by temperature and rainfall changes"}
+                    {hover.data.name === "Livestock Yield" && " Livestock production - heat stress reduces meat and dairy output"}
+                    {hover.data.name === "Climate Altering Land" && " Land cover changes - affects carbon storage and biodiversity"}
+                    {hover.data.name === "Disasters" && " Cyclones, floods, storm surges - direct climate impacts"}
+                    {hover.data.name === "Economic Loss" && " Infrastructure and economic damage from disasters"}
+                    {hover.data.name === "Tourist Arrivals" && " Tourism-dependent economies - vulnerable to climate disruptions"}
+                    {hover.data.name === "People Affected" && " Human displacement and livelihood impacts"}
+                    {hover.data.name === "Population Growth" && " Demographic trends - affected by migration and economic conditions"}
                   </div>
                 </>
               )}
