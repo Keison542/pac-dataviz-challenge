@@ -498,7 +498,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
       {ranked.length > 0 && (
         <div className="mt-4 pt-3 border-t border-slate-100">
           <p className="text-xs text-slate-500 text-center leading-relaxed">
-            <span className="font-medium">Distribution insight:</span> The top 3 countries ({ranked.slice(0, 3).map(d => d.country).join(", ")}) 
+            The top 3 countries ({ranked.slice(0, 3).map(d => d.country).join(", ")}) 
             account for <span className="font-semibold">{top3Percentage.toFixed(1)}%</span> of the total {currentMetric.formatNumber(totalSum)} {currentMetric.unit}.
             {bottomCountry && ` The lowest among all is ${bottomCountry.country} with ${currentMetric.formatNumber(bottomCountry.value)}.`}
           </p>
