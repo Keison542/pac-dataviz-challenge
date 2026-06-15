@@ -276,13 +276,10 @@ export const LineChart = ({
       {/* Narrative Paragraph */}
       <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
-          Over the recorded period, this indicator has shown a 
-          <span className={`font-bold ${percentChange > 0 ? 'text-rose-600' : percentChange < 0 ? 'text-cyan-600' : 'text-slate-600'}`}>
-            {' '}{trendDirection} trend
-          </span> of {Math.abs(percentChange).toFixed(1)}%. 
-          The highest value was recorded in <span className="font-bold text-amber-700">{maxYear}</span> 
+          Over the recorded period, this indicator has shown a {trendDirection} trend of {Math.abs(percentChange).toFixed(1)}%. 
+          The highest value was recorded in {maxYear} 
           ({valueFormatter ? valueFormatter(maxValue) : formatNumber(maxValue)}),
-          while the lowest was in <span className="font-bold text-blue-700">{minYear}</span>
+          while the lowest was in {minYear}
           ({valueFormatter ? valueFormatter(minValue) : formatNumber(minValue)}).
         </p>
       </div>
