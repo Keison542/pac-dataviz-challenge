@@ -203,7 +203,7 @@ export function BubbleChart({
         <h3 className="text-base font-semibold text-slate-800 mb-1">{title}</h3>
         <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-rose-500">
           <p className="text-xs text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800">💡 Story Insight:</span> {insight}
+            <span className="font-semibold text-slate-800"> Story Insight:</span> {insight}
           </p>
         </div>
       </div>
@@ -462,9 +462,9 @@ export function BubbleChart({
 
       <div className="mt-4 pt-3 border-t border-slate-100">
         <p className="text-xs text-slate-500 text-center leading-relaxed">
-          📊 {countries.length} Pacific nations tracked across {years.length} years · 
+          {countries.length} Pacific nations tracked across {years.length} years · 
           Largest bubble = {largestEvent?.country} in {largestEvent?.year} ({formatNumber(largestEvent?.value || 0)} people) · 
-          💡 Hover over any bubble for details — they grow and glow
+          Hover over any bubble for details — they grow and glow
         </p>
       </div>
     </div>
