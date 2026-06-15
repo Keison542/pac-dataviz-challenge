@@ -234,7 +234,7 @@ export default function AlluvialDiagram({
         style={{ width, height }}
       >
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">🔀</div>
+          <div className="text-4xl mb-3 opacity-30"></div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Flow Data</h3>
           <p className="text-xs text-slate-400 max-w-xs">No climate flow data available for {selectedCountryName}</p>
         </div>
@@ -249,7 +249,7 @@ export default function AlluvialDiagram({
         <h3 className="text-base font-semibold text-slate-800 mb-1">{title}</h3>
         <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-purple-500">
           <p className="text-xs text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800">💡 Story Insight:</span> {insight}
+            <span className="font-semibold text-slate-800"> Story Insight:</span> {insight}
           </p>
         </div>
       </div>
@@ -299,7 +299,7 @@ export default function AlluvialDiagram({
 
       {/* Legend */}
       <div className="mb-3 flex flex-wrap items-center gap-4 text-xs">
-        <span className="text-slate-500">📊 Color legend:</span>
+        <span className="text-slate-500">Color legend:</span>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-orange-500"></div>
@@ -323,7 +323,7 @@ export default function AlluvialDiagram({
       <svg width={width} height={height} className="overflow-visible">
         {/* Instruction text */}
         <text x={20} y={22} fontSize={10} fill="#64748b" fontWeight="500">
-          🔀 Hover over any node to trace connections | Flow moves left (causes) → right (effects)
+          Hover over any node to trace connections | Flow moves left (causes) → right (effects)
         </text>
 
         {/* Background */}
@@ -405,12 +405,12 @@ export default function AlluvialDiagram({
         {/* Category labels at the top */}
         <g>
           {[
-            { x: 80, label: "🌏 Country" },
-            { x: 180, label: "📅 Decades" },
-            { x: 320, label: "🌡️ Climate Drivers" },
-            { x: 500, label: "🌿 Environmental" },
-            { x: 680, label: "💰 Economic" },
-            { x: 860, label: "👥 Human" },
+            { x: 80, label: "Country" },
+            { x: 180, label: "Decades" },
+            { x: 320, label: "Climate Drivers" },
+            { x: 500, label: "Environmental" },
+            { x: 680, label: "Economic" },
+            { x: 860, label: "Human" },
           ].map((item) => (
             <text
               key={item.label}
@@ -453,19 +453,19 @@ export default function AlluvialDiagram({
                   {node.name}
                 </div>
                 <div className="text-xs text-slate-400 mt-1">
-                  {node.category === "country" && `🌏 ${selectedCountryName} - Pacific Island Nation`}
-                  {node.category === "decade" && "📅 Time period grouping - shows trends over 10-year intervals"}
-                  {node.category === "temp" && "🌡️ Surface temperature anomaly - affects agriculture and human health"}
-                  {node.category === "sea_surface_temperature" && "🌊 Sea surface temperature - fuels cyclones and marine heatwaves"}
-                  {node.category === "sea" && "📈 Sea level rise - threatens coastal communities and infrastructure"}
-                  {node.category === "rain" && "☔ Rainfall anomaly - causes flooding or drought"}
-                  {node.category === "crop" && "🌾 Crop yield - agricultural productivity indicator"}
+                  {node.category === "country" && ` ${selectedCountryName} - Pacific Island Nation`}
+                  {node.category === "decade" && "Time period grouping - shows trends over 10-year intervals"}
+                  {node.category === "temp" && "Surface temperature anomaly - affects agriculture and human health"}
+                  {node.category === "sea_surface_temperature" && " Sea surface temperature - fuels cyclones and marine heatwaves"}
+                  {node.category === "sea" && "Sea level rise - threatens coastal communities and infrastructure"}
+                  {node.category === "rain" && " Rainfall anomaly - causes flooding or drought"}
+                  {node.category === "crop" && " Crop yield - agricultural productivity indicator"}
                   {node.category === "livestock" && "🐄 Livestock yield - meat and dairy production"}
-                  {node.category === "land" && "🌍 Climate altering land - land cover changes affecting carbon storage"}
-                  {node.category === "loss" && "💰 Economic loss - disaster-related damages"}
-                  {node.category === "tourism" && "✈️ Tourist arrivals - economic vulnerability indicator"}
-                  {node.category === "people" && "👥 People affected - human displacement and impact"}
-                  {node.category === "population" && "📈 Population growth - demographic trends affected by climate"}
+                  {node.category === "land" && " Climate altering land - land cover changes affecting carbon storage"}
+                  {node.category === "loss" && "Economic loss - disaster-related damages"}
+                  {node.category === "tourism" && " Tourist arrivals - economic vulnerability indicator"}
+                  {node.category === "people" && " People affected - human displacement and impact"}
+                  {node.category === "population" && " Population growth - demographic trends affected by climate"}
                 </div>
               </>
             );
