@@ -12,9 +12,9 @@ export function Conclusion({ selectedCountry, seaTrend, countriesCount }: Conclu
         <div className="text-[1.5rem] font-semibold mb-4 text-slate-900">The Evidence Is Unequivocal</div>
         <div className="text-base text-slate-600 max-w-[720px] mx-auto leading-relaxed">
           For <strong>{selectedCountry}</strong>, the data confirms the complete causal chain: 
-          <strong style={{ color: "#D85A30" }}> rising temperatures</strong> drive <strong style={{ color: "#2E86AB" }}>environmental changes</strong>, 
-          which create <strong style={{ color: "#EF9F27" }}>economic losses</strong> and ultimately 
-          <strong style={{ color: "#7F77DD" }}> affect human communities</strong>.
+          <strong > rising temperatures</strong> drive <strong >environmental changes</strong>, 
+          which create <strong >economic losses</strong> and ultimately 
+          <strong > affect human communities</strong>.
           {seaTrend > 0 && ` Sea levels have risen ${seaTrend.toFixed(1)}% — and the trend is accelerating.`}
         </div>
         <div className="text-base text-slate-900 font-medium max-w-[720px] mx-auto leading-relaxed mt-4">
