@@ -25,20 +25,20 @@ type Node = {
 
 const CATEGORY_META = [
   // Climate Drivers
-  { key: "Temperature", color: "#ef4444", label: "Temperature (°C)", icon: "🌡️", description: "Surface temperature anomaly", dataKey: "temp" },
-  { key: "Sea Surface Temperature", color: "#06b6d4", label: "Sea Surface Temp (°C)", icon: "🌊", description: "Ocean surface warming", dataKey: "seaSurfaceTemp" },
-  { key: "Sea Level", color: "#3b82f6", label: "Sea Level (mm)", icon: "📈", description: "Ocean level anomaly", dataKey: "sea" },
-  { key: "Rainfall", color: "#22c55e", label: "Rainfall (mm)", icon: "☔", description: "Precipitation anomaly", dataKey: "rainfall" },
+  { key: "Temperature", color: "#ef4444", label: "Temperature (°C)", icon: "", description: "Surface temperature anomaly", dataKey: "temp" },
+  { key: "Sea Surface Temperature", color: "#06b6d4", label: "Sea Surface Temp (°C)", icon: "", description: "Ocean surface warming", dataKey: "seaSurfaceTemp" },
+  { key: "Sea Level", color: "#3b82f6", label: "Sea Level (mm)", icon: "", description: "Ocean level anomaly", dataKey: "sea" },
+  { key: "Rainfall", color: "#22c55e", label: "Rainfall (mm)", icon: "", description: "Precipitation anomaly", dataKey: "rainfall" },
   // Environmental Impacts
-  { key: "Crop Yield", color: "#10b981", label: "Crop Yield (t/ha)", icon: "🌾", description: "Agricultural productivity", dataKey: "cropYield" },
-  { key: "Livestock Yield", color: "#f59e0b", label: "Livestock Yield (tons)", icon: "🐄", description: "Livestock production", dataKey: "lifestockYield" },
-  { key: "Climate Altering Land", color: "#8b5cf6", label: "Climate Altering Land (ha)", icon: "🌍", description: "Land cover changes", dataKey: "climateAlteringLand" },
+  { key: "Crop Yield", color: "#10b981", label: "Crop Yield (t/ha)", icon: "", description: "Agricultural productivity", dataKey: "cropYield" },
+  { key: "Livestock Yield", color: "#f59e0b", label: "Livestock Yield (tons)", icon: "", description: "Livestock production", dataKey: "lifestockYield" },
+  { key: "Climate Altering Land", color: "#8b5cf6", label: "Climate Altering Land (ha)", icon: "", description: "Land cover changes", dataKey: "climateAlteringLand" },
   // Economic Consequences
-  { key: "Economic Loss", color: "#f97316", label: "Economic Loss (USD)", icon: "💰", description: "Disaster-related losses", dataKey: "loss" },
-  { key: "Tourist Arrivals", color: "#14b8a6", label: "Tourist Arrivals", icon: "✈️", description: "Tourism volume", dataKey: "tourists" },
+  { key: "Economic Loss", color: "#f97316", label: "Economic Loss (USD)", icon: "", description: "Disaster-related losses", dataKey: "loss" },
+  { key: "Tourist Arrivals", color: "#14b8a6", label: "Tourist Arrivals", icon: "", description: "Tourism volume", dataKey: "tourists" },
   // Human Consequences
-  { key: "People Affected", color: "#ef4444", label: "People Affected", icon: "👥", description: "Human impact magnitude", dataKey: "people" },
-  { key: "Population Growth", color: "#ec4898", label: "Population Growth (%)", icon: "📈", description: "Demographic trends", dataKey: "populationGrowth" },
+  { key: "People Affected", color: "#ef4444", label: "People Affected", icon: "", description: "Human impact magnitude", dataKey: "people" },
+  { key: "Population Growth", color: "#ec4898", label: "Population Growth (%)", icon: "", description: "Demographic trends", dataKey: "populationGrowth" },
 ];
 
 // Animated circle component with spring effects
@@ -320,7 +320,7 @@ export default function BeeswarmChart({
         <h3 className="text-base font-semibold text-slate-800 mb-1">{title}</h3>
         <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-purple-500">
           <p className="text-xs text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800">💡 Story Insight:</span> {insight}
+            <span className="font-semibold text-slate-800"> Story Insight:</span> {insight}
           </p>
         </div>
       </div>
@@ -341,7 +341,7 @@ export default function BeeswarmChart({
         </div>
         <div className="text-center p-2 bg-amber-50 rounded-lg">
           <div className="text-lg font-bold text-amber-700">
-            {mostCommonMeta?.icon || "📊"}
+            {mostCommonMeta?.icon || ""}
           </div>
           <div className="text-xs text-slate-500">Most Frequent</div>
           <div className="text-[10px] text-slate-400">{mostCommonMeta?.label || mostCommonCategory}</div>
@@ -362,7 +362,7 @@ export default function BeeswarmChart({
           onMouseEnter={() => setHoveredCategory("driver")}
           onMouseLeave={() => setHoveredCategory(null)}
         >
-          <span className="text-sm">🌡️</span>
+          <span className="text-sm"></span>
           <div className="text-xs font-bold text-orange-700">{driverCount}</div>
           <div className="text-[9px] text-slate-400">Climate Drivers</div>
         </div>
@@ -372,7 +372,7 @@ export default function BeeswarmChart({
           onMouseEnter={() => setHoveredCategory("environmental")}
           onMouseLeave={() => setHoveredCategory(null)}
         >
-          <span className="text-sm">🌿</span>
+          <span className="text-sm"></span>
           <div className="text-xs font-bold text-emerald-700">{environmentalCount}</div>
           <div className="text-[9px] text-slate-400">Environmental</div>
         </div>
@@ -392,7 +392,7 @@ export default function BeeswarmChart({
           onMouseEnter={() => setHoveredCategory("human")}
           onMouseLeave={() => setHoveredCategory(null)}
         >
-          <span className="text-sm">👥</span>
+          <span className="text-sm"></span>
           <div className="text-xs font-bold text-rose-700">{humanCount}</div>
           <div className="text-[9px] text-slate-400">Human</div>
         </div>
@@ -405,10 +405,10 @@ export default function BeeswarmChart({
           <span className="font-bold text-emerald-600"> {countries.length} Pacific nations</span> over 
           <span className="font-bold text-slate-700"> {years.length} decades</span>. 
           Each dot represents a measurement across the full climate cascade: 
-          <span className="font-bold text-orange-600"> climate drivers</span> (🌡️🌊📈☔), 
-          <span className="font-bold text-emerald-600"> environmental impacts</span> (🌾🐄🌍), 
-          <span className="font-bold text-amber-600"> economic consequences</span> (💰✈️), and 
-          <span className="font-bold text-rose-600"> human outcomes</span> (👥📈). 
+          <span className="font-bold text-orange-600"> climate drivers</span> (), 
+          <span className="font-bold text-emerald-600"> environmental impacts</span> (), 
+          <span className="font-bold text-amber-600"> economic consequences</span> (), and 
+          <span className="font-bold text-rose-600"> human outcomes</span> (). 
           Larger dots indicate more severe impacts. <span className="font-semibold text-slate-800">Hover over dots to see details — they pulse and glow!</span>
         </p>
       </div>
@@ -606,7 +606,7 @@ export default function BeeswarmChart({
       {/* Footer Insight */}
       <div className="mt-4 pt-3 border-t border-slate-100">
         <p className="text-xs text-slate-500 text-center leading-relaxed">
-          📊 Hover over any dot for details — they glow and pulse on hover · Click legend to filter categories · 
+        Hover over any dot for details — they glow and pulse on hover · Click legend to filter categories · 
           Dot size = magnitude of impact · Vertical position = country · Horizontal = decade · 
           Complete cascade: Climate Drivers → Environmental → Economic → Human Impacts
         </p>
