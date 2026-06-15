@@ -201,11 +201,9 @@ export function BubbleChart({
     <div className="w-full">
       <div className="mb-4">
         <h3 className="text-base font-semibold text-slate-800 mb-1">{title}</h3>
-        <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-rose-500">
           <p className="text-xs text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800"> Story Insight:</span> {insight}
+            {insight}
           </p>
-        </div>
       </div>
 
       <div className="mb-5 grid grid-cols-3 gap-2">
