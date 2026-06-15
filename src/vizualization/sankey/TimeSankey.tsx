@@ -564,15 +564,6 @@ export default function TimeSankey({
           </foreignObject>
         )}
       </svg>
-
-      {/* Footer Insight */}
-      <div className="mt-4 pt-3 border-t border-slate-100">
-        <p className="text-xs text-slate-500 text-center leading-relaxed">
-          Hover over any link or node to explore the complete causal chain · 
-          Thicker lines indicate stronger relationships.  
-          Full pathway: Climate Drivers → Environmental → Economic → Human Impacts
-        </p>
-      </div>
     </div>
   );
 }
