@@ -128,10 +128,6 @@ export default function Home() {
           />
         )}
 
-        {hasTimelineData && null (
-          
-        )}
-
         {(hasClimateData || hasEconomicData || hasHumanData || hasSocioeconomicData || hasRegionalData || hasCausalData || hasTimelineData) && (
           <Conclusion selectedCountry={selectedCountry} seaTrend={seaTrend} countriesCount={countries.length} />
         )}
