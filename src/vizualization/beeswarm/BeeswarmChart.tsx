@@ -399,8 +399,7 @@ export default function BeeswarmChart({
       {/* Narrative Paragraph */}
       <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
-          This chart visualizes {totalEvents} climate impact events across {countries.length} Pacific nations over 
-         {years.length} decades. 
+          This chart visualizes {totalEvents} climate impact events across {countries.length} Pacific nations over {years.length} decades. 
           Each dot represents a measurement across the full climate cascade: 
           climate drivers, environmental impacts, economic consequences, and human outcomes. 
           Larger dots indicate more severe impacts. Hover over dots to see details — they pulse and glow!
