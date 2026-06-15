@@ -21,7 +21,7 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth }: Climat
         <div className="text-sm text-slate-500 max-w-[680px] mx-auto">
           Surface temperatures have {tempTrend > 0 ? `risen ${tempTrend.toFixed(1)}%` : tempTrend < 0 ? `fallen ${Math.abs(tempTrend).toFixed(1)}%` : "remained stable"} over the recorded period.
         </div>
-        <div className="text-sm text-[#D85A30] mt-2 font-medium"> Hotter air → warmer oceans → more energy for storms → heavier rain</div>
+        <div className="text-sm mt-2 font-medium"> Hotter air → warmer oceans → more energy for storms → heavier rain</div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {hasTempData && (
