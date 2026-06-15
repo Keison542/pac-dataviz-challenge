@@ -299,11 +299,9 @@ export default function TimeSankey({
       {/* Header with Storytelling */}
       <div className="mb-4">
         <h3 className="text-base font-semibold text-slate-800 mb-1">{title}</h3>
-        <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-purple-500">
           <p className="text-xs text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800"> Story Insight:</span> {insight}
+             {insight}
           </p>
-        </div>
       </div>
 
       {/* Key Findings Summary Cards */}
@@ -573,8 +571,8 @@ export default function TimeSankey({
       {/* Footer Insight */}
       <div className="mt-4 pt-3 border-t border-slate-100">
         <p className="text-xs text-slate-500 text-center leading-relaxed">
-          📊 Hover over any link or node to explore the complete causal chain · 
-          Thicker lines indicate stronger relationships · Lines glow on hover for better visibility · 
+          Hover over any link or node to explore the complete causal chain · 
+          Thicker lines indicate stronger relationships.  
           Full pathway: Climate Drivers → Environmental → Economic → Human Impacts
         </p>
       </div>
