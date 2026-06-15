@@ -459,14 +459,6 @@ export function BubbleChart({
           </div>
         </div>
       )}
-
-      <div className="mt-4 pt-3 border-t border-slate-100">
-        <p className="text-xs text-slate-500 text-center leading-relaxed">
-          {countries.length} Pacific nations tracked across {years.length} years · 
-          Largest bubble = {largestEvent?.country} in {largestEvent?.year} ({formatNumber(largestEvent?.value || 0)} people) · 
-          Hover over any bubble for details — they grow and glow
-        </p>
-      </div>
     </div>
   );
 }
