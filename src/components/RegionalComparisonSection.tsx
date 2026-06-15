@@ -11,11 +11,11 @@ export function RegionalComparisonSection({ selectedCountry, countriesCount, ran
   return (
     <div className="mb-12">
       <div className="text-center mb-6">
-        <div className="text-[1.75rem] font-semibold mb-3 text-slate-900">🌏 A Regional Perspective</div>
+        <div className="text-[1.75rem] font-semibold mb-3 text-slate-900">A Regional Perspective</div>
         <div className="text-sm text-slate-500 max-w-[680px] mx-auto">
           How does {selectedCountry} compare to {countriesCount} other Pacific nations across 7 key metrics?
         </div>
-        <div className="text-sm text-[#D85A30] mt-2 font-medium">💡 Click on any metric to see country rankings. Thicker bars indicate higher impact.</div>
+        <div className="text-sm text-[#D85A30] mt-2 font-medium">Click on any metric to see country rankings. Thicker bars indicate higher impact.</div>
       </div>
       <div className="p-2">
         <MultiMetricRankedDashboard width={chartWidth * 2 + 20} height={520} data={rankedData} />
