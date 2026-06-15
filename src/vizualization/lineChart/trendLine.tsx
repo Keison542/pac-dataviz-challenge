@@ -219,7 +219,7 @@ export const TrendLine = ({
         <h3 className="text-lg font-semibold text-slate-800 mb-2">{title}</h3>
         <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-cyan-500">
           <p className="text-sm text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800">💡 Story Insight:</span> {insight}
+            <span className="font-semibold text-slate-800">Story Insight:</span> {insight}
           </p>
         </div>
       </div>
@@ -533,7 +533,7 @@ export const TrendLine = ({
       <div className="mt-6 pt-4 border-t border-slate-200">
         <div className="bg-slate-50 rounded-lg p-4 transition-all duration-200 hover:shadow-sm">
           <div className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
-            <span>📊</span> Trend Analysis & Data Summary
+            <span></span> Trend Analysis & Data Summary
           </div>
           <div className="space-y-2 text-sm text-slate-600">
             <p className="leading-relaxed">
