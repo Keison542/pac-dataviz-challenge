@@ -181,7 +181,7 @@ export const LineChart = ({
         style={{ width, height }}
       >
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">📈</div>
+          <div className="text-4xl mb-3 opacity-30"></div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             No data available for the selected country or indicator
@@ -248,7 +248,7 @@ export const LineChart = ({
         </h3>
         <div className="p-3 bg-slate-50 rounded-lg border-l-4" style={{ borderLeftColor: lineColor }}>
           <p className="text-xs text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800">💡 Story Insight:</span> {insight}
+            <span className="font-semibold text-slate-800">Story Insight:</span> {insight}
           </p>
         </div>
       </div>
@@ -477,7 +477,7 @@ export const LineChart = ({
       {/* Footer Insight */}
       <div className="mt-4 pt-3 border-t border-slate-100">
         <p className="text-xs text-slate-500 text-center leading-relaxed">
-          📊 Hover over any point for details · {percentChange > 0 ? '📈 Rising trend detected' : percentChange < 0 ? '📉 Declining trend detected' : '📊 Stable trend detected'} · 
+          Hover over any point for details · {percentChange > 0 ? ' Rising trend detected' : percentChange < 0 ? 'Declining trend detected' : 'Stable trend detected'} · 
           Peak: {maxYear} ({valueFormatter ? valueFormatter(maxValue) : formatNumber(maxValue)})
         </p>
       </div>
