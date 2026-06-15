@@ -87,7 +87,6 @@ export function BubbleChart({
   width,
   height,
   data,
-  title = "People Affected by Disasters",
   insight = "Larger bubbles reveal years when climate disasters displaced the most people",
 }: Props) {
   const [hovered, setHovered] = useState<DataPoint | null>(null);
@@ -200,7 +199,6 @@ export function BubbleChart({
   return (
     <div className="w-full">
       <div className="mb-4">
-        <h3 className="text-base font-semibold text-slate-800 mb-1">{title}</h3>
           <p className="text-xs text-slate-600 leading-relaxed">
             {insight}
           </p>
