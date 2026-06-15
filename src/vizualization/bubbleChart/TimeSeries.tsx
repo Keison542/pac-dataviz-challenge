@@ -31,7 +31,7 @@ const METRICS = [
     unit: "t/ha",
     color: "#10b981",
     lightColor: "#6ee7b7",
-    icon: "🌾",
+    icon: "",
     format: (v: number) => v.toFixed(1),
     formatCompact: (v: number) => v.toFixed(1),
   },
@@ -41,7 +41,7 @@ const METRICS = [
     unit: "tons",
     color: "#f59e0b",
     lightColor: "#fcd34d",
-    icon: "🐄",
+    icon: "",
     format: (v: number) => v.toLocaleString(),
     formatCompact: (v: number) =>
       v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v.toString(),
@@ -52,7 +52,7 @@ const METRICS = [
     unit: "",
     color: "#14b8a6",
     lightColor: "#5eead4",
-    icon: "✈️",
+    icon: "",
     format: (v: number) =>
       v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v.toString(),
     formatCompact: (v: number) =>
@@ -311,7 +311,7 @@ export function TimeSeriesDashboard({
         style={{ width, height }}
       >
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">📈</div>
+          <div className="text-4xl mb-3 opacity-30"></div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             No data available
@@ -692,13 +692,13 @@ export function TimeSeriesDashboard({
       <div className="mt-4 pt-3 border-t border-slate-100">
         <div className="text-xs text-slate-500 text-center leading-relaxed space-y-1">
           <p>
-            📊 Data across {data.length} years · 
+            Data across {data.length} years · 
             <span className="font-medium text-emerald-600"> Crop Yield</span> peaked at {formatNumber(peakCrop)} t/ha ({peakCropYear}) · 
             <span className="font-medium text-amber-600"> Livestock</span> peaked at {formatNumber(peakLivestock)} tons ({peakLivestockYear}) · 
             <span className="font-medium text-teal-600"> Tourism</span> peaked at {formatNumber(peakTourist)} ({peakTouristYear})
           </p>
           <p className="text-[10px] text-slate-400">
-            💡 Click legend items to show/hide metrics · Hover over lines or points for details
+            Click legend items to show/hide metrics · Hover over lines or points for details
           </p>
         </div>
       </div>
