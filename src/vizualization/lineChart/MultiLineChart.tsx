@@ -302,16 +302,13 @@ export function MultiLineChart({
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              🏝️ {selectedCountry !== "the selected country" ? selectedCountry : "Select a country"}
+               {selectedCountry !== "the selected country" ? selectedCountry : "Select a country"}
             </button>
           </div>
         </div>
-        
-        <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-blue-500">
           <p className="text-xs text-slate-600 leading-relaxed">
-            <span className="font-semibold text-slate-800">Story Insight:</span> {insight}
+            {insight}
           </p>
-        </div>
       </div>
 
       <div className="mb-5 grid grid-cols-4 gap-2">
@@ -342,24 +339,17 @@ export function MultiLineChart({
 
       <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
-          <span className="font-bold text-blue-600">{displayName}</span> over 
-          <span className="font-bold text-slate-700"> {firstYear}–{lastYear}</span> (standardized to {baselineYearDisplay}=0):
+          {displayName} over {firstYear}–{lastYear} (standardized to {baselineYearDisplay}=0)
           {fastestRising && fastestRising[1].change > 0 && (
-            <> <span className="font-bold text-red-600">{fastestRising[0].replace(/_/g, " ")}</span> showed the strongest increase 
-            (<span className="font-semibold">+{fastestRising[1].change.toFixed(2)}</span> units),</>
+            <>{fastestRising[0].replace(/_/g, " ")} showed the strongest increase 
+            (+{fastestRising[1].change.toFixed(2)} units),</>
           )}
           {fastestFalling && fastestFalling[1].change < 0 && (
-            <> while <span className="font-bold text-green-600">{fastestFalling[0].replace(/_/g, " ")}</span> 
-            declined by <span className="font-semibold">{Math.abs(fastestFalling[1].change).toFixed(2)}</span> units.</>
+            <> while {fastestFalling[0].replace(/_/g, " ")} 
+            declined by {Math.abs(fastestFalling[1].change).toFixed(2)} units.</>
           )}
           {' '}The standardized scale allows direct comparison of each indicator's trend.
         </p>
-      </div>
-
-      <div className="mb-2 text-right">
-        <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded">
-          Values show deviation from {baselineYearDisplay} baseline (0 = no anomaly)
-        </span>
       </div>
 
       <svg width={width} height={height} className="overflow-visible">
