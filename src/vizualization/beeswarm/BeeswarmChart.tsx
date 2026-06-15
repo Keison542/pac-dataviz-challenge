@@ -399,15 +399,11 @@ export default function BeeswarmChart({
       {/* Narrative Paragraph */}
       <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
-          This comprehensive beeswarm chart visualizes <span className="font-bold text-blue-600">{totalEvents} climate impact events</span> across 
-          <span className="font-bold text-emerald-600"> {countries.length} Pacific nations</span> over 
-          <span className="font-bold text-slate-700"> {years.length} decades</span>. 
+          This chart visualizes {totalEvents} climate impact events across {countries.length} Pacific nations over 
+         {years.length} decades. 
           Each dot represents a measurement across the full climate cascade: 
-          <span className="font-bold text-orange-600"> climate drivers</span> (), 
-          <span className="font-bold text-emerald-600"> environmental impacts</span> (), 
-          <span className="font-bold text-amber-600"> economic consequences</span> (), and 
-          <span className="font-bold text-rose-600"> human outcomes</span> (). 
-          Larger dots indicate more severe impacts. <span className="font-semibold text-slate-800">Hover over dots to see details — they pulse and glow!</span>
+          climate drivers, environmental impacts, economic consequences, and human outcomes. 
+          Larger dots indicate more severe impacts. Hover over dots to see details — they pulse and glow!
         </p>
       </div>
 
@@ -600,15 +596,6 @@ export default function BeeswarmChart({
           </div>
         </div>
       )}
-
-      {/* Footer Insight */}
-      <div className="mt-4 pt-3 border-t border-slate-100">
-        <p className="text-xs text-slate-500 text-center leading-relaxed">
-        Hover over any dot for details — they glow and pulse on hover · Click legend to filter categories · 
-          Dot size = magnitude of impact · Vertical position = country · Horizontal = decade · 
-          Complete cascade: Climate Drivers → Environmental → Economic → Human Impacts
-        </p>
-      </div>
     </div>
   );
 }
