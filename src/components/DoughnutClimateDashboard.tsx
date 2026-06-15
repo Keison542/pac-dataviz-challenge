@@ -149,10 +149,6 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
           </div>
           <div className="space-y-3">
             {metrics.slice(7, 9).map((m, i) => <MetricCircle key={m.key} m={m} index={i} group="economic" />)}
-            <div className="mt-2 pt-2 text-center border-t border-amber-200">
-              <div className="text-lg font-bold text-amber-700">${(getSafeValue("loss") / 1e6).toFixed(0)}M</div>
-              <div className="text-[9px] text-slate-500">Total economic impact</div>
-            </div>
           </div>
         </div>
 
