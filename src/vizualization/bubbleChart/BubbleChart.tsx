@@ -230,9 +230,9 @@ export function BubbleChart({
       {largestEvent && (
         <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100 transition-all duration-200 hover:shadow-sm">
           <p className="text-sm text-slate-700 leading-relaxed">
-            The data reveals that <span className="font-bold text-slate-900">{largestEvent.country}</span> experienced the 
-            single largest disaster impact in <span className="font-bold text-slate-900">{largestEvent.year}</span>, with{' '}
-            <span className="font-bold text-rose-600">{largestEvent.value.toLocaleString()} people</span> affected.
+            The data reveals that {largestEvent.country} experienced the 
+            single largest disaster impact in {largestEvent.year}, with{' '}
+            {largestEvent.value.toLocaleString()} people affected.
             {yearTotals.year && ` The most devastating year across all Pacific nations was ${yearTotals.year}, when ${formatNumber(yearTotals.total)} people were displaced or impacted.`}
           </p>
         </div>
