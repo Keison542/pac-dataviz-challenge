@@ -326,7 +326,7 @@ export const LineChart = ({
         <div className="text-center p-3 bg-cyan-50 rounded-lg border border-cyan-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-xl font-bold text-cyan-700">{stats.averageValue.toFixed(2)}{unit}</div>
           <div className="text-xs text-slate-500 mt-1">Average</div>
-          <div className="text-[10px] text-slate-400">{selectedCountry}</div>
+          
         </div>
         <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-xl font-bold text-amber-700">{stats.maxValue.toFixed(2)}{unit}</div>
