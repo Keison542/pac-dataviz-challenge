@@ -438,16 +438,6 @@ export function BubbleChart({
             >
               Year
             </text>
-            
-            <text
-              transform={`rotate(-90) translate(${-boundsHeight / 2}, -55)`}
-              textAnchor="middle"
-              fill="#64748b"
-              fontSize="11"
-              fontWeight="500"
-            >
-              Country
-            </text>
           </g>
         </svg>
 
