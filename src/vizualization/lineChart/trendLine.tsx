@@ -273,8 +273,7 @@ export const TrendLine = ({
           with an annual average of {formatTick(averageLoss)}. 
           The highest loss was recorded in {worstYear?.year} 
           at {worstYear ? formatCompact(worstYear.total) : "—"}, 
-          while the lowest was in {bestYear?.year} 
-          at {bestYear ? formatCompact(bestYear.total) : "—"}.
+          while the lowest was in {bestYear?.year} at {bestYear ? formatCompact(bestYear.total) : "—"}.
         </p>
 
       {/* Line Chart */}
