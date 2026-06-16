@@ -225,8 +225,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
   }, [ranked]);
 
   // Dynamic left margin based on presence of negative values
-  // If no negative values, use smaller margin; if negative values exist, use larger margin
-  const LEFT_MARGIN = hasNegative ? 120 : 60;
+  const LEFT_MARGIN = hasNegative ? 120 : 70;
   
   const MARGIN = {
     top: 60,
@@ -242,8 +241,11 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
   const minValue = Math.min(...ranked.map(d => d.value), 0);
   const maxValue = Math.max(...ranked.map(d => d.value), 1);
   
-  // Add padding
-  const paddedMin = minValue < 0 ? minValue * 1.15 : -maxValue * 0.1;
+  // CRITICAL FIX: For positive-only data, domain starts at 0 with NO negative padding
+  const hasOnlyPositive = minValue >= 0;
+  
+  // Add padding only to the positive side when no negative values
+  const paddedMin = hasOnlyPositive ? 0 : minValue * 1.15;
   const paddedMax = maxValue > 0 ? maxValue * 1.15 : 1;
 
   const totalSum = ranked.reduce((sum, d) => sum + d.value, 0);
@@ -264,7 +266,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
     .range([0, boundsHeight])
     .padding(0.25);
 
-  // X scale with negative domain support
+  // X scale with proper domain
   const xScale = scaleLinear()
     .domain([paddedMin, paddedMax])
     .nice()
@@ -406,16 +408,18 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
         </defs>
 
         <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-          {/* Zero line */}
-          <line
-            x1={zeroPosition}
-            x2={zeroPosition}
-            y1={0}
-            y2={boundsHeight}
-            stroke="#94a3b8"
-            strokeWidth="1.5"
-            strokeDasharray="4 4"
-          />
+          {/* Zero line - only show if there are negative values */}
+          {hasNegative && (
+            <line
+              x1={zeroPosition}
+              x2={zeroPosition}
+              y1={0}
+              y2={boundsHeight}
+              stroke="#94a3b8"
+              strokeWidth="1.5"
+              strokeDasharray="4 4"
+            />
+          )}
 
           {/* Grid lines */}
           {ticks.map((t) => (
@@ -444,7 +448,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
             </text>
           ))}
 
-          {/* Bars - country labels on left, bars from zero */}
+          {/* Bars */}
           {ranked.map((d, i) => {
             const y = yScale(d.country)!;
             const barHeight = yScale.bandwidth();
@@ -455,6 +459,8 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
             const isNegative = d.value < 0;
             const barWidth = Math.abs(xScale(d.value) - zeroPosition);
             
+            // For positive values: bar starts at zero
+            // For negative values: bar starts at negative value
             const barX = isNegative ? xScale(d.value) : zeroPosition;
             
             let barColor;
@@ -470,9 +476,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
               barColor = "url(#barGradient)";
             }
             
-            // Country label x position: 
-            // If no negative values, labels are close to bars (at x=0)
-            // If negative values exist, labels are shifted left to accommodate negative bars
+            // Country label position
             const labelX = hasNegative ? -8 : -12;
             
             return (
@@ -561,14 +565,12 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
 
       {/* Distribution Insight Footer */}
       {ranked.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-slate-100">
           <p className="text-xs text-slate-500 text-center leading-relaxed">
             The top 3 countries ({ranked.slice(0, 3).filter(d => d.value > 0).map(d => d.country).join(", ") || "N/A"}) 
             account for {top3Percentage.toFixed(1)}% of the total {currentMetric.formatNumber(totalSum)} {currentMetric.unit}.
             {bottomCountry && ` The lowest among all is ${bottomCountry.country} with ${currentMetric.formatNumber(bottomCountry.value)}.`}
             {hasNegative && ` Negative values indicate improvement.`}
           </p>
-        </div>
       )}
     </div>
   );
