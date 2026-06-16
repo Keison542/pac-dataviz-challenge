@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+
 import { Hero } from "@/components/Hero";
 import { DoughnutClimateDashboard } from "@/components/DoughnutClimateDashboard";
 import { ClimateDriversSection } from "@/components/ClimateDriversSection";
@@ -11,12 +13,15 @@ import { Conclusion } from "@/components/Conclusion";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { useClimateData } from "@/hooks/useClimateData";
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  show: { opacity: 1, y: 0 },
+};
+
 export default function Home() {
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => setIsClient(true), []);
 
   const {
     selectedCountry,
@@ -28,7 +33,6 @@ export default function Home() {
     timeSeriesData,
     climateFlowData,
     rankedData,
-    multiLineData,
     beeswarmData,
     tempTrend,
     seaTrend,
@@ -50,32 +54,35 @@ export default function Home() {
   return (
     <main className="relative min-h-screen bg-white font-sans text-slate-900">
 
-      {/* BACKGROUND (unchanged) */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-5" />
 
       <div className="relative z-10 max-w-[1200px] mx-auto px-6 py-8">
 
-        {/* =========================================================
-            1. HERO (UNCHANGED but now story hook)
-        ========================================================= */}
+        {/* =========================
+            HERO (UNCHANGED BUT FIRST IMPACT)
+        ========================== */}
         <Hero
           countries={countries}
           selectedCountry={selectedCountry}
           onSelectCountry={setSelectedCountry}
         />
 
-        {/* ADD STORY HOOK TEXT */}
-        <div className="mt-6 mb-10 text-center max-w-3xl mx-auto">
-          <p className="text-slate-600 text-lg">
-            The Pacific is not just changing — it is transforming under accelerating climate pressure.
-          </p>
+        <div className="mt-6 mb-10 text-center max-w-3xl mx-auto text-slate-600">
+          The Pacific is not just changing — it is transforming under accelerating climate pressure.
         </div>
 
-        {/* =========================================================
-            2. CLIMATE SIGNAL (FIRST REVEAL MOMENT)
-        ========================================================= */}
+        {/* =========================
+            1. CLIMATE SIGNAL (FADE-IN)
+        ========================== */}
         {hasClimateData && (
-          <section className="py-16">
+          <motion.section
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
+            className="py-16"
+          >
             <h2 className="text-2xl font-semibold mb-2">
               1. A clear climate signal is emerging
             </h2>
@@ -98,14 +105,21 @@ export default function Home() {
                 selectedCountry={selectedCountry}
               />
             </div>
-          </section>
+          </motion.section>
         )}
 
-        {/* =========================================================
-            3. HUMAN IMPACT (STORY SHIFT)
-        ========================================================= */}
+        {/* =========================
+            2. HUMAN IMPACT
+        ========================== */}
         {(hasEconomicData || hasHumanData || hasSocioeconomicData) && (
-          <section className="py-20 border-t border-slate-100">
+          <motion.section
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
+            className="py-20 border-t border-slate-100"
+          >
             <h2 className="text-2xl font-semibold mb-2">
               2. Climate change is already affecting livelihoods
             </h2>
@@ -123,14 +137,21 @@ export default function Home() {
               chartWidth={chartWidth}
               setSelectedCountry={setSelectedCountry}
             />
-          </section>
+          </motion.section>
         )}
 
-        {/* =========================================================
-            4. RELATIONSHIP / SYSTEM VIEW (IMPORTANT UPGRADE)
-        ========================================================= */}
+        {/* =========================
+            3. SYSTEM VIEW (MOST IMPORTANT SECTION)
+        ========================== */}
         {hasCausalData && (
-          <section className="py-20 bg-slate-50 rounded-2xl px-6">
+          <motion.section
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.7 }}
+            className="py-20 bg-slate-50 rounded-2xl px-6"
+          >
             <h2 className="text-2xl font-semibold mb-2">
               3. These impacts are interconnected
             </h2>
@@ -145,14 +166,21 @@ export default function Home() {
               selectedCountry={selectedCountry}
               chartWidth={chartWidth}
             />
-          </section>
+          </motion.section>
         )}
 
-        {/* =========================================================
-            5. WHO IS MOST AFFECTED (HIERARCHY MOMENT)
-        ========================================================= */}
+        {/* =========================
+            4. INEQUALITY MOMENT
+        ========================== */}
         {hasRegionalData && (
-          <section className="py-20">
+          <motion.section
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
+            className="py-20"
+          >
             <h2 className="text-2xl font-semibold mb-2">
               4. Impact is not evenly distributed
             </h2>
@@ -167,12 +195,12 @@ export default function Home() {
               rankedData={rankedData}
               chartWidth={chartWidth}
             />
-          </section>
+          </motion.section>
         )}
 
-        {/* =========================================================
-            6. CONCLUSION (EMOTIONAL PAYOFF)
-        ========================================================= */}
+        {/* =========================
+            5. CONCLUSION (EMOTIONAL PEAK)
+        ========================== */}
         {(hasClimateData ||
           hasEconomicData ||
           hasHumanData ||
@@ -180,7 +208,14 @@ export default function Home() {
           hasRegionalData ||
           hasCausalData ||
           hasTimelineData) && (
-          <section className="py-24 text-center border-t">
+          <motion.section
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8 }}
+            className="py-24 text-center border-t"
+          >
             <Conclusion
               selectedCountry={selectedCountry}
               seaTrend={seaTrend}
@@ -190,7 +225,7 @@ export default function Home() {
             <div className="mt-10 max-w-2xl mx-auto text-slate-500">
               The Pacific contributed least to global emissions — yet faces some of the most severe consequences.
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* FOOTER */}
