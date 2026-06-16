@@ -1,46 +1,36 @@
 "use client";
 
-import { DisasterLossRecord } from "@/climatedata/economic_consequence/direct_disaster_economic_loss";
-import { AffectedPeopleRecord } from "@/climatedata/human_consequence/number_of_persons_affected";
 import { scaleLinear } from "d3-scale";
 import { line, area, curveMonotoneX } from "d3-shape";
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { LineItem } from "./LineItem";
-import { InteractionData } from "./types/interaction";
 
 const MARGIN = { top: 50, right: 40, bottom: 70, left: 75 };
 
-export type LineChartDataType = 
-  | "employmentRate"
+export type ClimateDriverType = 
   | "surfaceTempAnomaly"
   | "seaSurfaceTempAnomaly"
   | "precipitationAnomaly"
-  | "seaLevelAnomaly"
-  | "greenhouseGasEmission"
-  | "cropYield"
-  | "livestockYield"
-  | "powerGeneration"
-  | "tourismArrivals"
-  | "meteorologicalMonitoringNetwork"
-  | "fisheriesManagement"
-  | "environmentalTaxes"
-  | "alteredLandCover";
+  | "seaLevelAnomaly";
+
+// Climate driver data point
+type ClimateDataPoint = {
+  year: number;
+  value: number;
+};
 
 type LineChartProps = {
   width: number;
   height: number;
-  data: AffectedPeopleRecord[] | DisasterLossRecord[];
-  dataType?: LineChartDataType;
-  selectedCountry?: string;
-  setHoveredDataPoint?: (interactionData: InteractionData | null) => void;
+  data: ClimateDataPoint[];
+  dataType: ClimateDriverType;
+  selectedCountry: string;
   xAxisLabel?: string;
   yAxisLabel?: string;
   title?: string;
-  insight?: string;
-  valueFormatter?: (value: number) => string;
 };
 
-const formatYAxisTick = (value: number, dataType: LineChartDataType): string => {
+const formatYAxisTick = (value: number, dataType: ClimateDriverType): string => {
   switch (dataType) {
     case "surfaceTempAnomaly":
     case "seaSurfaceTempAnomaly":
@@ -49,69 +39,86 @@ const formatYAxisTick = (value: number, dataType: LineChartDataType): string => 
       return `${value.toFixed(0)}mm`;
     case "seaLevelAnomaly":
       return `${value.toFixed(2)}m`;
-    case "greenhouseGasEmission":
-      return `${(value / 1_000_000).toFixed(1)}M t`;
     default:
       return value.toLocaleString();
   }
 };
 
-const formatNumber = (v: number): string => {
-  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
-  return v.toLocaleString();
+const getChartLabel = (dataType: ClimateDriverType): string => {
+  switch (dataType) {
+    case "surfaceTempAnomaly": return "Surface Temperature";
+    case "seaSurfaceTempAnomaly": return "Sea Surface Temperature";
+    case "precipitationAnomaly": return "Rainfall";
+    case "seaLevelAnomaly": return "Sea Level";
+    default: return "Value";
+  }
+};
+
+const getUnit = (dataType: ClimateDriverType): string => {
+  switch (dataType) {
+    case "surfaceTempAnomaly":
+    case "seaSurfaceTempAnomaly":
+      return "°C";
+    case "precipitationAnomaly":
+      return "mm";
+    case "seaLevelAnomaly":
+      return "m";
+    default:
+      return "";
+  }
 };
 
 export const LineChart = ({
   width,
   height,
   data,
-  dataType = "employmentRate",
+  dataType,
   selectedCountry,
-  setHoveredDataPoint,
   xAxisLabel = "Year",
   yAxisLabel,
   title,
-  valueFormatter,
 }: LineChartProps) => {
   const [isClient, setIsClient] = useState(false);
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
-  const [tooltipData, setTooltipData] = useState<{ x: number; y: number; year: number; value: number; category: string } | null>(null);
+  const [tooltipData, setTooltipData] = useState<{ x: number; y: number; year: number; value: number } | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isLineHovered, setIsLineHovered] = useState(false);
   const [animate, setAnimate] = useState(false);
   
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const hasData = data.length > 0;
+  const hasData = data && data.length > 0;
 
+  // Process climate driver data
   const processedData = useMemo(() => {
     if (!hasData) return [];
-    return (data as any[])
+    return data
       .map(d => ({
-        year: d.year ?? d.TIME_PERIOD ?? 0,
-        value: d.value ?? d.OBS_VALUE ?? 0,
-        category: d.Sex || "Value"
+        year: d.year ?? 0,
+        value: d.value ?? 0,
       }))
+      .filter(d => d.year > 0 && d.value !== null && !isNaN(d.value))
       .sort((a, b) => a.year - b.year);
   }, [data, hasData]);
 
+  // Calculate statistics for the selected country's climate driver
   const firstValue = processedData[0]?.value;
   const lastValue = processedData[processedData.length - 1]?.value;
-  const percentChange = firstValue && lastValue ? ((lastValue - firstValue) / Math.abs(firstValue)) * 100 : 0;
+  const percentChange = firstValue && lastValue && firstValue !== 0 
+    ? ((lastValue - firstValue) / Math.abs(firstValue)) * 100 
+    : 0;
   const trendDirection = percentChange > 0 ? "increasing" : percentChange < 0 ? "decreasing" : "stable";
-  const maxValue = Math.max(...processedData.map(d => d.value));
+  const maxValue = Math.max(...processedData.map(d => d.value), 0);
   const maxYear = processedData.find(d => d.value === maxValue)?.year;
-  const minValue = Math.min(...processedData.map(d => d.value));
+  const minValue = Math.min(...processedData.map(d => d.value), 0);
   const minYear = processedData.find(d => d.value === minValue)?.year;
+  const averageValue = processedData.reduce((sum, d) => sum + d.value, 0) / processedData.length;
 
   useEffect(() => {
     if (!hasData) return;
@@ -120,8 +127,6 @@ export const LineChart = ({
     return () => clearTimeout(timer);
   }, [data, hasData]);
 
-  const isClimateData = !(data.length > 0 && "Sex" in data[0]);
-
   useEffect(() => {
     return () => {
       if (hoverTimerRef.current) {
@@ -129,6 +134,36 @@ export const LineChart = ({
       }
     };
   }, []);
+
+  if (!isClient) {
+    return (
+      <div 
+        className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white"
+        style={{ width, height }}
+      >
+        <div className="text-center p-6">
+          <div className="animate-pulse">Loading chart...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasData) {
+    return (
+      <div 
+        className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white"
+        style={{ width, height }}
+      >
+        <div className="text-center p-6">
+          <div className="text-4xl mb-3 opacity-30">📊</div>
+          <h3 className="text-base font-semibold text-slate-700 mb-1">No Climate Data Available</h3>
+          <p className="text-xs text-slate-400 max-w-xs">
+            No {getChartLabel(dataType).toLowerCase()} data available for {selectedCountry}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const years = processedData.map(d => d.year);
   const values = processedData.map(d => d.value);
@@ -192,25 +227,12 @@ export const LineChart = ({
       y: svgY,
       year: d.year,
       value: d.value,
-      category: d.category,
     });
-    
-    if (setHoveredDataPoint) {
-      setHoveredDataPoint({
-        x: mouseX,
-        y: mouseY,
-        label: `${selectedCountry || "Unknown"} • ${d.year}`,
-        value: d.value,
-      });
-    }
   };
 
   const handleMouseLeave = () => {
     hoverTimerRef.current = setTimeout(() => {
       setTooltipData(null);
-      if (setHoveredDataPoint) {
-        setHoveredDataPoint(null);
-      }
     }, 100);
   };
 
@@ -221,115 +243,61 @@ export const LineChart = ({
       }
       setIsLineHovered(true);
       setTooltipData(null);
-      if (setHoveredDataPoint) {
-        setHoveredDataPoint(null);
-      }
     } else {
       setIsLineHovered(false);
     }
   };
 
-  if (!isClient) {
-    return (
-      <div 
-        className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white"
-        style={{ width, height }}
-      >
-        <div className="text-center p-6">
-          <div className="animate-pulse">Loading chart...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!hasData) {
-    return (
-      <div 
-        className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white"
-        style={{ width, height }}
-      >
-        <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">📊</div>
-          <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
-          <p className="text-xs text-slate-400 max-w-xs">
-            No data available for {selectedCountry || "the selected country"}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Get the label for the chart based on dataType
-  const getChartLabel = () => {
-    switch (dataType) {
-      case "surfaceTempAnomaly": return "surface temperature";
-      case "seaSurfaceTempAnomaly": return "sea surface temperature";
-      case "precipitationAnomaly": return "rainfall";
-      case "seaLevelAnomaly": return "sea level";
-      case "greenhouseGasEmission": return "greenhouse gas emissions";
-      case "cropYield": return "crop yield";
-      case "livestockYield": return "livestock yield";
-      case "tourismArrivals": return "tourist arrivals";
-      default: return "this indicator";
-    }
+  const formatTooltipValue = (value: number) => {
+    return `${value.toFixed(2)}${getUnit(dataType)}`;
   };
+
+  const formatYValue = (value: number) => {
+    return `${value.toFixed(2)}${getUnit(dataType)}`;
+  };
+
+  const chartLabel = getChartLabel(dataType);
+  const unit = getUnit(dataType);
 
   return (
     <div className="w-full">
-      <div className="mb-5 grid grid-cols-3 gap-2">
-        <div className="text-center p-2 rounded-lg" style={{ backgroundColor: percentChange > 0 ? '#fef2f2' : '#ecfeff' }}>
-          <div className="text-lg font-bold" style={{ color: lineColor }}>
-            {percentChange > 0 ? `+${percentChange.toFixed(1)}%` : `${percentChange.toFixed(1)}%`}
-          </div>
-          <div className="text-xs text-slate-500">overall change</div>
-          <div className="text-[10px] text-slate-400">{trendDirection} trend</div>
-          {selectedCountry && <div className="text-[9px] text-slate-400 mt-1">{selectedCountry}</div>}
+      {/* Stats Cards for the selected country */}
+      <div className="mb-4 grid grid-cols-4 gap-2">
+        <div className="text-center p-2 bg-cyan-50 rounded-lg">
+          <div className="text-sm font-bold text-cyan-700">{averageValue.toFixed(2)}{unit}</div>
+          <div className="text-[10px] text-slate-500">Average</div>
         </div>
         <div className="text-center p-2 bg-amber-50 rounded-lg">
-          <div className="text-lg font-bold text-amber-700">
-            {maxYear || "—"}
-          </div>
-          <div className="text-xs text-slate-500">peak year</div>
-          <div className="text-[10px] text-slate-400">{valueFormatter ? valueFormatter(maxValue) : formatNumber(maxValue)}</div>
+          <div className="text-sm font-bold text-amber-700">{maxValue.toFixed(2)}{unit}</div>
+          <div className="text-[10px] text-slate-500">Peak ({maxYear})</div>
         </div>
         <div className="text-center p-2 bg-blue-50 rounded-lg">
-          <div className="text-lg font-bold text-blue-700">
-            {minYear || "—"}
+          <div className="text-sm font-bold text-blue-700">{minValue.toFixed(2)}{unit}</div>
+          <div className="text-[10px] text-slate-500">Lowest ({minYear})</div>
+        </div>
+        <div className="text-center p-2 bg-emerald-50 rounded-lg">
+          <div className={`text-sm font-bold ${percentChange > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            {percentChange > 0 ? `+${percentChange.toFixed(1)}%` : `${percentChange.toFixed(1)}%`}
           </div>
-          <div className="text-xs text-slate-500">lowest year</div>
-          <div className="text-[10px] text-slate-400">{valueFormatter ? valueFormatter(minValue) : formatNumber(minValue)}</div>
+          <div className="text-[10px] text-slate-500">Overall Change</div>
         </div>
       </div>
 
-      {/* Insight Text - NOW WITH COUNTRY NAME MENTIONED like Bubble Chart */}
-      <div className="mb-5 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
-        <p className="text-sm text-slate-700 leading-relaxed">
-          {selectedCountry ? (
-            <>
-              For <span className="font-semibold" style={{ color: lineColor }}>{selectedCountry}</span>, {getChartLabel()} has shown a{' '}
-              <span className={`font-semibold ${percentChange > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                {trendDirection} trend of {Math.abs(percentChange).toFixed(1)}%
-              </span> over the recorded period. 
-              The highest value was recorded in <span className="font-semibold text-amber-600">{maxYear}</span> 
-              (<span className="font-semibold text-amber-600">{valueFormatter ? valueFormatter(maxValue) : formatNumber(maxValue)}</span>),
-              while the lowest was in <span className="font-semibold text-blue-600">{minYear}</span>
-              (<span className="font-semibold text-blue-600">{valueFormatter ? valueFormatter(minValue) : formatNumber(minValue)}</span>).
-            </>
-          ) : (
-            <>
-              Over the recorded period, {getChartLabel()} has shown a {trendDirection} trend of {Math.abs(percentChange).toFixed(1)}%. 
-              The highest value was recorded in {maxYear} 
-              ({valueFormatter ? valueFormatter(maxValue) : formatNumber(maxValue)}),
-              while the lowest was in {minYear}
-              ({valueFormatter ? valueFormatter(minValue) : formatNumber(minValue)}).
-            </>
-          )}
+      {/* Insight Text with selected country */}
+      <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
+        <p className="text-xs text-slate-700 leading-relaxed">
+          For <span className="font-semibold text-cyan-700">{selectedCountry}</span>, {chartLabel.toLowerCase()} has shown a{' '}
+          <span className={`font-semibold ${percentChange > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            {trendDirection} trend of {Math.abs(percentChange).toFixed(1)}%
+          </span> over the recorded period ({minDataYear} - {maxDataYear}). 
+          The highest value was <span className="font-semibold text-amber-600">{maxValue.toFixed(2)}{unit}</span> recorded in {maxYear},
+          while the lowest was <span className="font-semibold text-blue-600">{minValue.toFixed(2)}{unit}</span> in {minYear}.
         </p>
       </div>
-      
+
+      {/* Chart */}
       <div className="relative" style={{ width, height }}>
         <svg 
-          ref={svgRef}
           width={width} 
           height={height} 
           className="overflow-visible"
@@ -347,7 +315,8 @@ export const LineChart = ({
           </defs>
 
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-            {xScale.ticks(8).map((v, i) => (
+            {/* Grid lines */}
+            {xScale.ticks(6).map((v, i) => (
               <line
                 key={`x-${i}`}
                 x1={xScale(v)} x2={xScale(v)}
@@ -358,7 +327,7 @@ export const LineChart = ({
                 opacity="0.5"
               />
             ))}
-            {yScale.ticks(6).map((v, i) => (
+            {yScale.ticks(5).map((v, i) => (
               <line
                 key={`y-${i}`}
                 x1="0" x2={boundsWidth}
@@ -370,6 +339,7 @@ export const LineChart = ({
               />
             ))}
 
+            {/* Zero line */}
             <line
               x1={0} x2={boundsWidth}
               y1={yScale(0)} y2={yScale(0)}
@@ -378,31 +348,34 @@ export const LineChart = ({
               strokeDasharray="6 4"
             />
 
-            {isClimateData && (
-              <path
-                d={areaBuilder(processedData) || ""}
-                fill="url(#areaGradient)"
-                opacity={animate ? 1 : 0}
-                style={{ transition: "opacity 1s ease-out" }}
-              />
-            )}
+            {/* Area under curve */}
+            <path
+              d={areaBuilder(processedData) || ""}
+              fill="url(#areaGradient)"
+              opacity={animate ? 1 : 0}
+              style={{ transition: "opacity 1s ease-out" }}
+            />
 
+            {/* Main line */}
             <LineItem
               path={lineBuilder(processedData) || ""}
               color="url(#lineGradient)"
-              strokeWidth={isClimateData ? 3.5 : 3}
+              strokeWidth={3}
               opacity={animate ? 1 : 0}
               onHover={handleLineHover}
             />
 
+            {/* Data points */}
             {processedData.map((d, i) => {
               const x = xScale(d.year);
               const y = yScale(d.value);
               const isHovered = tooltipData?.year === d.year;
-              const isMax = d.value === maxValue;
-              const isMin = d.value === minValue;
-              const pointRadius = isHovered ? 8 : (isMax || isMin ? 6 : 4.5);
+              const isMax = d.value === maxValue && maxValue !== 0;
+              const isMin = d.value === minValue && minValue !== 0;
+              const pointRadius = isHovered ? 8 : (isMax || isMin ? 6 : 4);
               const pointColor = isMax ? "#f59e0b" : isMin ? "#3b82f6" : lineColor;
+
+              const showLabel = (isMax || isMin || i === 0 || i === processedData.length - 1) && !isHovered;
 
               return (
                 <g 
@@ -432,7 +405,7 @@ export const LineChart = ({
                     opacity={isLineHovered && !isHovered ? 0.4 : 1}
                   />
                   
-                  {(isMax || isMin || i === 0 || i === processedData.length - 1) && !isHovered && (
+                  {showLabel && (
                     <text
                       x={x}
                       y={y - (isMax ? 14 : 10)}
@@ -442,44 +415,47 @@ export const LineChart = ({
                       fontWeight={isMax ? "bold" : "normal"}
                       pointerEvents="none"
                     >
-                      {valueFormatter ? valueFormatter(d.value) : formatNumber(d.value)}
+                      {formatYValue(d.value)}
                     </text>
                   )}
                 </g>
               );
             })}
 
-            {xScale.ticks(8).map((v, i) => (
+            {/* X Axis Labels */}
+            {xScale.ticks(6).map((v, i) => (
               <text
                 key={`x-${i}`}
                 x={xScale(v)}
-                y={boundsHeight + 25}
+                y={boundsHeight + 20}
                 textAnchor="middle"
-                fontSize="11"
+                fontSize="10"
                 fill="#64748b"
               >
                 {v}
               </text>
             ))}
 
-            {yScale.ticks(6).map((v, i) => (
+            {/* Y Axis Labels */}
+            {yScale.ticks(5).map((v, i) => (
               <text
                 key={`y-${i}`}
-                x={-10}
+                x={-8}
                 y={yScale(v) + 4}
                 textAnchor="end"
-                fontSize="11"
+                fontSize="10"
                 fill="#64748b"
               >
-                {valueFormatter ? valueFormatter(v) : formatYAxisTick(v, dataType)}
+                {formatYValue(v)}
               </text>
             ))}
 
+            {/* Axis Titles */}
             <text
               x={boundsWidth / 2}
-              y={boundsHeight + 52}
+              y={boundsHeight + 42}
               textAnchor="middle"
-              fontSize="11"
+              fontSize="10"
               fill="#64748b"
               fontWeight="500"
             >
@@ -487,17 +463,18 @@ export const LineChart = ({
             </text>
 
             <text
-              transform={`rotate(-90) translate(${-boundsHeight / 2}, -50)`}
+              transform={`rotate(-90) translate(${-boundsHeight / 2}, -55)`}
               textAnchor="middle"
-              fontSize="11"
+              fontSize="10"
               fill="#64748b"
               fontWeight="500"
             >
-              {yAxisLabel || (isClimateData ? "Anomaly Value" : "Value")}
+              {yAxisLabel || `${chartLabel} Anomaly`}
             </text>
           </g>
         </svg>
 
+        {/* Tooltip */}
         {tooltipData && !isLineHovered && (
           <div
             style={{
@@ -507,30 +484,25 @@ export const LineChart = ({
               backgroundColor: 'white',
               border: '1px solid #e2e8f0',
               borderRadius: '8px',
-              padding: '10px 14px',
+              padding: '8px 12px',
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               zIndex: 99999,
               pointerEvents: 'none',
-              minWidth: '160px',
+              minWidth: '140px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: lineColor }}></div>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155' }}>
-                {selectedCountry || "Selected"} • {tooltipData.year}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: lineColor }}></div>
+              <span style={{ fontSize: '10px', fontWeight: 600, color: '#334155' }}>
+                {selectedCountry} • {tooltipData.year}
               </span>
             </div>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
-              {valueFormatter ? valueFormatter(tooltipData.value) : formatNumber(tooltipData.value)}
+            <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>
+              {formatTooltipValue(tooltipData.value)}
             </div>
-            <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
-              {isClimateData ? "anomaly value" : "value"}
+            <div style={{ fontSize: '9px', color: '#64748b', marginTop: '2px' }}>
+              {chartLabel}
             </div>
-            {tooltipData.category !== "Value" && (
-              <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
-                {tooltipData.category}
-              </div>
-            )}
           </div>
         )}
       </div>
