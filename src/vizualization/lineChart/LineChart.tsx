@@ -179,8 +179,6 @@ export const LineChart = ({
       hoverTimerRef.current = null;
     }
     
-    // Get position relative to viewport for tooltip
-    const rect = svgRef.current?.getBoundingClientRect();
     const mouseX = event.clientX;
     const mouseY = event.clientY;
     
@@ -197,7 +195,7 @@ export const LineChart = ({
       setHoveredDataPoint({
         x: mouseX,
         y: mouseY,
-        label: `${selectedCountry || "Unknown"} • ${d.year}`,
+        label: `${d.year}`,
         value: d.value,
       });
     }
@@ -243,10 +241,6 @@ export const LineChart = ({
       </div>
     );
   }
-
-  const displayCountry = selectedCountry && selectedCountry !== "Regional" 
-    ? selectedCountry 
-    : (selectedCountry === "Regional" ? "Pacific Region" : "Select a country");
 
   return (
     <div className="w-full">
@@ -358,7 +352,7 @@ export const LineChart = ({
               onHover={handleLineHover}
             />
 
-            {/* Data Points - DIRECT SVG ELEMENTS with event handlers */}
+            {/* Data Points */}
             {processedData.map((d, i) => {
               const x = xScale(d.year);
               const y = yScale(d.value);
@@ -468,7 +462,7 @@ export const LineChart = ({
           </g>
         </svg>
 
-        {/* Tooltip - Separate div that appears on hover */}
+        {/* Tooltip - NO COUNTRY NAME */}
         {tooltipData && !isLineHovered && (
           <div
             style={{
@@ -482,7 +476,7 @@ export const LineChart = ({
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               zIndex: 99999,
               pointerEvents: 'none',
-              minWidth: '160px',
+              minWidth: '140px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -491,11 +485,8 @@ export const LineChart = ({
                 Year {tooltipData.year}
               </span>
             </div>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>
+            <div style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
               {valueFormatter ? valueFormatter(tooltipData.value) : formatNumber(tooltipData.value)}
-            </div>
-            <div style={{ fontSize: '11px', color: '#64748b' }}>
-              {displayCountry}
             </div>
             {tooltipData.category !== "Value" && (
               <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
