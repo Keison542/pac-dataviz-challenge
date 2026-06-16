@@ -2,14 +2,11 @@
 
 import { DisasterLossRecord } from "@/climatedata/economic_consequence/direct_disaster_economic_loss";
 import { AffectedPeopleRecord } from "@/climatedata/human_consequence/number_of_persons_affected";
-import { sexColorScale, climateColorScale } from "@/lib/utils";
 import { scaleLinear } from "d3-scale";
 import { line, area, curveMonotoneX } from "d3-shape";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { CircleItem } from "./CircleItem";
 import { LineItem } from "./LineItem";
 import { InteractionData } from "./types/interaction";
-import { AXIS_COLOR, AXIS_FONT_SIZE } from "../constant";
 
 const MARGIN = { top: 50, right: 40, bottom: 70, left: 75 };
 
@@ -88,7 +85,6 @@ export const LineChart = ({
   const [animate, setAnimate] = useState(false);
   
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
 
   const hasData = data.length > 0;
 
@@ -122,7 +118,6 @@ export const LineChart = ({
 
   const isClimateData = !(data.length > 0 && "Sex" in data[0]);
 
-  // Clear timer on unmount
   useEffect(() => {
     return () => {
       if (hoverTimerRef.current) {
@@ -133,17 +128,14 @@ export const LineChart = ({
 
   // Handle point hover with explicit mouse position
   const handleMouseEnter = useCallback((event: React.MouseEvent, d: any, x: number, y: number) => {
-    // Clear any pending hide timer
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
     }
     
-    // Get mouse position relative to viewport
     const mouseX = event.clientX;
     const mouseY = event.clientY;
     
-    // Position tooltip near cursor (offset to avoid covering the point)
     setTooltipPosition({ 
       x: mouseX + 15, 
       y: mouseY - 40 
@@ -160,14 +152,13 @@ export const LineChart = ({
       setHoveredDataPoint({
         x: mouseX,
         y: mouseY,
-        label: `${selectedCountry ?? "Global"} • ${d.year}`,
+        label: `${selectedCountry || "Unknown"} • ${d.year}`,
         value: d.value,
       });
     }
   }, [setHoveredDataPoint, selectedCountry]);
 
   const handleMouseLeave = useCallback(() => {
-    // Delay hiding to allow moving to another point
     hoverTimerRef.current = setTimeout(() => {
       setTooltipVisible(false);
       setHoveredPoint(null);
@@ -177,7 +168,6 @@ export const LineChart = ({
     }, 100);
   }, [setHoveredDataPoint]);
 
-  // Handle line hover
   const handleLineHover = useCallback((hovered: boolean) => {
     if (hovered) {
       if (hoverTimerRef.current) {
@@ -195,7 +185,6 @@ export const LineChart = ({
     }
   }, [setHoveredDataPoint]);
 
-  // Empty state
   if (!hasData) {
     return (
       <div 
@@ -240,7 +229,6 @@ export const LineChart = ({
     .y1(d => yScale(d.value))
     .curve(curveMonotoneX);
 
-  // Get color for the line
   const getLineColor = () => {
     if (percentChange > 0) return "#e11d48";
     if (percentChange < 0) return "#0891b2";
@@ -260,6 +248,9 @@ export const LineChart = ({
   };
 
   const lineColor = getLineColor();
+
+  // Debug: Log selectedCountry to console
+  console.log("LineChart selectedCountry:", selectedCountry);
 
   return (
     <div className="w-full">
@@ -299,10 +290,8 @@ export const LineChart = ({
         </p>
       </div>
       
-      {/* Chart container */}
       <div className="relative" style={{ width, height }}>
         <svg 
-          ref={svgRef}
           width={width} 
           height={height} 
           className="overflow-visible"
@@ -313,7 +302,6 @@ export const LineChart = ({
               <stop offset="0%" stopColor={getGradientStart()} stopOpacity="0.25" />
               <stop offset="100%" stopColor={getGradientEnd()} stopOpacity="0.02" />
             </linearGradient>
-
             <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={getGradientStart()} />
               <stop offset="100%" stopColor={getGradientEnd()} />
@@ -364,7 +352,7 @@ export const LineChart = ({
               />
             )}
 
-            {/* Main Line using LineItem */}
+            {/* Main Line */}
             <LineItem
               path={lineBuilder(processedData) || ""}
               color="url(#lineGradient)"
@@ -373,7 +361,7 @@ export const LineChart = ({
               onHover={handleLineHover}
             />
 
-            {/* Data Points - DIRECT EVENT HANDLERS */}
+            {/* Data Points */}
             {processedData.map((d, i) => {
               const x = xScale(d.year);
               const y = yScale(d.value);
@@ -394,7 +382,6 @@ export const LineChart = ({
                   onMouseLeave={handleMouseLeave}
                   style={{ cursor: 'pointer' }}
                 >
-                  {/* Outer glow ring for hover effect */}
                   {isPointHovered && !isLineHovered && (
                     <circle
                       cx={x}
@@ -407,7 +394,6 @@ export const LineChart = ({
                     />
                   )}
                   
-                  {/* Main circle */}
                   <circle
                     cx={x}
                     cy={y}
@@ -416,26 +402,8 @@ export const LineChart = ({
                     stroke="white"
                     strokeWidth="2"
                     opacity={isLineHovered && !isPointHovered ? 0.5 : 1}
-                    style={{
-                      transition: "r 0.1s ease",
-                      cursor: "pointer"
-                    }}
+                    style={{ transition: "r 0.1s ease" }}
                   />
-                  
-                  {/* Value label for important points */}
-                  {(isMax || isMin || i === 0 || i === processedData.length - 1) && !isPointHovered && (
-                    <text
-                      x={x}
-                      y={y - (isMax ? 12 : 10)}
-                      textAnchor="middle"
-                      fontSize="9"
-                      fill={isMax ? "#f59e0b" : "#64748b"}
-                      fontWeight={isMax ? "bold" : "normal"}
-                      className="pointer-events-none"
-                    >
-                      {valueFormatter ? valueFormatter(d.value) : formatNumber(d.value)}
-                    </text>
-                  )}
                 </g>
               );
             })}
@@ -492,7 +460,7 @@ export const LineChart = ({
           </g>
         </svg>
 
-        {/* Tooltip - Direct DOM element guaranteed to be on top */}
+        {/* Tooltip - Now shows the ACTUAL selected country name */}
         {tooltipVisible && hoveredPoint && !isLineHovered && (
           <div
             style={{
@@ -518,8 +486,9 @@ export const LineChart = ({
             <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>
               {valueFormatter ? valueFormatter(hoveredPoint.value) : formatNumber(hoveredPoint.value)}
             </div>
+            {/* THIS IS THE FIX - Shows actual country name */}
             <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
-              {selectedCountry || "Regional"}
+              {selectedCountry || "No country selected"}
             </div>
             {hoveredPoint.category !== "Value" && (
               <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
