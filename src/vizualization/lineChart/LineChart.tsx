@@ -82,13 +82,12 @@ export const LineChart = ({
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isLineHovered, setIsLineHovered] = useState(false);
   const [animate, setAnimate] = useState(false);
   
-  // Refs for hover management
-  const pointHoverTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lineHoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
   const hasData = data.length > 0;
@@ -123,63 +122,78 @@ export const LineChart = ({
 
   const isClimateData = !(data.length > 0 && "Sex" in data[0]);
 
-  // Clear all timers
-  const clearTimers = useCallback(() => {
-    if (pointHoverTimerRef.current) {
-      clearTimeout(pointHoverTimerRef.current);
-      pointHoverTimerRef.current = null;
-    }
-    if (lineHoverTimerRef.current) {
-      clearTimeout(lineHoverTimerRef.current);
-      lineHoverTimerRef.current = null;
-    }
+  // Clear timer on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+      }
+    };
   }, []);
 
-  // Handle point hover with mouse position tracking
-  const handlePointEnter = useCallback((x: number, y: number, value: number, year: number, category: string, mouseEvent: React.MouseEvent) => {
-    clearTimers();
+  // Handle point hover with explicit mouse position
+  const handleMouseEnter = useCallback((event: React.MouseEvent, d: any, x: number, y: number) => {
+    // Clear any pending hide timer
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
     
-    // Get mouse position for tooltip placement
-    const tooltipX = mouseEvent.clientX + 15;
-    const tooltipY = mouseEvent.clientY - 30;
+    // Get mouse position relative to viewport
+    const mouseX = event.clientX;
+    const mouseY = event.clientY;
     
-    setTooltipPosition({ x: tooltipX, y: tooltipY });
-    setHoveredPoint({ x, y, value, year, category });
+    // Position tooltip near cursor (offset to avoid covering the point)
+    setTooltipPosition({ 
+      x: mouseX + 15, 
+      y: mouseY - 40 
+    });
+    
+    setHoveredPoint({
+      year: d.year,
+      value: d.value,
+      category: d.category,
+    });
+    setTooltipVisible(true);
     
     if (setHoveredDataPoint) {
       setHoveredDataPoint({
-        x: mouseEvent.clientX,
-        y: mouseEvent.clientY,
-        label: `${selectedCountry ?? "Global"} • ${year}`,
-        value,
+        x: mouseX,
+        y: mouseY,
+        label: `${selectedCountry ?? "Global"} • ${d.year}`,
+        value: d.value,
       });
     }
-  }, [setHoveredDataPoint, selectedCountry, clearTimers]);
+  }, [setHoveredDataPoint, selectedCountry]);
 
-  const handlePointLeave = useCallback(() => {
-    clearTimers();
-    pointHoverTimerRef.current = setTimeout(() => {
+  const handleMouseLeave = useCallback(() => {
+    // Delay hiding to allow moving to another point
+    hoverTimerRef.current = setTimeout(() => {
+      setTooltipVisible(false);
       setHoveredPoint(null);
-      setHoveredDataPoint?.(null);
-      pointHoverTimerRef.current = null;
+      if (setHoveredDataPoint) {
+        setHoveredDataPoint(null);
+      }
     }, 100);
-  }, [setHoveredDataPoint, clearTimers]);
+  }, [setHoveredDataPoint]);
 
   // Handle line hover
   const handleLineHover = useCallback((hovered: boolean) => {
-    clearTimers();
-    
     if (hovered) {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+        hoverTimerRef.current = null;
+      }
       setIsLineHovered(true);
+      setTooltipVisible(false);
       setHoveredPoint(null);
-      setHoveredDataPoint?.(null);
+      if (setHoveredDataPoint) {
+        setHoveredDataPoint(null);
+      }
     } else {
-      lineHoverTimerRef.current = setTimeout(() => {
-        setIsLineHovered(false);
-        lineHoverTimerRef.current = null;
-      }, 100);
+      setIsLineHovered(false);
     }
-  }, [setHoveredDataPoint, clearTimers]);
+  }, [setHoveredDataPoint]);
 
   // Empty state
   if (!hasData) {
@@ -285,8 +299,8 @@ export const LineChart = ({
         </p>
       </div>
       
-      {/* Chart container with relative positioning for tooltip */}
-      <div className="relative">
+      {/* Chart container */}
+      <div className="relative" style={{ width, height }}>
         <svg 
           ref={svgRef}
           width={width} 
@@ -359,11 +373,11 @@ export const LineChart = ({
               onHover={handleLineHover}
             />
 
-            {/* Data Points */}
+            {/* Data Points - DIRECT EVENT HANDLERS */}
             {processedData.map((d, i) => {
               const x = xScale(d.year);
               const y = yScale(d.value);
-              const isPointHovered = hoveredPoint?.year === d.year;
+              const isPointHovered = hoveredPoint?.year === d.year && tooltipVisible;
               const isMax = d.value === maxValue;
               const isMin = d.value === minValue;
 
@@ -374,26 +388,53 @@ export const LineChart = ({
               if (!showPoint) return null;
 
               return (
-                <g key={i}>
-                  <CircleItem
-                    x={x}
-                    y={y}
-                    r={isPointHovered ? 8 : (isMax || isMin ? 6 : 4.5)}
-                    color={isMax ? "#f59e0b" : isMin ? "#3b82f6" : lineColor}
-                    opacity={isLineHovered && !isPointHovered ? 0.4 : 1}
-                    onMouseEnter={(e) => handlePointEnter(x, y, d.value, d.year, d.category, e)}
-                    onMouseLeave={handlePointLeave}
-                    isSelected={isPointHovered}
-                  />
+                <g 
+                  key={i}
+                  onMouseEnter={(e) => handleMouseEnter(e, d, x, y)}
+                  onMouseLeave={handleMouseLeave}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {/* Outer glow ring for hover effect */}
                   {isPointHovered && !isLineHovered && (
                     <circle
-                      cx={x} cy={y}
+                      cx={x}
+                      cy={y}
                       r={12}
                       fill="none"
                       stroke={lineColor}
-                      strokeOpacity="0.3"
                       strokeWidth="2"
+                      opacity="0.4"
                     />
+                  )}
+                  
+                  {/* Main circle */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={isPointHovered ? 8 : (isMax || isMin ? 6 : 4.5)}
+                    fill={isMax ? "#f59e0b" : isMin ? "#3b82f6" : lineColor}
+                    stroke="white"
+                    strokeWidth="2"
+                    opacity={isLineHovered && !isPointHovered ? 0.5 : 1}
+                    style={{
+                      transition: "r 0.1s ease",
+                      cursor: "pointer"
+                    }}
+                  />
+                  
+                  {/* Value label for important points */}
+                  {(isMax || isMin || i === 0 || i === processedData.length - 1) && !isPointHovered && (
+                    <text
+                      x={x}
+                      y={y - (isMax ? 12 : 10)}
+                      textAnchor="middle"
+                      fontSize="9"
+                      fill={isMax ? "#f59e0b" : "#64748b"}
+                      fontWeight={isMax ? "bold" : "normal"}
+                      className="pointer-events-none"
+                    >
+                      {valueFormatter ? valueFormatter(d.value) : formatNumber(d.value)}
+                    </text>
                   )}
                 </g>
               );
@@ -451,31 +492,40 @@ export const LineChart = ({
           </g>
         </svg>
 
-        {/* Tooltip - Fixed to appear near cursor */}
-        {hoveredPoint && !isLineHovered && (
+        {/* Tooltip - Direct DOM element guaranteed to be on top */}
+        {tooltipVisible && hoveredPoint && !isLineHovered && (
           <div
-            className="fixed pointer-events-none bg-white border border-slate-200 shadow-lg px-4 py-2 rounded-lg z-[9999]"
             style={{
+              position: 'fixed',
               left: tooltipPosition.x,
               top: tooltipPosition.y,
-              minWidth: '180px',
+              backgroundColor: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              padding: '8px 12px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              zIndex: 99999,
+              pointerEvents: 'none',
+              minWidth: '160px',
             }}
           >
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: lineColor }}></div>
-              <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: lineColor }}></div>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155', letterSpacing: '0.5px' }}>
                 {hoveredPoint.year}
               </span>
             </div>
-            <div className="text-lg font-bold text-slate-800 tabular-nums">
+            <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>
               {valueFormatter ? valueFormatter(hoveredPoint.value) : formatNumber(hoveredPoint.value)}
             </div>
-            <div className="text-xs text-slate-500 mt-0.5">
+            <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
               {selectedCountry || "Regional"}
             </div>
-            <div className="text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-100">
-              {hoveredPoint.category !== "Value" && `Category: ${hoveredPoint.category}`}
-            </div>
+            {hoveredPoint.category !== "Value" && (
+              <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
+                {hoveredPoint.category}
+              </div>
+            )}
           </div>
         )}
       </div>
