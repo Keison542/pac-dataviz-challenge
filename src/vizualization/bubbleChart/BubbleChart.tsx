@@ -86,8 +86,7 @@ const AnimatedBubble = ({
 export function BubbleChart({
   width,
   height,
-  data,
-  insight = "Larger bubbles reveal years when climate disasters displaced the most people",
+  data
 }: Props) {
   const [hovered, setHovered] = useState<DataPoint | null>(null);
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
@@ -198,12 +197,6 @@ export function BubbleChart({
 
   return (
     <div className="w-full">
-      <div className="mb-4">
-          <p className="text-xs text-slate-600 leading-relaxed">
-            {insight}
-          </p>
-      </div>
-
       <div className="mb-5 grid grid-cols-3 gap-2">
         <div className="text-center p-2 bg-rose-50 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-lg font-bold text-rose-700">
