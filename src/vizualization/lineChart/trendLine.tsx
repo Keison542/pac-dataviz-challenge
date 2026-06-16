@@ -39,9 +39,13 @@ export const TrendLine = ({
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
-  const [hovered, setHovered] = useState<InteractionData | null>(null);
+  const [hoveredPoint, setHoveredPoint] = useState<{ x: number; y: number; value: number; year: number } | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isLineHovered, setIsLineHovered] = useState(false);
+  const [animate, setAnimate] = useState(false);
+  
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   const stackKeys = useMemo(() => {
     if (stackBy === "year") {
@@ -159,46 +163,53 @@ export const TrendLine = ({
     return ticks;
   }, [trendData]);
 
-  // Clear any pending timer
-  const clearHoverTimer = useCallback(() => {
+  useEffect(() => {
+    if (!hasData) return;
+    setAnimate(false);
+    const timer = setTimeout(() => setAnimate(true), 80);
+    return () => clearTimeout(timer);
+  }, [data, hasData]);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Handle point hover
+  const handlePointEnter = (event: React.MouseEvent, year: number, value: number, x: number, y: number) => {
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
     }
-  }, []);
-
-  // Handle point hover
-  const handlePointHover = useCallback((point: InteractionData | null) => {
-    clearHoverTimer();
     
-    if (point) {
-      setHovered(point);
-    } else {
-      // If line is not hovered, clear immediately
-      if (!isLineHovered) {
-        setHovered(null);
-      } else {
-        // Small delay to allow line hover to take over
-        hoverTimerRef.current = setTimeout(() => {
-          if (!isLineHovered) {
-            setHovered(null);
-          }
-          hoverTimerRef.current = null;
-        }, 100);
-      }
-    }
-  }, [isLineHovered, clearHoverTimer]);
+    const mouseX = event.clientX;
+    const mouseY = event.clientY;
+    
+    setTooltipPosition({ x: mouseX + 15, y: mouseY - 55 });
+    setHoveredPoint({ x, y, value, year });
+  };
+
+  const handlePointLeave = () => {
+    hoverTimerRef.current = setTimeout(() => {
+      setHoveredPoint(null);
+    }, 150);
+  };
 
   // Handle line hover
-  const handleLineHover = useCallback((hovered: boolean) => {
-    clearHoverTimer();
-    setIsLineHovered(hovered);
-    
+  const handleLineHover = (hovered: boolean) => {
     if (hovered) {
-      // When line is hovered, don't show point tooltip
-      setHovered(null);
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+      }
+      setIsLineHovered(true);
+      setHoveredPoint(null);
+    } else {
+      setIsLineHovered(false);
     }
-  }, [clearHoverTimer]);
+  };
 
   if (!hasData) {
     return (
@@ -216,6 +227,8 @@ export const TrendLine = ({
       </div>
     );
   }
+
+  const lineColor = "#06b6d4";
 
   return (
     <div className="w-full font-sans">
@@ -243,22 +256,36 @@ export const TrendLine = ({
         </div>
       </div>
 
-      {/* Insight Text - RIGHT BELOW STATS CARDS */}
+      {/* Insight Text */}
+      <div className="mb-5 p-3 bg-slate-50 rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
           Over the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
           disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
           The total economic loss across all years was {formatTick(totalLoss)}, 
-          with an annual average of {formatTick(averageLoss)}.The highest loss was recorded in {worstYear?.year} 
+          with an annual average of {formatTick(averageLoss)}. The highest loss was recorded in {worstYear?.year} 
           at {worstYear ? formatCompact(worstYear.total) : "—"}, 
           while the lowest was in {bestYear?.year} 
           at {bestYear ? formatCompact(bestYear.total) : "—"}.
         </p>
-     
+      </div>
 
       {/* Line Chart */}
       <div className="relative">
-        <svg width={width} height={height} className="overflow-visible">
+        <svg 
+          ref={svgRef}
+          width={width} 
+          height={height} 
+          className="overflow-visible"
+        >
+          <defs>
+            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6"/>
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.0"/>
+            </linearGradient>
+          </defs>
+
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+            {/* Grid lines */}
             {yAxisTicks.map((v, i) => (
               <line
                 key={`grid-y-${i}`}
@@ -285,40 +312,44 @@ export const TrendLine = ({
               />
             ))}
 
+            {/* Area under curve */}
             <path 
               d={areaPath} 
               fill="url(#areaGradient)" 
               opacity="0.3"
             />
 
-            <defs>
-              <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6"/>
-                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.0"/>
-              </linearGradient>
-            </defs>
-
+            {/* Main line */}
             <LineItem
               path={linePath}
-              color="#06b6d4"
+              color={lineColor}
               opacity={0.85}
               strokeWidth={3.5}
               onHover={handleLineHover}
             />
 
+            {/* Data points */}
             {trendData.map((d, i) => {
+              const x = xScale(d.year);
+              const y = yScale(d.total);
+              const isHovered = hoveredPoint?.year === d.year;
               const isWorstYear = worstYear && d.year === worstYear.year;
               const isBestYear = bestYear && d.year === bestYear.year;
-              const isHovered = hovered?.label === `${d.year}`;
               const pointRadius = isHovered ? 10 : (isWorstYear ? 9 : isBestYear ? 7 : 5);
-              const pointColor = isWorstYear ? "#f59e0b" : isBestYear ? "#10b981" : "#06b6d4";
+              const pointColor = isWorstYear ? "#f59e0b" : isBestYear ? "#10b981" : lineColor;
               
               return (
-                <g key={i}>
+                <g 
+                  key={i}
+                  onMouseEnter={(e) => handlePointEnter(e, d.year, d.total, x, y)}
+                  onMouseLeave={handlePointLeave}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {/* Outer ring for important points */}
                   {(isWorstYear || isBestYear) && !isHovered && !isLineHovered && (
                     <circle
-                      cx={xScale(d.year)}
-                      cy={yScale(d.total)}
+                      cx={x}
+                      cy={y}
                       r={pointRadius + 3}
                       fill="none"
                       stroke={pointColor}
@@ -327,42 +358,31 @@ export const TrendLine = ({
                     />
                   )}
                   
+                  {/* Main circle */}
                   <circle
-                    cx={xScale(d.year)}
-                    cy={yScale(d.total)}
+                    cx={x}
+                    cy={y}
                     r={pointRadius}
                     fill={pointColor}
                     stroke="#fff"
                     strokeWidth={2.5}
-                    className="cursor-pointer transition-all duration-200"
                     style={{
                       transform: isHovered ? "scale(1.15)" : "scale(1)",
-                      transition: "transform 0.2s ease",
+                      transition: "transform 0.15s ease",
                       filter: isHovered ? `drop-shadow(0 0 6px ${pointColor})` : "none"
                     }}
-                    onMouseEnter={() => handlePointHover({
-                      x: xScale(d.year),
-                      y: yScale(d.total),
-                      value: d.total,
-                      label: `${d.year}`,
-                    })}
-                    onMouseLeave={() => handlePointHover(null)}
                   />
                   
-                  {(isWorstYear || isBestYear || i === 0 || i === trendData.length - 1) && (
+                  {/* Value label for important points */}
+                  {(isWorstYear || isBestYear || i === 0 || i === trendData.length - 1) && !isHovered && !isLineHovered && (
                     <text
-                      x={xScale(d.year)}
-                      y={yScale(d.total) - (isWorstYear ? 22 : 15)}
+                      x={x}
+                      y={y - (isWorstYear ? 22 : 15)}
                       textAnchor="middle"
-                      fontSize={isHovered ? "12" : (isWorstYear ? "11" : "10")}
+                      fontSize={isWorstYear ? "11" : "10"}
                       fill={pointColor}
                       fontWeight={isWorstYear ? "800" : "600"}
-                      className="whitespace-nowrap transition-all duration-200 pointer-events-none"
-                      style={{
-                        opacity: isLineHovered ? 0.5 : 1,
-                        transform: isHovered ? "scale(1.05)" : "scale(1)",
-                        transition: "all 0.2s ease"
-                      }}
+                      pointerEvents="none"
                     >
                       {formatCompact(d.total)}
                     </text>
@@ -371,6 +391,7 @@ export const TrendLine = ({
               );
             })}
 
+            {/* X Axis */}
             {xAxisTicks.map((year, i) => (
               <g key={`x-axis-${i}`}>
                 <line
@@ -394,6 +415,7 @@ export const TrendLine = ({
               </g>
             ))}
 
+            {/* Y Axis */}
             {yAxisTicks.map((v, i) => (
               <g key={`y-axis-${i}`}>
                 <line
@@ -418,6 +440,7 @@ export const TrendLine = ({
               </g>
             ))}
 
+            {/* Axis Titles */}
             <text 
               x={boundsWidth / 2} 
               y={boundsHeight + 48} 
@@ -439,6 +462,7 @@ export const TrendLine = ({
               Total Economic Loss (USD)
             </text>
 
+            {/* Peak annotation */}
             {worstYear && (
               <g>
                 <line
@@ -474,6 +498,7 @@ export const TrendLine = ({
               </g>
             )}
 
+            {/* Trend arrow */}
             {trendData.length > 1 && (
               <g>
                 <path
@@ -512,33 +537,41 @@ export const TrendLine = ({
             )}
           </g>
         </svg>
-      </div>
 
-      {/* Tooltip */}
-      {hovered && !isLineHovered && (
-        <div
-          className="fixed pointer-events-none bg-white border border-slate-200 shadow-xl px-4 py-2.5 rounded-lg z-50 animate-in fade-in zoom-in duration-200"
-          style={{
-            left: hovered.x + MARGIN.left + 15,
-            top: hovered.y + MARGIN.top - 55,
-          }}
-        >
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
-            <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-              Year {hovered.label}
-            </span>
+        {/* Tooltip - No blinking, stable positioning */}
+        {hoveredPoint && !isLineHovered && (
+          <div
+            style={{
+              position: 'fixed',
+              left: tooltipPosition.x,
+              top: tooltipPosition.y,
+              backgroundColor: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              padding: '10px 14px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              zIndex: 99999,
+              pointerEvents: 'none',
+              minWidth: '140px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: lineColor }}></div>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155' }}>
+                Year {hoveredPoint.year}
+              </span>
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
+              {formatTick(hoveredPoint.value)}
+            </div>
+            <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
+              {hoveredPoint.value > 1000000000 ? "Extreme loss year" : 
+               hoveredPoint.value > 100000000 ? "Major disaster year" : 
+               hoveredPoint.value > 10000000 ? "Significant impact year" : "Measured impact year"}
+            </div>
           </div>
-          <div className="text-lg font-bold text-slate-800 tabular-nums">
-            {formatTick(Number(hovered.value) || 0)}
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">
-            {Number(hovered.value) > 1000000000 ? "Extreme loss year" : 
-             Number(hovered.value) > 100000000 ? "Major disaster year" : 
-             Number(hovered.value) > 10000000 ? "Significant impact year" : "Measured impact year"}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
