@@ -496,17 +496,15 @@ export const LineChart = ({
               />
             )}
 
-            {/* Data points */}
+            {/* Data points - NO LABELS SHOWN, only circles */}
             {processedData.map((d, i) => {
               const x = xScale(d.year);
               const y = yScale(d.value);
               const isHovered = tooltipData?.year === d.year;
               const isMax = d.value === stats.maxValue && stats.maxValue !== 0;
               const isMin = d.value === stats.minValue && stats.minValue !== 0;
-              const pointRadius = isHovered ? 10 : (isMax || isMin ? 9 : 5);
+              const pointRadius = isHovered ? 10 : (isMax || isMin ? 7 : 5);
               const pointColor = isMax ? "#f59e0b" : isMin ? "#3b82f6" : lineColor;
-
-              const showLabel = (isMax || isMin || i === 0 || i === processedData.length - 1) && !isHovered;
 
               return (
                 <g 
@@ -515,18 +513,20 @@ export const LineChart = ({
                   onMouseLeave={handleMouseLeave}
                   style={{ cursor: 'pointer' }}
                 >
+                  {/* Outer ring for hover effect */}
                   {isHovered && !isLineHovered && (
                     <circle
                       cx={x}
                       cy={y}
-                      r={pointRadius + 3}
+                      r={pointRadius + 4}
                       fill="none"
                       stroke={pointColor}
-                      strokeWidth="1.5"
+                      strokeWidth="2"
                       opacity="0.3"
                     />
                   )}
                   
+                  {/* Main circle - slightly larger for max/min points but NO LABELS */}
                   <circle
                     cx={x}
                     cy={y}
@@ -534,21 +534,10 @@ export const LineChart = ({
                     fill={pointColor}
                     stroke="#fff"
                     strokeWidth={2.5}
+                    opacity={isLineHovered && !isHovered ? 0.4 : 1}
                   />
                   
-                  {showLabel && (
-                    <text
-                      x={x}
-                      y={y - (isMax ? 22 : 15)}
-                      textAnchor="middle"
-                      fontSize={isMax ? "11" : "10"}
-                      fill={pointColor}
-                      fontWeight={isMax ? "800" : "600"}
-                      pointerEvents="none"
-                    >
-                      {formatValue(d.value)}
-                    </text>
-                  )}
+                  {/* NO TEXT LABELS - Values only shown in tooltip on hover */}
                 </g>
               );
             })}
@@ -577,7 +566,7 @@ export const LineChart = ({
               </g>
             ))}
 
-            {/* Y Axis Labels - CLEANER with fewer ticks */}
+            {/* Y Axis Labels */}
             {yAxisTicks.map((v, i) => (
               <g key={`y-axis-${i}`}>
                 <line
@@ -626,7 +615,7 @@ export const LineChart = ({
           </g>
         </svg>
 
-        {/* Tooltip */}
+        {/* Tooltip - ONLY shows on hover */}
         {tooltipData && !isLineHovered && (
           <div
             style={{
@@ -656,6 +645,8 @@ export const LineChart = ({
               {chartLabel.toLowerCase()} anomaly
             </div>
           </div>
+        )}
+      </div>
         )}
       </div>
     </div>
