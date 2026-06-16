@@ -41,16 +41,18 @@ const METRIC_CONFIGS = {
     gradientEnd: "#06b6d4",
     unit: "USD",
     format: (v: number) => {
-      if (v >= 1_000_000_000) return `$${(v / 1_000_000_000).toFixed(1)}B`;
-      if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-      if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
-      return `$${v}`;
+      const absV = Math.abs(v);
+      if (absV >= 1_000_000_000) return `${v < 0 ? '-' : ''}$${(absV / 1_000_000_000).toFixed(1)}B`;
+      if (absV >= 1_000_000) return `${v < 0 ? '-' : ''}$${(absV / 1_000_000).toFixed(1)}M`;
+      if (absV >= 1_000) return `${v < 0 ? '-' : ''}$${(absV / 1_000).toFixed(1)}K`;
+      return `${v < 0 ? '-' : ''}$${absV}`;
     },
     formatNumber: (v: number) => {
-      if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
-      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-      if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
-      return v.toString();
+      const absV = Math.abs(v);
+      if (absV >= 1_000_000_000) return `${v < 0 ? '-' : ''}${(absV / 1_000_000_000).toFixed(1)}B`;
+      if (absV >= 1_000_000) return `${v < 0 ? '-' : ''}${(absV / 1_000_000).toFixed(1)}M`;
+      if (absV >= 1_000) return `${v < 0 ? '-' : ''}${(absV / 1_000).toFixed(1)}K`;
+      return `${v < 0 ? '-' : ''}${absV}`;
     }
   },
   cropYield: {
@@ -61,8 +63,8 @@ const METRIC_CONFIGS = {
     gradientStart: "#059669",
     gradientEnd: "#10b981",
     unit: "t/ha",
-    format: (v: number) => `${v.toFixed(1)} t/ha`,
-    formatNumber: (v: number) => v.toFixed(1)
+    format: (v: number) => `${v < 0 ? '-' : ''}${Math.abs(v).toFixed(1)} t/ha`,
+    formatNumber: (v: number) => `${v < 0 ? '-' : ''}${Math.abs(v).toFixed(1)}`
   },
   touristArrivals: {
     title: "Tourist Arrivals by Country",
@@ -73,14 +75,16 @@ const METRIC_CONFIGS = {
     gradientEnd: "#14b8a6",
     unit: "visitors",
     format: (v: number) => {
-      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-      if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
-      return v.toString();
+      const absV = Math.abs(v);
+      if (absV >= 1_000_000) return `${v < 0 ? '-' : ''}${(absV / 1_000_000).toFixed(1)}M`;
+      if (absV >= 1_000) return `${v < 0 ? '-' : ''}${(absV / 1_000).toFixed(1)}K`;
+      return `${v < 0 ? '-' : ''}${absV}`;
     },
     formatNumber: (v: number) => {
-      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-      if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
-      return v.toString();
+      const absV = Math.abs(v);
+      if (absV >= 1_000_000) return `${v < 0 ? '-' : ''}${(absV / 1_000_000).toFixed(1)}M`;
+      if (absV >= 1_000) return `${v < 0 ? '-' : ''}${(absV / 1_000).toFixed(1)}K`;
+      return `${v < 0 ? '-' : ''}${absV}`;
     }
   },
   livestockYield: {
@@ -92,14 +96,16 @@ const METRIC_CONFIGS = {
     gradientEnd: "#f59e0b",
     unit: "tons",
     format: (v: number) => {
-      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-      if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
-      return v.toString();
+      const absV = Math.abs(v);
+      if (absV >= 1_000_000) return `${v < 0 ? '-' : ''}${(absV / 1_000_000).toFixed(1)}M`;
+      if (absV >= 1_000) return `${v < 0 ? '-' : ''}${(absV / 1_000).toFixed(1)}K`;
+      return `${v < 0 ? '-' : ''}${absV}`;
     },
     formatNumber: (v: number) => {
-      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-      if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
-      return v.toString();
+      const absV = Math.abs(v);
+      if (absV >= 1_000_000) return `${v < 0 ? '-' : ''}${(absV / 1_000_000).toFixed(1)}M`;
+      if (absV >= 1_000) return `${v < 0 ? '-' : ''}${(absV / 1_000).toFixed(1)}K`;
+      return `${v < 0 ? '-' : ''}${absV}`;
     }
   },
   climateAlteringLand: {
@@ -111,14 +117,16 @@ const METRIC_CONFIGS = {
     gradientEnd: "#8b5cf6",
     unit: "hectares",
     format: (v: number) => {
-      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M ha`;
-      if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K ha`;
-      return `${v} ha`;
+      const absV = Math.abs(v);
+      if (absV >= 1_000_000) return `${v < 0 ? '-' : ''}${(absV / 1_000_000).toFixed(1)}M ha`;
+      if (absV >= 1_000) return `${v < 0 ? '-' : ''}${(absV / 1_000).toFixed(1)}K ha`;
+      return `${v < 0 ? '-' : ''}${absV} ha`;
     },
     formatNumber: (v: number) => {
-      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-      if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
-      return v.toString();
+      const absV = Math.abs(v);
+      if (absV >= 1_000_000) return `${v < 0 ? '-' : ''}${(absV / 1_000_000).toFixed(1)}M`;
+      if (absV >= 1_000) return `${v < 0 ? '-' : ''}${(absV / 1_000).toFixed(1)}K`;
+      return `${v < 0 ? '-' : ''}${absV}`;
     }
   },
   populationGrowth: {
@@ -129,8 +137,8 @@ const METRIC_CONFIGS = {
     gradientStart: "#db2777",
     gradientEnd: "#ec4898",
     unit: "%",
-    format: (v: number) => `${v.toFixed(1)}%`,
-    formatNumber: (v: number) => v.toFixed(1)
+    format: (v: number) => `${v < 0 ? '-' : ''}${Math.abs(v).toFixed(1)}%`,
+    formatNumber: (v: number) => `${v < 0 ? '-' : ''}${Math.abs(v).toFixed(1)}`
   },
   affectedPersons: {
     title: "People Affected by Country",
@@ -141,20 +149,22 @@ const METRIC_CONFIGS = {
     gradientEnd: "#ef4444",
     unit: "people",
     format: (v: number) => {
-      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-      if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
-      return v.toString();
+      const absV = Math.abs(v);
+      if (absV >= 1_000_000) return `${v < 0 ? '-' : ''}${(absV / 1_000_000).toFixed(1)}M`;
+      if (absV >= 1_000) return `${v < 0 ? '-' : ''}${(absV / 1_000).toFixed(1)}K`;
+      return `${v < 0 ? '-' : ''}${absV}`;
     },
     formatNumber: (v: number) => {
-      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-      if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
-      return v.toString();
+      const absV = Math.abs(v);
+      if (absV >= 1_000_000) return `${v < 0 ? '-' : ''}${(absV / 1_000_000).toFixed(1)}M`;
+      if (absV >= 1_000) return `${v < 0 ? '-' : ''}${(absV / 1_000).toFixed(1)}K`;
+      return `${v < 0 ? '-' : ''}${absV}`;
     }
   }
 };
 
 // Animated bar component with spring effects
-const AnimatedBar = ({ width, height, y, fill, rx, onMouseEnter, onMouseLeave, isHovered }: any) => {
+const AnimatedBar = ({ width, height, y, fill, rx, onMouseEnter, onMouseLeave, isHovered, isNegative }: any) => {
   const springProps = useSpring({
     width: width,
     opacity: isHovered ? 0.95 : 0.85,
@@ -166,12 +176,15 @@ const AnimatedBar = ({ width, height, y, fill, rx, onMouseEnter, onMouseLeave, i
     config: { tension: 200, friction: 20 },
   });
 
+  // For negative bars, we need to position from the right
+  const xPosition = isNegative ? -width : 0;
+
   return (
     <>
       {/* Glow effect on hover */}
       {isHovered && (
         <animated.rect
-          x={0}
+          x={isNegative ? xPosition - 4 : 0}
           y={y - 2}
           width={width + 8}
           height={height + 4}
@@ -182,7 +195,7 @@ const AnimatedBar = ({ width, height, y, fill, rx, onMouseEnter, onMouseLeave, i
         />
       )}
       <animated.rect
-        x={0}
+        x={isNegative ? xPosition : 0}
         y={y}
         width={springProps.width}
         height={height}
@@ -220,7 +233,14 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
+  // Find min and max values for proper domain
+  const minValue = Math.min(...ranked.map(d => d.value), 0);
   const maxValue = Math.max(...ranked.map(d => d.value), 1);
+  
+  // Add some padding
+  const paddedMin = minValue < 0 ? minValue * 1.1 : -maxValue * 0.05;
+  const paddedMax = maxValue * 1.1;
+
   const totalSum = ranked.reduce((sum, d) => sum + d.value, 0);
   const totalCountries = ranked.length;
 
@@ -239,8 +259,9 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
     .range([0, boundsHeight])
     .padding(0.25);
 
+  // X scale with negative domain support
   const xScale = scaleLinear()
-    .domain([0, maxValue])
+    .domain([paddedMin, paddedMax])
     .nice()
     .range([0, boundsWidth]);
 
@@ -250,7 +271,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white" style={{ width, height }}>
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30"></div>
+          <div className="text-4xl mb-3 opacity-30">📊</div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             No data available for this metric
@@ -259,6 +280,10 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
       </div>
     );
   }
+
+  // Check if there are negative values
+  const hasNegative = minValue < 0;
+  const zeroPosition = xScale(0);
 
   return (
     <div className="w-full">
@@ -303,9 +328,14 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
       {/* Header with Storytelling */}
       <div className="mb-4">
         <h3 className="text-base font-semibold text-slate-800 mb-1">{currentMetric.title}</h3>
-          <p className="text-xs text-slate-600 leading-relaxed">
-             {currentMetric.insight}
+        <p className="text-xs text-slate-600 leading-relaxed">
+          {currentMetric.insight}
+        </p>
+        {hasNegative && (
+          <p className="text-xs text-amber-600 mt-1">
+            ⚠️ Negative values indicate improvement or reduction in this metric
           </p>
+        )}
       </div>
 
       {/* Key Findings Summary Cards with hover effects */}
@@ -338,13 +368,13 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
 
       {/* Narrative Paragraph */}
       {topCountry && totalSum > 0 && (
-          <p className="text-sm text-slate-700 leading-relaxed">
-            {topCountry.country} leads with{' '}
-            {currentMetric.format(topCountry.value)} — 
-            representing {topPercentage}% of the total regional impact.
-            {topVsSecond > 20 && ` This is ${topVsSecond.toFixed(0)}% higher than ${secondCountry?.country}, the second most affected nation.`}
-            {' '}The top 3 countries alone account for {top3Percentage.toFixed(0)}% of all recorded {currentMetric.title.toLowerCase().split(' by')[0]}.
-          </p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          {topCountry.country} leads with{' '}
+          {currentMetric.format(topCountry.value)} — 
+          representing {topPercentage}% of the total regional impact.
+          {topVsSecond > 20 && ` This is ${topVsSecond.toFixed(0)}% higher than ${secondCountry?.country}, the second most affected nation.`}
+          {' '}The top 3 countries alone account for {top3Percentage.toFixed(0)}% of all recorded {currentMetric.title.toLowerCase().split(' by')[0]}.
+        </p>
       )}
 
       {/* Chart */}
@@ -353,6 +383,10 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
           <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor={currentMetric.gradientStart} />
             <stop offset="100%" stopColor={currentMetric.gradientEnd} />
+          </linearGradient>
+          <linearGradient id="negativeBarGradient" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#cbd5e1" />
           </linearGradient>
           <linearGradient id="topBarGradient" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#be123c" />
@@ -369,6 +403,17 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
         </defs>
 
         <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+          {/* Zero line */}
+          <line
+            x1={zeroPosition}
+            x2={zeroPosition}
+            y1={0}
+            y2={boundsHeight}
+            stroke="#94a3b8"
+            strokeWidth="1.5"
+            strokeDasharray="4 4"
+          />
+
           {/* Grid lines */}
           {ticks.map((t) => (
             <line
@@ -399,46 +444,44 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
           {/* Bars with animated effects */}
           {ranked.map((d, i) => {
             const y = yScale(d.country)!;
-            const isTop = i === 0;
-            const isSecond = i === 1;
-            const isThird = i === 2;
+            const isTop = i === 0 && d.value > 0;
+            const isSecond = i === 1 && d.value > 0;
+            const isThird = i === 2 && d.value > 0;
             const isHovered = hoveredCountry === d.country;
+            const isNegative = d.value < 0;
+            const barWidth = Math.abs(xScale(d.value) - zeroPosition);
             
             let barColor;
-            if (isTop) barColor = "url(#topBarGradient)";
-            else if (isSecond) barColor = "url(#secondBarGradient)";
-            else if (isThird) barColor = "url(#thirdBarGradient)";
-            else barColor = "url(#barGradient)";
+            if (isNegative) {
+              barColor = "url(#negativeBarGradient)";
+            } else if (isTop) {
+              barColor = "url(#topBarGradient)";
+            } else if (isSecond) {
+              barColor = "url(#secondBarGradient)";
+            } else if (isThird) {
+              barColor = "url(#thirdBarGradient)";
+            } else {
+              barColor = "url(#barGradient)";
+            }
+            
+            // For negative bars, we start from the right (zero position)
+            const barX = isNegative ? xScale(d.value) : zeroPosition;
             
             return (
               <g key={d.country}>
                 <AnimatedBar
-                  width={xScale(d.value)}
+                  width={barWidth}
                   height={yScale.bandwidth()}
                   y={y}
+                  x={barX}
                   fill={barColor}
                   rx={4}
                   isHovered={isHovered}
+                  isNegative={isNegative}
                   onMouseEnter={() => setHoveredCountry(d.country)}
                   onMouseLeave={() => setHoveredCountry(null)}
                 />
                 
-                {/* Value label on bar (if wide enough) */}
-                {xScale(d.value) > 65 && (
-                  <text
-                    x={xScale(d.value) - 8}
-                    y={y + yScale.bandwidth() / 2}
-                    textAnchor="end"
-                    dominantBaseline="middle"
-                    fontSize={11}
-                    fill="#ffffff"
-                    fontWeight={isHovered ? 700 : 600}
-                    className="transition-all duration-200"
-                  >
-                    {currentMetric.formatNumber(d.value)}
-                  </text>
-                )}
-
                 {/* Country label with hover effect */}
                 <text
                   x={-12}
@@ -460,15 +503,32 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
                   {isThird && <tspan className="text-amber-500"> </tspan>}
                 </text>
 
-                {/* Value label outside bar (if bar is too narrow) */}
-                {xScale(d.value) <= 65 && (
+                {/* Value label - positioned correctly for positive/negative */}
+                {barWidth > 30 && (
                   <text
-                    x={xScale(d.value) + 8}
+                    x={isNegative ? xScale(d.value) + 8 : zeroPosition + barWidth - 8}
                     y={y + yScale.bandwidth() / 2}
+                    textAnchor={isNegative ? "start" : "end"}
                     dominantBaseline="middle"
                     fontSize={11}
-                    fill={isTop ? "#be123c" : isSecond ? "#ea580c" : isThird ? "#d97706" : (isHovered ? currentMetric.color : "#334155")}
-                    fontWeight={isTop || isSecond || isThird || isHovered ? 600 : 500}
+                    fill={isNegative ? "#94a3b8" : "#ffffff"}
+                    fontWeight={isHovered ? 700 : 600}
+                    className="transition-all duration-200"
+                  >
+                    {currentMetric.formatNumber(d.value)}
+                  </text>
+                )}
+
+                {/* Value label outside bar (if bar is too narrow) */}
+                {barWidth <= 30 && (
+                  <text
+                    x={isNegative ? xScale(d.value) - 8 : zeroPosition + barWidth + 8}
+                    y={y + yScale.bandwidth() / 2}
+                    textAnchor={isNegative ? "end" : "start"}
+                    dominantBaseline="middle"
+                    fontSize={11}
+                    fill={isNegative ? "#94a3b8" : currentMetric.color}
+                    fontWeight={isHovered ? 600 : 500}
                     className="transition-all duration-200"
                   >
                     {currentMetric.formatNumber(d.value)}
@@ -494,13 +554,12 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
 
       {/* Distribution Insight Footer */}
       {ranked.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-slate-100">
           <p className="text-xs text-slate-500 text-center leading-relaxed">
-            The top 3 countries ({ranked.slice(0, 3).map(d => d.country).join(", ")}) 
-            account for <span className="font-semibold">{top3Percentage.toFixed(1)}%</span> of the total {currentMetric.formatNumber(totalSum)} {currentMetric.unit}.
+            The top 3 countries ({ranked.slice(0, 3).filter(d => d.value > 0).map(d => d.country).join(", ") || "N/A"}) 
+            account for {top3Percentage.toFixed(1)}% of the total {currentMetric.formatNumber(totalSum)} {currentMetric.unit}.
             {bottomCountry && ` The lowest among all is ${bottomCountry.country} with ${currentMetric.formatNumber(bottomCountry.value)}.`}
+            {hasNegative && ` Negative values indicate improvement.`}
           </p>
-        </div>
       )}
     </div>
   );
