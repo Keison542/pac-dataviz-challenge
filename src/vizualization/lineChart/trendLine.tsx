@@ -227,7 +227,7 @@ export const TrendLine = ({
         style={{ width, height }}
       >
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30"></div>
+          <div className="text-4xl mb-3 opacity-30">📊</div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             No economic loss data available for the selected filter
@@ -265,17 +265,21 @@ export const TrendLine = ({
         </div>
       </div>
 
-      {/* Insight Text - Without country selection */}
+      {/* Insight Text */}
+      <div className="mb-5 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
           Over the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
-          disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
-          The total economic loss across all years was {formatTick(totalLoss)}, 
-          with an annual average of {formatTick(averageLoss)}. 
-          The highest loss was recorded in {worstYear?.year} at {worstYear ? formatCompact(worstYear.total) : "—"}, 
-          while the lowest was in {bestYear?.year} 
-          at {bestYear ? formatCompact(bestYear.total) : "—"}.
+          disaster economic losses have shown a <span className={`font-semibold ${growthRate > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}
+          </span>.
+          The total economic loss across all years was <span className="font-semibold text-cyan-700">{formatTick(totalLoss)}</span>, 
+          with an annual average of <span className="font-semibold text-cyan-700">{formatTick(averageLoss)}</span>. 
+          The highest loss was recorded in <span className="font-semibold text-amber-600">{worstYear?.year}</span> 
+          at <span className="font-semibold text-amber-600">{worstYear ? formatCompact(worstYear.total) : "—"}</span>, 
+          while the lowest was in <span className="font-semibold text-emerald-600">{bestYear?.year}</span> 
+          at <span className="font-semibold text-emerald-600">{bestYear ? formatCompact(bestYear.total) : "—"}</span>.
         </p>
-      
+      </div>
 
       {/* Line Chart */}
       <div className="relative">
@@ -340,7 +344,7 @@ export const TrendLine = ({
               const isHovered = hoveredPoint?.year === d.year;
               const isWorstYear = worstYear && d.year === worstYear.year;
               const isBestYear = bestYear && d.year === bestYear.year;
-              const pointRadius = isHovered ? 10 : (isWorstYear ? 9 : isBestYear ? 7 : 5);
+              const pointRadius = isHovered ? 10 : (isWorstYear ? 6 : isBestYear ? 6 : 4);
               const pointColor = isWorstYear ? "#f59e0b" : isBestYear ? "#10b981" : lineColor;
               
               return (
@@ -350,6 +354,7 @@ export const TrendLine = ({
                   onMouseLeave={handlePointLeave}
                   style={{ cursor: 'pointer' }}
                 >
+                  {/* Outer ring for important years - subtle */}
                   {(isWorstYear || isBestYear) && !isHovered && !isLineHovered && (
                     <circle
                       cx={x}
@@ -358,32 +363,22 @@ export const TrendLine = ({
                       fill="none"
                       stroke={pointColor}
                       strokeWidth="1.5"
-                      opacity="0.3"
+                      opacity="0.2"
                     />
                   )}
                   
+                  {/* Main circle - all points visible but no labels */}
                   <circle
                     cx={x}
                     cy={y}
                     r={pointRadius}
                     fill={pointColor}
                     stroke="#fff"
-                    strokeWidth={2.5}
+                    strokeWidth={2}
+                    opacity={isLineHovered && !isHovered ? 0.5 : 1}
                   />
                   
-                  {(isWorstYear || isBestYear || i === 0 || i === trendData.length - 1) && !isHovered && !isLineHovered && (
-                    <text
-                      x={x}
-                      y={y - (isWorstYear ? 22 : 15)}
-                      textAnchor="middle"
-                      fontSize={isWorstYear ? "11" : "10"}
-                      fill={pointColor}
-                      fontWeight={isWorstYear ? "800" : "600"}
-                      pointerEvents="none"
-                    >
-                      {formatCompact(d.total)}
-                    </text>
-                  )}
+                  {/* NO TEXT LABELS ON POINTS - Only visible on hover tooltip */}
                 </g>
               );
             })}
@@ -466,7 +461,7 @@ export const TrendLine = ({
                   stroke="#f59e0b"
                   strokeWidth="2"
                   strokeDasharray="6 4"
-                  opacity="0.4"
+                  opacity="0.3"
                 />
                 <rect
                   x={xScale(worstYear.year) - 45}
@@ -530,7 +525,7 @@ export const TrendLine = ({
           </g>
         </svg>
 
-        {/* Tooltip */}
+        {/* Tooltip - Only shows on hover */}
         {hoveredPoint && !isLineHovered && (
           <div
             style={{
