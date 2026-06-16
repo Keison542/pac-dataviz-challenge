@@ -125,7 +125,7 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
         {/* CLIMATE DRIVERS */}
         <div className="rounded-xl border border-orange-200 p-3">
           <div className="-mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
-            <span className="text-white text-sm font-semibold">Climate Drivers</span>
+            <span className="text-black text-sm font-semibold">Climate Drivers</span>
           </div>
           <div className="space-y-3">
             {metrics.slice(0, 4).map((m, i) => <MetricCircle key={m.key} m={m} index={i} group="climate" />)}
@@ -135,7 +135,7 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
         {/* ENVIRONMENTAL IMPACT */}
         <div className="bg-teal-50 rounded-xl border border-teal-200 p-3">
           <div className="-mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
-            <span className="text-white text-sm font-semibold"> Environmental Impacts</span>
+            <span className="text-black text-sm font-semibold"> Environmental Impacts</span>
           </div>
           <div className="space-y-3">
             {metrics.slice(4, 7).map((m, i) => <MetricCircle key={m.key} m={m} index={i} group="environmental" />)}
@@ -145,7 +145,7 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
         {/* ECONOMIC CONSEQUENCE */}
         <div className="bg-amber-50 rounded-xl border border-amber-200 p-3">
           <div className="-mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
-            <span className="text-white text-sm font-semibold"> Economic Impacts</span>
+            <span className="text-black text-sm font-semibold"> Economic Impacts</span>
           </div>
           <div className="space-y-3">
             {metrics.slice(7, 9).map((m, i) => <MetricCircle key={m.key} m={m} index={i} group="economic" />)}
@@ -155,7 +155,7 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
         {/* HUMAN CONSEQUENCE */}
         <div className="bg-purple-50 rounded-xl border border-purple-200 p-3">
           <div className="-mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
-            <span className="text-white text-sm font-semibold">Human Impacts</span>
+            <span className="text-black text-sm font-semibold">Human Impacts</span>
           </div>
           <div className="space-y-3">
             {metrics.slice(9, 11).map((m, i) => <MetricCircle key={m.key} m={m} index={i} group="human" />)}
