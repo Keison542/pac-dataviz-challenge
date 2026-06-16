@@ -1,7 +1,7 @@
 "use client";
 
 import { scaleBand, scaleLinear, scaleSqrt } from "d3-scale";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { animated, useSpring } from "@react-spring/web";
 
 type DataPoint = {
@@ -89,10 +89,16 @@ export function BubbleChart({
   data
 }: Props) {
   const [hovered, setHovered] = useState<DataPoint | null>(null);
-  const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isClient, setIsClient] = useState(false);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const countries = useMemo(
     () => Array.from(new Set(data.map((d) => d.country))).sort(),
@@ -169,20 +175,43 @@ export function BubbleChart({
     return value.toString();
   };
 
-  const handleBubbleHover = useCallback((point: DataPoint | null) => {
-    if (hoverTimer) {
-      clearTimeout(hoverTimer);
+  const handleBubbleHover = useCallback((event: React.MouseEvent, point: DataPoint | null) => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
     }
     
     if (point) {
+      // Position tooltip near cursor
+      const mouseX = event.clientX;
+      const mouseY = event.clientY;
+      setTooltipPosition({ x: mouseX + 15, y: mouseY - 40 });
       setHovered(point);
     } else {
-      const timer = setTimeout(() => {
+      hoverTimerRef.current = setTimeout(() => {
         setHovered(null);
-      }, 50);
-      setHoverTimer(timer);
+      }, 100);
     }
-  }, [hoverTimer]);
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+      }
+    };
+  }, []);
+
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white" style={{ width, height }}>
+        <div className="text-center">
+          <div className="animate-pulse">Loading chart...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!data.length) {
     return (
@@ -221,12 +250,14 @@ export function BubbleChart({
       </div>
 
       {largestEvent && (
+        <div className="mb-5 p-3 bg-slate-50 rounded-lg border border-slate-100">
           <p className="text-sm text-slate-700 leading-relaxed">
             The data reveals that {largestEvent.country} experienced the 
             single largest disaster impact in {largestEvent.year}, with{' '}
             {largestEvent.value.toLocaleString()} people affected.
             {yearTotals.year && ` The most devastating year across all Pacific nations was ${yearTotals.year}, when ${formatNumber(yearTotals.total)} people were displaced or impacted.`}
           </p>
+        </div>
       )}
 
       <div className="mb-3 flex flex-wrap items-center gap-4 text-xs">
@@ -244,208 +275,219 @@ export function BubbleChart({
         </div>
       </div>
 
-      <svg width={width} height={height} className="overflow-visible">
-        <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-          {xAxisTicks.map((year) => {
-            const xPos = (xScale(year) ?? 0) + xScale.bandwidth() / 2;
-            return (
-              <line
-                key={`grid-${year}`}
-                x1={xPos}
-                x2={xPos}
-                y1={0}
-                y2={boundsHeight}
-                stroke="#e2e8f0"
-                strokeWidth="1"
-                strokeDasharray="4 4"
-              />
-            );
-          })}
-
-          {countries.map((country) => (
-            <line
-              key={country}
-              x1={0}
-              x2={boundsWidth}
-              y1={(yScale(country) ?? 0) + yScale.bandwidth() / 2}
-              y2={(yScale(country) ?? 0) + yScale.bandwidth() / 2}
-              stroke="#f1f5f9"
-              strokeWidth="1"
-            />
-          ))}
-
-          {data.map((d, i) => {
-            const cx = (xScale(d.year) ?? 0) + xScale.bandwidth() / 2;
-            const cy = (yScale(d.country) ?? 0) + yScale.bandwidth() / 2;
-            const r = radiusScale(d.value);
-            const isLargest = d === largestEvent;
-            const isHovered = hovered === d;
-            const bubbleColor = colorScale(d.value);
-
-            return (
-              <AnimatedBubble
-                key={i}
-                cx={cx}
-                cy={cy}
-                r={r}
-                fill={bubbleColor}
-                fillOpacity={0.85}
-                stroke="#e11d48"
-                strokeWidth={isLargest ? 3 : 1.5}
-                isLargest={isLargest}
-                isHovered={isHovered}
-                onMouseEnter={() => handleBubbleHover(d)}
-                onMouseLeave={() => handleBubbleHover(null)}
-              />
-            );
-          })}
-
-          {data.map((d, i) => {
-            const cx = (xScale(d.year) ?? 0) + xScale.bandwidth() / 2;
-            const cy = (yScale(d.country) ?? 0) + yScale.bandwidth() / 2;
-            const r = radiusScale(d.value);
-            const isHovered = hovered === d;
-            
-            if (r <= 25) return null;
-            
-            return (
-              <text
-                key={`label-${i}`}
-                x={cx}
-                y={cy + 3}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize={isHovered ? "10" : "9"}
-                fontWeight="bold"
-                fill="#ffffff"
-                className="pointer-events-none transition-all duration-200"
-                style={{
-                  transform: isHovered ? "scale(1.05)" : "scale(1)",
-                  transition: "all 0.2s ease"
-                }}
-              >
-                {formatNumber(d.value)}
-              </text>
-            );
-          })}
-
-          {xAxisTicks.map((year) => {
-            const xPos = (xScale(year) ?? 0) + xScale.bandwidth() / 2;
-            const isWorstYear = year === yearTotals.year;
-            
-            return (
-              <g key={`x-tick-${year}`}>
+      <div className="relative">
+        <svg width={width} height={height} className="overflow-visible">
+          <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+            {xAxisTicks.map((year) => {
+              const xPos = (xScale(year) ?? 0) + xScale.bandwidth() / 2;
+              return (
                 <line
+                  key={`grid-${year}`}
                   x1={xPos}
-                  y1={boundsHeight}
                   x2={xPos}
-                  y2={boundsHeight + 5}
-                  stroke="#94a3b8"
+                  y1={0}
+                  y2={boundsHeight}
+                  stroke="#e2e8f0"
                   strokeWidth="1"
+                  strokeDasharray="4 4"
                 />
-                <text
-                  x={xPos}
-                  y={boundsHeight + 20}
-                  textAnchor="start"
-                  fontSize={isWorstYear ? "11" : "10"}
-                  fill={isWorstYear ? "#d97706" : "#64748b"}
-                  fontWeight={isWorstYear ? "bold" : "normal"}
-                  transform={`rotate(45, ${xPos}, ${boundsHeight + 20})`}
-                  className="select-none whitespace-nowrap"
-                >
-                  {year}
-                  {isWorstYear && " ●"}
-                </text>
-              </g>
-            );
-          })}
+              );
+            })}
 
-          {countries.map((country) => {
-            const yPos = (yScale(country) ?? 0) + yScale.bandwidth() / 2;
-            const isLargestCountry = country === largestEvent?.country;
-            const isHoveredCountry = hovered?.country === country;
-            
-            return (
-              <g key={`y-tick-${country}`}>
-                <line
-                  x1={-5}
-                  y1={yPos}
-                  x2={0}
-                  y2={yPos}
-                  stroke="#94a3b8"
-                  strokeWidth="1"
+            {countries.map((country) => (
+              <line
+                key={country}
+                x1={0}
+                x2={boundsWidth}
+                y1={(yScale(country) ?? 0) + yScale.bandwidth() / 2}
+                y2={(yScale(country) ?? 0) + yScale.bandwidth() / 2}
+                stroke="#f1f5f9"
+                strokeWidth="1"
+              />
+            ))}
+
+            {data.map((d, i) => {
+              const cx = (xScale(d.year) ?? 0) + xScale.bandwidth() / 2;
+              const cy = (yScale(d.country) ?? 0) + yScale.bandwidth() / 2;
+              const r = radiusScale(d.value);
+              const isLargest = d === largestEvent;
+              const isHovered = hovered === d;
+              const bubbleColor = colorScale(d.value);
+
+              return (
+                <AnimatedBubble
+                  key={i}
+                  cx={cx}
+                  cy={cy}
+                  r={r}
+                  fill={bubbleColor}
+                  fillOpacity={0.85}
+                  stroke="#e11d48"
+                  strokeWidth={isLargest ? 3 : 1.5}
+                  isLargest={isLargest}
+                  isHovered={isHovered}
+                  onMouseEnter={(e: React.MouseEvent) => handleBubbleHover(e, d)}
+                  onMouseLeave={(e: React.MouseEvent) => handleBubbleHover(e, null)}
                 />
+              );
+            })}
+
+            {data.map((d, i) => {
+              const cx = (xScale(d.year) ?? 0) + xScale.bandwidth() / 2;
+              const cy = (yScale(d.country) ?? 0) + yScale.bandwidth() / 2;
+              const r = radiusScale(d.value);
+              const isHovered = hovered === d;
+              
+              if (r <= 25) return null;
+              
+              return (
                 <text
-                  x={-12}
-                  y={yPos + 3}
-                  textAnchor="end"
+                  key={`label-${i}`}
+                  x={cx}
+                  y={cy + 3}
+                  textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize="11"
-                  fill={isLargestCountry ? "#e11d48" : (isHoveredCountry ? "#f43f5e" : "#475569")}
-                  fontWeight={isLargestCountry || isHoveredCountry ? "bold" : "normal"}
-                  className="select-none transition-all duration-200"
+                  fontSize={isHovered ? "10" : "9"}
+                  fontWeight="bold"
+                  fill="#ffffff"
+                  className="pointer-events-none transition-all duration-200"
                   style={{
-                    transform: isHoveredCountry ? "translateX(-4px)" : "translateX(0)",
-                    transition: "transform 0.2s ease"
+                    transform: isHovered ? "scale(1.05)" : "scale(1)",
+                    transition: "all 0.2s ease"
                   }}
                 >
-                  {country}
-                  {isLargestCountry && " "}
+                  {formatNumber(d.value)}
                 </text>
-              </g>
-            );
-          })}
+              );
+            })}
 
-          <text
-            x={boundsWidth / 2}
-            y={boundsHeight + 65}
-            textAnchor="middle"
-            fill="#64748b"
-            fontSize="11"
-            fontWeight="500"
-          >
-            Year
-          </text>
-          
-          <text
-            transform={`rotate(-90) translate(${-boundsHeight / 2}, -55)`}
-            textAnchor="middle"
-            fill="#64748b"
-            fontSize="11"
-            fontWeight="500"
-          >
-            Country
-          </text>
-        </g>
-      </svg>
+            {xAxisTicks.map((year) => {
+              const xPos = (xScale(year) ?? 0) + xScale.bandwidth() / 2;
+              const isWorstYear = year === yearTotals.year;
+              
+              return (
+                <g key={`x-tick-${year}`}>
+                  <line
+                    x1={xPos}
+                    y1={boundsHeight}
+                    x2={xPos}
+                    y2={boundsHeight + 5}
+                    stroke="#94a3b8"
+                    strokeWidth="1"
+                  />
+                  <text
+                    x={xPos}
+                    y={boundsHeight + 20}
+                    textAnchor="start"
+                    fontSize={isWorstYear ? "11" : "10"}
+                    fill={isWorstYear ? "#d97706" : "#64748b"}
+                    fontWeight={isWorstYear ? "bold" : "normal"}
+                    transform={`rotate(45, ${xPos}, ${boundsHeight + 20})`}
+                    className="select-none whitespace-nowrap"
+                  >
+                    {year}
+                    {isWorstYear && " ●"}
+                  </text>
+                </g>
+              );
+            })}
 
-      {hovered && (
-        <div
-          className="fixed pointer-events-none bg-white border border-slate-200 shadow-xl px-4 py-3 rounded-lg z-50 animate-in fade-in zoom-in duration-200"
-          style={{
-            left: (xScale(hovered.year) ?? 0) + MARGIN.left + (xScale.bandwidth() / 2) + 25,
-            top: (yScale(hovered.country) ?? 0) + MARGIN.top + (yScale.bandwidth() / 2) - 40,
-          }}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
-            <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-              {hovered.country} • {hovered.year}
-            </span>
+            {countries.map((country) => {
+              const yPos = (yScale(country) ?? 0) + yScale.bandwidth() / 2;
+              const isLargestCountry = country === largestEvent?.country;
+              const isHoveredCountry = hovered?.country === country;
+              
+              return (
+                <g key={`y-tick-${country}`}>
+                  <line
+                    x1={-5}
+                    y1={yPos}
+                    x2={0}
+                    y2={yPos}
+                    stroke="#94a3b8"
+                    strokeWidth="1"
+                  />
+                  <text
+                    x={-12}
+                    y={yPos + 3}
+                    textAnchor="end"
+                    dominantBaseline="middle"
+                    fontSize="11"
+                    fill={isLargestCountry ? "#e11d48" : (isHoveredCountry ? "#f43f5e" : "#475569")}
+                    fontWeight={isLargestCountry || isHoveredCountry ? "bold" : "normal"}
+                    className="select-none transition-all duration-200"
+                    style={{
+                      transform: isHoveredCountry ? "translateX(-4px)" : "translateX(0)",
+                      transition: "transform 0.2s ease"
+                    }}
+                  >
+                    {country}
+                    {isLargestCountry && " "}
+                  </text>
+                </g>
+              );
+            })}
+
+            <text
+              x={boundsWidth / 2}
+              y={boundsHeight + 65}
+              textAnchor="middle"
+              fill="#64748b"
+              fontSize="11"
+              fontWeight="500"
+            >
+              Year
+            </text>
+            
+            <text
+              transform={`rotate(-90) translate(${-boundsHeight / 2}, -55)`}
+              textAnchor="middle"
+              fill="#64748b"
+              fontSize="11"
+              fontWeight="500"
+            >
+              Country
+            </text>
+          </g>
+        </svg>
+
+        {/* Tooltip - Positioned near cursor */}
+        {hovered && (
+          <div
+            style={{
+              position: 'fixed',
+              left: tooltipPosition.x,
+              top: tooltipPosition.y,
+              backgroundColor: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              padding: '10px 14px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              zIndex: 99999,
+              pointerEvents: 'none',
+              minWidth: '160px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#e11d48' }}></div>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155' }}>
+                {hovered.country} • {hovered.year}
+              </span>
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: 700, color: '#e11d48' }}>
+              {hovered.value.toLocaleString()}
+            </div>
+            <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
+              people affected by disasters
+            </div>
+            <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
+              {hovered.value > 100000 ? "Catastrophic event" : 
+               hovered.value > 50000 ? "Major disaster" : 
+               hovered.value > 10000 ? "Significant impact" : "Regional impact"}
+            </div>
           </div>
-          <div className="text-xl font-bold text-rose-600 tabular-nums">
-            {hovered.value.toLocaleString()}
-          </div>
-          <div className="text-xs text-slate-400 mt-0.5">
-            people affected by disasters
-          </div>
-          <div className="text-[10px] text-slate-300 mt-1">
-            {hovered.value > 100000 ? "Catastrophic event" : 
-             hovered.value > 50000 ? "Major disaster" : 
-             hovered.value > 10000 ? "Significant impact" : "Regional impact"}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
