@@ -44,9 +44,11 @@ export const TrendLine = ({
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const stackKeys = useMemo(() => {
-    return Array.from(
-      new Set(data.map((d) => d[stackBy]))
-    ).sort((a: any, b: any) => a - b);
+    if (stackBy === "year") {
+      return Array.from(new Set(data.map((d) => d.year))).sort((a, b) => a - b);
+    } else {
+      return Array.from(new Set(data.map((d) => d.country))).sort();
+    }
   }, [data, stackBy]);
 
   const hasData = data.length > 0 && stackKeys.length > 0;
@@ -115,11 +117,12 @@ export const TrendLine = ({
   );
 
   const linePath = useMemo(() => {
+    if (trendData.length === 0) return "";
     return (
       line<{ year: number; total: number }>()
         .x((d) => xScale(d.year))
         .y((d) => yScale(d.total))
-        .curve(curveCardinal.tension(0.7))(trendData) || ""
+        .curve(curveCardinal)(trendData) || ""
     );
   }, [trendData, xScale, yScale]);
 
@@ -128,9 +131,11 @@ export const TrendLine = ({
     const lineGenerator = line<{ year: number; total: number }>()
       .x((d) => xScale(d.year))
       .y((d) => yScale(d.total))
-      .curve(curveCardinal.tension(0.7));
+      .curve(curveCardinal);
     
     const linePart = lineGenerator(trendData);
+    if (!linePart) return "";
+    
     const lastPoint = trendData[trendData.length - 1];
     const firstPoint = trendData[0];
     
@@ -202,7 +207,7 @@ export const TrendLine = ({
         style={{ width, height }}
       >
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30"></div>
+          <div className="text-4xl mb-3 opacity-30">📊</div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             No economic loss data available for the selected filter
@@ -215,9 +220,9 @@ export const TrendLine = ({
   return (
     <div className="w-full font-sans">
       <div className="mb-6">
-          <p className="text-sm text-slate-600 leading-relaxed">
-            {insight}
-          </p>
+        <p className="text-sm text-slate-600 leading-relaxed">
+          {insight}
+        </p>
       </div>
 
       <div className="mb-6 grid grid-cols-4 gap-3">
@@ -519,9 +524,9 @@ export const TrendLine = ({
             {formatTick(Number(hovered.value) || 0)}
           </div>
           <div className="text-[10px] text-slate-400 mt-1">
-            {hovered.value > 1000000000 ? "Extreme loss year" : 
-             hovered.value > 100000000 ? "Major disaster year" : 
-             hovered.value > 10000000 ? "Significant impact year" : "Measured impact year"}
+            {Number(hovered.value) > 1000000000 ? "Extreme loss year" : 
+             Number(hovered.value) > 100000000 ? "Major disaster year" : 
+             Number(hovered.value) > 10000000 ? "Significant impact year" : "Measured impact year"}
           </div>
         </div>
       )}
@@ -531,8 +536,8 @@ export const TrendLine = ({
           <div className="space-y-2 text-sm text-slate-600">
             <p className="leading-relaxed">
               Over the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
-              disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}
-              . The total economic loss across all years was {formatTick(totalLoss), 
+              disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
+              The total economic loss across all years was {formatTick(totalLoss)}, 
               with an annual average of {formatTick(averageLoss)}.
             </p>
             <p className="leading-relaxed">
@@ -542,7 +547,6 @@ export const TrendLine = ({
               at {bestYear ? formatCompact(bestYear.total) : "—"}.
               The smooth curved line helps visualize the overall trend pattern over time.
             </p>
-            
           </div>
         </div>
       </div>
