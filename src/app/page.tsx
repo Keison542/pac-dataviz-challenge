@@ -94,7 +94,7 @@ export default function Home() {
         {hasClimateData && (
           <>
             <DoughnutClimateDashboard kpis={kpis} deltas={deltas} selectedCountry={selectedCountry} />
-            <ClimateDriversSection dataMap={dataMap} tempTrend={tempTrend} chartWidth={chartWidth} dataType="surfaceTempAnomaly" selectedCountry={selectedCountry} />
+           <ClimateDriversSection dataMap={dataMap} tempTrend={tempTrend} chartWidth={chartWidth} selectedCountry={selectedCountry} />
           </>
         )}
 
