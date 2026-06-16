@@ -328,7 +328,6 @@ export default function TimeSankey({
 
       {/* Narrative Paragraph */}
       {strongestLink && (
-        <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
           <p className="text-sm text-slate-700 leading-relaxed">
             The climate impact cascade in {selectedCountry} flows through {driverCount} climate drivers → 
             {environmentalCount} environmental impacts → {economicCount} economic consequences → {humanCount} human outcomes.
@@ -336,7 +335,6 @@ export default function TimeSankey({
             {strongestLink.target?.name} (strength: {Math.round(strongestLink.value)}), 
             highlighting the critical role of climate drivers in shaping disaster risk and downstream impacts.
           </p>
-        </div>
       )}
 
       {/* Legend */}
