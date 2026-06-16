@@ -75,6 +75,7 @@ export const LineChart = ({
   title,
   valueFormatter,
 }: LineChartProps) => {
+  const [isClient, setIsClient] = useState(false);
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
@@ -85,6 +86,10 @@ export const LineChart = ({
   
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const hasData = data.length > 0;
 
@@ -195,7 +200,7 @@ export const LineChart = ({
       setHoveredDataPoint({
         x: mouseX,
         y: mouseY,
-        label: `${d.year}`,
+        label: `${selectedCountry || "Unknown"} • ${d.year}`,
         value: d.value,
       });
     }
@@ -225,6 +230,19 @@ export const LineChart = ({
     }
   };
 
+  if (!isClient) {
+    return (
+      <div 
+        className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white"
+        style={{ width, height }}
+      >
+        <div className="text-center p-6">
+          <div className="animate-pulse">Loading chart...</div>
+        </div>
+      </div>
+    );
+  }
+
   if (!hasData) {
     return (
       <div 
@@ -235,12 +253,16 @@ export const LineChart = ({
           <div className="text-4xl mb-3 opacity-30">📊</div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
-            No data available for the selected country or indicator
+            No data available for {selectedCountry || "the selected country"}
           </p>
         </div>
       </div>
     );
   }
+
+  const displayCountry = selectedCountry && selectedCountry !== "Regional" 
+    ? selectedCountry 
+    : (selectedCountry === "Regional" ? "Pacific Region" : "Selected Country");
 
   return (
     <div className="w-full">
@@ -252,6 +274,7 @@ export const LineChart = ({
           </div>
           <div className="text-xs text-slate-500">overall change</div>
           <div className="text-[10px] text-slate-400">{trendDirection} trend</div>
+          {selectedCountry && <div className="text-[9px] text-slate-400 mt-1">{selectedCountry}</div>}
         </div>
         <div className="text-center p-2 bg-amber-50 rounded-lg">
           <div className="text-lg font-bold text-amber-700">
@@ -272,7 +295,7 @@ export const LineChart = ({
       {/* Narrative Paragraph */}
       <div className="mb-5 p-3 bg-slate-50 rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
-          Over the recorded period, this indicator has shown a {trendDirection} trend of {Math.abs(percentChange).toFixed(1)}%. 
+          {selectedCountry ? `For ${selectedCountry}, over` : 'Over'} the recorded period, this indicator has shown a {trendDirection} trend of {Math.abs(percentChange).toFixed(1)}%. 
           The highest value was recorded in {maxYear} 
           ({valueFormatter ? valueFormatter(maxValue) : formatNumber(maxValue)}),
           while the lowest was in {minYear}
@@ -462,7 +485,7 @@ export const LineChart = ({
           </g>
         </svg>
 
-        {/* Tooltip - NO COUNTRY NAME */}
+        {/* Tooltip - Positioned near cursor like Bubble Chart */}
         {tooltipData && !isLineHovered && (
           <div
             style={{
@@ -476,20 +499,23 @@ export const LineChart = ({
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               zIndex: 99999,
               pointerEvents: 'none',
-              minWidth: '140px',
+              minWidth: '160px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: lineColor }}></div>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155', letterSpacing: '0.5px' }}>
-                Year {tooltipData.year}
+              <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155' }}>
+                {selectedCountry || "Selected"} • {tooltipData.year}
               </span>
             </div>
             <div style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
               {valueFormatter ? valueFormatter(tooltipData.value) : formatNumber(tooltipData.value)}
             </div>
+            <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
+              {isClimateData ? "anomaly value" : "value"}
+            </div>
             {tooltipData.category !== "Value" && (
-              <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
+              <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
                 {tooltipData.category}
               </div>
             )}
