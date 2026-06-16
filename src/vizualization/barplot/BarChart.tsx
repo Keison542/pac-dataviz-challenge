@@ -24,13 +24,6 @@ type Props = {
   selectedCountry?: string;
 };
 
-const MARGIN = {
-  top: 60,
-  right: 60,
-  bottom: 50,
-  left: 120,
-};
-
 const METRIC_CONFIGS = {
   economicLoss: {
     title: "Economic Loss by Country",
@@ -178,7 +171,6 @@ const AnimatedBar = ({ width, height, y, x, fill, rx, onMouseEnter, onMouseLeave
 
   return (
     <>
-      {/* Glow effect on hover */}
       {isHovered && (
         <animated.rect
           x={x - 4}
@@ -226,6 +218,22 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
       .map(([country, value]) => ({ country, value }))
       .sort((a, b) => b.value - a.value);
   }, [currentData]);
+
+  // Check if there are negative values
+  const hasNegative = useMemo(() => {
+    return ranked.some(d => d.value < 0);
+  }, [ranked]);
+
+  // Dynamic left margin based on presence of negative values
+  // If no negative values, use smaller margin; if negative values exist, use larger margin
+  const LEFT_MARGIN = hasNegative ? 120 : 60;
+  
+  const MARGIN = {
+    top: 60,
+    right: 60,
+    bottom: 50,
+    left: LEFT_MARGIN,
+  };
 
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
@@ -278,8 +286,6 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
     );
   }
 
-  // Check if there are negative values
-  const hasNegative = minValue < 0;
   const zeroPosition = xScale(0);
 
   return (
@@ -449,7 +455,6 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
             const isNegative = d.value < 0;
             const barWidth = Math.abs(xScale(d.value) - zeroPosition);
             
-            // Bar starts at zero position and extends left or right
             const barX = isNegative ? xScale(d.value) : zeroPosition;
             
             let barColor;
@@ -465,11 +470,16 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
               barColor = "url(#barGradient)";
             }
             
+            // Country label x position: 
+            // If no negative values, labels are close to bars (at x=0)
+            // If negative values exist, labels are shifted left to accommodate negative bars
+            const labelX = hasNegative ? -8 : -12;
+            
             return (
               <g key={d.country}>
-                {/* Country label - positioned to the far left */}
+                {/* Country label */}
                 <text
-                  x={-12}
+                  x={labelX}
                   y={y + barHeight / 2}
                   textAnchor="end"
                   dominantBaseline="middle"
@@ -503,7 +513,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
                   onMouseLeave={() => setHoveredCountry(null)}
                 />
 
-                {/* Value label on bar or beside it */}
+                {/* Value label */}
                 {barWidth > 40 ? (
                   <text
                     x={isNegative ? xScale(d.value) + 8 : zeroPosition + barWidth - 8}
