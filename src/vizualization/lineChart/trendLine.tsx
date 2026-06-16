@@ -48,7 +48,6 @@ export const TrendLine = ({
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Set client-side flag
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -177,7 +176,6 @@ export const TrendLine = ({
     };
   }, []);
 
-  // Handle point hover with cursor position
   const handlePointEnter = (event: React.MouseEvent, year: number, value: number, x: number, y: number) => {
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
@@ -197,7 +195,6 @@ export const TrendLine = ({
     }, 150);
   };
 
-  // Handle line hover
   const handleLineHover = (hovered: boolean) => {
     if (hovered) {
       if (hoverTimerRef.current) {
@@ -210,7 +207,6 @@ export const TrendLine = ({
     }
   };
 
-  // Don't render on server
   if (!isClient) {
     return (
       <div
@@ -245,7 +241,7 @@ export const TrendLine = ({
 
   return (
     <div className="w-full font-sans">
-      {/* Stats Cards with selected country context */}
+      {/* Stats Cards */}
       <div className="mb-4 grid grid-cols-4 gap-3">
         <div className="text-center p-3 bg-cyan-50 rounded-lg border border-cyan-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-xl font-bold text-cyan-700">{formatTick(totalLoss)}</div>
@@ -270,16 +266,34 @@ export const TrendLine = ({
         </div>
       </div>
 
-      {/* Insight Text with selected country */}
-      <div className="mb-5 p-3 bg-slate-50 rounded-lg border border-slate-100">
+      {/* Insight Text - NOW WITH DYNAMIC COUNTRY MENTION like Bubble Chart */}
+      <div className="mb-5 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
-          {selectedCountry ? `For ${selectedCountry}, over` : 'Over'} the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
-          disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
-          The total economic loss across all years was {formatTick(totalLoss)}, 
-          with an annual average of {formatTick(averageLoss)}. The highest loss was recorded in {worstYear?.year} 
-          at {worstYear ? formatCompact(worstYear.total) : "—"}, 
-          while the lowest was in {bestYear?.year} 
-          at {bestYear ? formatCompact(bestYear.total) : "—"}.
+          {selectedCountry ? (
+            <>
+              For <span className="font-semibold text-cyan-700">{selectedCountry}</span>, over the {trendData.length}-year period 
+              ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), disaster economic losses have shown a{' '}
+              <span className={`font-semibold ${growthRate > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}
+              </span>.
+              The total economic loss across all years was <span className="font-semibold text-cyan-700">{formatTick(totalLoss)}</span>, 
+              with an annual average of <span className="font-semibold text-cyan-700">{formatTick(averageLoss)}</span>. 
+              The highest loss was recorded in <span className="font-semibold text-amber-600">{worstYear?.year}</span> 
+              at <span className="font-semibold text-amber-600">{worstYear ? formatCompact(worstYear.total) : "—"}</span>, 
+              while the lowest was in <span className="font-semibold text-emerald-600">{bestYear?.year}</span> 
+              at <span className="font-semibold text-emerald-600">{bestYear ? formatCompact(bestYear.total) : "—"}</span>.
+            </>
+          ) : (
+            <>
+              Over the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
+              disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
+              The total economic loss across all years was {formatTick(totalLoss)}, 
+              with an annual average of {formatTick(averageLoss)}. The highest loss was recorded in {worstYear?.year} 
+              at {worstYear ? formatCompact(worstYear.total) : "—"}, 
+              while the lowest was in {bestYear?.year} 
+              at {bestYear ? formatCompact(bestYear.total) : "—"}.
+            </>
+          )}
         </p>
       </div>
 
@@ -333,7 +347,7 @@ export const TrendLine = ({
               opacity="0.3"
             />
 
-            {/* Main line - using your LineItem component */}
+            {/* Main line */}
             <LineItem
               path={linePath}
               color={lineColor}
@@ -359,7 +373,6 @@ export const TrendLine = ({
                   onMouseLeave={handlePointLeave}
                   style={{ cursor: 'pointer' }}
                 >
-                  {/* Outer ring for important points */}
                   {(isWorstYear || isBestYear) && !isHovered && !isLineHovered && (
                     <circle
                       cx={x}
@@ -372,7 +385,6 @@ export const TrendLine = ({
                     />
                   )}
                   
-                  {/* Main circle */}
                   <circle
                     cx={x}
                     cy={y}
@@ -382,7 +394,6 @@ export const TrendLine = ({
                     strokeWidth={2.5}
                   />
                   
-                  {/* Value label for important points */}
                   {(isWorstYear || isBestYear || i === 0 || i === trendData.length - 1) && !isHovered && !isLineHovered && (
                     <text
                       x={x}
@@ -547,7 +558,7 @@ export const TrendLine = ({
           </g>
         </svg>
 
-        {/* Tooltip - Positioned near cursor like Bubble Chart */}
+        {/* Tooltip */}
         {hoveredPoint && !isLineHovered && (
           <div
             style={{
@@ -575,11 +586,6 @@ export const TrendLine = ({
             </div>
             <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
               economic loss
-            </div>
-            <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
-              {hoveredPoint.value > 1000000000 ? "Extreme loss year" : 
-               hoveredPoint.value > 100000000 ? "Major disaster year" : 
-               hoveredPoint.value > 10000000 ? "Significant impact year" : "Measured impact year"}
             </div>
           </div>
         )}
