@@ -18,6 +18,7 @@ type Props = {
   height: number;
   data: UnifiedDatum[];
   dataType: string;
+  selectedCountry?: string;
   setSelectedCountry: (c: string) => void;
   highlightedYear?: number;
   stackBy?: "year" | "country";
@@ -30,6 +31,7 @@ export const TrendLine = ({
   height,
   data,
   dataType,
+  selectedCountry,
   setSelectedCountry,
   highlightedYear,
   stackBy = "year",
@@ -175,7 +177,7 @@ export const TrendLine = ({
     };
   }, []);
 
-  // Handle point hover
+  // Handle point hover with cursor position
   const handlePointEnter = (event: React.MouseEvent, year: number, value: number, x: number, y: number) => {
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
@@ -232,7 +234,7 @@ export const TrendLine = ({
           <div className="text-4xl mb-3 opacity-30">📊</div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
-            No economic loss data available for the selected filter
+            No economic loss data available for {selectedCountry || "the selected filter"}
           </p>
         </div>
       </div>
@@ -243,11 +245,12 @@ export const TrendLine = ({
 
   return (
     <div className="w-full font-sans">
-      {/* Stats Cards */}
+      {/* Stats Cards with selected country context */}
       <div className="mb-4 grid grid-cols-4 gap-3">
         <div className="text-center p-3 bg-cyan-50 rounded-lg border border-cyan-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-xl font-bold text-cyan-700">{formatTick(totalLoss)}</div>
           <div className="text-xs text-slate-500 mt-1">Total Economic Loss</div>
+          {selectedCountry && <div className="text-[10px] text-slate-400">{selectedCountry}</div>}
         </div>
         <div className="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-xl font-bold text-emerald-700">{formatTick(averageLoss)}</div>
@@ -267,10 +270,10 @@ export const TrendLine = ({
         </div>
       </div>
 
-      {/* Insight Text */}
+      {/* Insight Text with selected country */}
       <div className="mb-5 p-3 bg-slate-50 rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
-          Over the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
+          {selectedCountry ? `For ${selectedCountry}, over` : 'Over'} the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
           disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
           The total economic loss across all years was {formatTick(totalLoss)}, 
           with an annual average of {formatTick(averageLoss)}. The highest loss was recorded in {worstYear?.year} 
@@ -544,7 +547,7 @@ export const TrendLine = ({
           </g>
         </svg>
 
-        {/* Tooltip */}
+        {/* Tooltip - Positioned near cursor like Bubble Chart */}
         {hoveredPoint && !isLineHovered && (
           <div
             style={{
@@ -558,19 +561,22 @@ export const TrendLine = ({
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               zIndex: 99999,
               pointerEvents: 'none',
-              minWidth: '140px',
+              minWidth: '160px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: lineColor }}></div>
               <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155' }}>
-                Year {hoveredPoint.year}
+                {selectedCountry || "Regional"} • Year {hoveredPoint.year}
               </span>
             </div>
             <div style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
               {formatTick(hoveredPoint.value)}
             </div>
-            <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
+            <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
+              economic loss
+            </div>
+            <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
               {hoveredPoint.value > 1000000000 ? "Extreme loss year" : 
                hoveredPoint.value > 100000000 ? "Major disaster year" : 
                hoveredPoint.value > 10000000 ? "Significant impact year" : "Measured impact year"}
