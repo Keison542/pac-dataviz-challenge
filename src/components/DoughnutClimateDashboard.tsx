@@ -10,16 +10,16 @@ interface DoughnutClimateDashboardProps {
 
 const thresholds: Record<string, any> = {
   temp: { max: 2.0, unit: "°C", label: "Surface Temp", isReversed: false },
-  sea_surface_temperature: { max: 2.0, unit: "°C", label: "Sea Surface Temp", icon: "", color: "#2AA7FF", isReversed: false },
-  rainfall: { max: 200, unit: "mm", label: "Rainfall", icon: "", color: "#2E86AB", isReversed: false },
-  sea: { max: 0.5, unit: "cm", label: "Sea Level", icon: "", color: "#185FA5", isReversed: false, multiplier: 100 },
-  climate_altering_land: { max: 100000, unit: "ha", label: "Land Cover", icon: "", color: "#2E86AB", isReversed: false, multiplier: 0.001, displayUnit: "K ha" },
-  crop_yield: { max: 10, unit: "t/ha", label: "Crop Yield", icon: "", color: "#3D9970", isReversed: true },
-  lifestock_yield: { max: 20, unit: "t", label: "Livestock", icon: "", color: "#FFC107", isReversed: true },
-  loss: { max: 1e8, unit: "M USD", label: "Economic Loss", icon: "", color: "#EF9F27", isReversed: true, multiplier: 1e-6, displayUnit: "M" },
-  tourist_arrival: { max: 1e6, unit: "K", label: "Tourist Arrivals", icon: "", color: "#F5A623", isReversed: false, multiplier: 0.001, displayUnit: "K" },
-  people: { max: 1e5, unit: "K", label: "People Affected", icon: "", color: "#7F77DD", isReversed: true, multiplier: 0.001, displayUnit: "K" },
-  population_growth: { max: 3, unit: "%", label: "Population Growth", icon: "", color: "#9C27B0", isReversed: false },
+  sea_surface_temperature: { max: 2.0, unit: "°C", label: "Sea Surface Temp", isReversed: false },
+  rainfall: { max: 200, unit: "mm", label: "Rainfall", isReversed: false },
+  sea: { max: 0.5, unit: "cm", label: "Sea Level", isReversed: false, multiplier: 100 },
+  climate_altering_land: { max: 100000, unit: "ha", label: "Land Cover", isReversed: false, multiplier: 0.001, displayUnit: "K ha" },
+  crop_yield: { max: 10, unit: "t/ha", label: "Crop Yield", isReversed: true },
+  lifestock_yield: { max: 20, unit: "t", label: "Livestock", isReversed: true },
+  loss: { max: 1e8, unit: "M USD", label: "Economic Loss", isReversed: true, multiplier: 1e-6, displayUnit: "M" },
+  tourist_arrival: { max: 1e6, unit: "K", label: "Tourist Arrivals", isReversed: false, multiplier: 0.001, displayUnit: "K" },
+  people: { max: 1e5, unit: "K", label: "People Affected", isReversed: true, multiplier: 0.001, displayUnit: "K" },
+  population_growth: { max: 3, unit: "%", label: "Population Growth", isReversed: false },
 };
 
 export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: DoughnutClimateDashboardProps) {
