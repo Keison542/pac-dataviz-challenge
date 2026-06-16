@@ -271,8 +271,7 @@ export const TrendLine = ({
           disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
           The total economic loss across all years was {formatTick(totalLoss)}, 
           with an annual average of {formatTick(averageLoss)}. 
-          The highest loss was recorded in {worstYear?.year}
-          at {worstYear ? formatCompact(worstYear.total) : "—"}, 
+          The highest loss was recorded in {worstYear?.year} at {worstYear ? formatCompact(worstYear.total) : "—"}, 
           while the lowest was in {bestYear?.year} 
           at {bestYear ? formatCompact(bestYear.total) : "—"}.
         </p>
