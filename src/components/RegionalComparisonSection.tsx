@@ -15,7 +15,6 @@ export function RegionalComparisonSection({ selectedCountry, countriesCount, ran
         <div className="text-sm text-slate-500 max-w-[680px] mx-auto">
           How does {selectedCountry} compare to {countriesCount} other Pacific nations across 7 key metrics?
         </div>
-        <div className="text-sm mt-2 font-medium">Click on any metric to see country rankings. Thicker bars indicate higher impact.</div>
       </div>
       <div className="p-2">
         <MultiMetricRankedDashboard width={chartWidth * 2 + 20} height={520} data={rankedData} />
