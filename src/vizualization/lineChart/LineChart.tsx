@@ -104,7 +104,6 @@ export const LineChart = ({
       .sort((a, b) => a.year - b.year);
   }, [data, hasData]);
 
-  // Calculate story insights
   const firstValue = processedData[0]?.value;
   const lastValue = processedData[processedData.length - 1]?.value;
   const percentChange = firstValue && lastValue ? ((lastValue - firstValue) / Math.abs(firstValue)) * 100 : 0;
@@ -260,13 +259,8 @@ export const LineChart = ({
     );
   }
 
-  const displayCountry = selectedCountry && selectedCountry !== "Regional" 
-    ? selectedCountry 
-    : (selectedCountry === "Regional" ? "Pacific Region" : "Selected Country");
-
   return (
     <div className="w-full">
-      {/* Key Findings Summary Cards */}
       <div className="mb-5 grid grid-cols-3 gap-2">
         <div className="text-center p-2 rounded-lg" style={{ backgroundColor: percentChange > 0 ? '#fef2f2' : '#ecfeff' }}>
           <div className="text-lg font-bold" style={{ color: lineColor }}>
@@ -292,14 +286,29 @@ export const LineChart = ({
         </div>
       </div>
 
-      {/* Narrative Paragraph */}
-      <div className="mb-5 p-3 bg-slate-50 rounded-lg border border-slate-100">
+      {/* Insight Text - NOW WITH DYNAMIC COUNTRY MENTION like Bubble Chart */}
+      <div className="mb-5 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
-          {selectedCountry ? `For ${selectedCountry}, over` : 'Over'} the recorded period, this indicator has shown a {trendDirection} trend of {Math.abs(percentChange).toFixed(1)}%. 
-          The highest value was recorded in {maxYear} 
-          ({valueFormatter ? valueFormatter(maxValue) : formatNumber(maxValue)}),
-          while the lowest was in {minYear}
-          ({valueFormatter ? valueFormatter(minValue) : formatNumber(minValue)}).
+          {selectedCountry ? (
+            <>
+              For <span className="font-semibold" style={{ color: lineColor }}>{selectedCountry}</span>, over the recorded period, 
+              this indicator has shown a <span className={`font-semibold ${percentChange > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                {trendDirection} trend of {Math.abs(percentChange).toFixed(1)}%
+              </span>. 
+              The highest value was recorded in <span className="font-semibold text-amber-600">{maxYear}</span> 
+              (<span className="font-semibold text-amber-600">{valueFormatter ? valueFormatter(maxValue) : formatNumber(maxValue)}</span>),
+              while the lowest was in <span className="font-semibold text-blue-600">{minYear}</span>
+              (<span className="font-semibold text-blue-600">{valueFormatter ? valueFormatter(minValue) : formatNumber(minValue)}</span>).
+            </>
+          ) : (
+            <>
+              Over the recorded period, this indicator has shown a {trendDirection} trend of {Math.abs(percentChange).toFixed(1)}%. 
+              The highest value was recorded in {maxYear} 
+              ({valueFormatter ? valueFormatter(maxValue) : formatNumber(maxValue)}),
+              while the lowest was in {minYear}
+              ({valueFormatter ? valueFormatter(minValue) : formatNumber(minValue)}).
+            </>
+          )}
         </p>
       </div>
       
@@ -323,7 +332,6 @@ export const LineChart = ({
           </defs>
 
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-            {/* Grid */}
             {xScale.ticks(8).map((v, i) => (
               <line
                 key={`x-${i}`}
@@ -347,7 +355,6 @@ export const LineChart = ({
               />
             ))}
 
-            {/* Zero line */}
             <line
               x1={0} x2={boundsWidth}
               y1={yScale(0)} y2={yScale(0)}
@@ -356,7 +363,6 @@ export const LineChart = ({
               strokeDasharray="6 4"
             />
 
-            {/* Area Fill */}
             {isClimateData && (
               <path
                 d={areaBuilder(processedData) || ""}
@@ -366,7 +372,6 @@ export const LineChart = ({
               />
             )}
 
-            {/* Main Line */}
             <LineItem
               path={lineBuilder(processedData) || ""}
               color="url(#lineGradient)"
@@ -375,7 +380,6 @@ export const LineChart = ({
               onHover={handleLineHover}
             />
 
-            {/* Data Points */}
             {processedData.map((d, i) => {
               const x = xScale(d.year);
               const y = yScale(d.value);
@@ -392,7 +396,6 @@ export const LineChart = ({
                   onMouseLeave={handleMouseLeave}
                   style={{ cursor: 'pointer' }}
                 >
-                  {/* Halo effect for hovered point */}
                   {isHovered && !isLineHovered && (
                     <circle
                       cx={x}
@@ -404,7 +407,6 @@ export const LineChart = ({
                     />
                   )}
                   
-                  {/* Main circle */}
                   <circle
                     cx={x}
                     cy={y}
@@ -415,7 +417,6 @@ export const LineChart = ({
                     opacity={isLineHovered && !isHovered ? 0.4 : 1}
                   />
                   
-                  {/* Value label for important points */}
                   {(isMax || isMin || i === 0 || i === processedData.length - 1) && !isHovered && (
                     <text
                       x={x}
@@ -433,7 +434,6 @@ export const LineChart = ({
               );
             })}
 
-            {/* X Axis Labels */}
             {xScale.ticks(8).map((v, i) => (
               <text
                 key={`x-${i}`}
@@ -447,7 +447,6 @@ export const LineChart = ({
               </text>
             ))}
 
-            {/* Y Axis Labels */}
             {yScale.ticks(6).map((v, i) => (
               <text
                 key={`y-${i}`}
@@ -461,7 +460,6 @@ export const LineChart = ({
               </text>
             ))}
 
-            {/* Axis Titles */}
             <text
               x={boundsWidth / 2}
               y={boundsHeight + 52}
@@ -485,7 +483,6 @@ export const LineChart = ({
           </g>
         </svg>
 
-        {/* Tooltip - Positioned near cursor like Bubble Chart */}
         {tooltipData && !isLineHovered && (
           <div
             style={{
