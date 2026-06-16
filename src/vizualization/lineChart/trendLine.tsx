@@ -244,7 +244,6 @@ export const TrendLine = ({
       </div>
 
       {/* Insight Text - RIGHT BELOW STATS CARDS */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
           Over the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
           disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
@@ -254,10 +253,7 @@ export const TrendLine = ({
           while the lowest was in {bestYear?.year} 
           at {bestYear ? formatCompact(bestYear.total) : "—"}.
         </p>
-      </div>
-        <p className="text-sm text-slate-700 leading-relaxed mt-2">
-          The smooth curved line helps visualize the overall trend pattern over time.
-        </p>
+     
 
       {/* Line Chart */}
       <div className="relative">
