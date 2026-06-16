@@ -274,7 +274,6 @@ export const LineChart = ({
       </div>
 
       {/* Narrative Paragraph */}
-      <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
           Over the recorded period, this indicator has shown a {trendDirection} trend of {Math.abs(percentChange).toFixed(1)}%. 
           The highest value was recorded in {maxYear} 
@@ -282,8 +281,7 @@ export const LineChart = ({
           while the lowest was in {minYear}
           ({valueFormatter ? valueFormatter(minValue) : formatNumber(minValue)}).
         </p>
-      </div>
-
+      
       <svg width={width} height={height} className="overflow-visible">
         <defs>
           <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
