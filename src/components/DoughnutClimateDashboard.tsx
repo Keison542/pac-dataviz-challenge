@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface DoughnutClimateDashboardProps {
   kpis: any;
@@ -11,195 +10,181 @@ interface DoughnutClimateDashboardProps {
 }
 
 const thresholds: Record<string, any> = {
-  temp: { max: 2.0, unit: "°C", label: "Surface Temp", isReversed: false, color: "#f97316", icon: "🌡️" },
+  temp: { max: 2.0, unit: "°C", label: "Temperature", isReversed: false, color: "#f97316", icon: "🌡️" },
   sea_surface_temperature: { max: 2.0, unit: "°C", label: "Sea Surface Temp", isReversed: false, color: "#0ea5e9", icon: "🌊" },
-  rainfall: { max: 200, unit: "mm", label: "Rainfall", isReversed: false, color: "#06b6d4", icon: "🌧️" },
-  sea: { max: 0.5, unit: "cm", label: "Sea Level", isReversed: false, color: "#2563eb", icon: "🌊", multiplier: 100 },
-
-  climate_altering_land: {
-    max: 100000,
-    unit: "ha",
-    label: "Land Cover",
-    isReversed: false,
-    color: "#84cc16",
-    icon: "🌿",
-    multiplier: 0.001,
-  },
-
-  crop_yield: { max: 10, unit: "t/ha", label: "Crop Yield", isReversed: true, color: "#eab308", icon: "🌾" },
-  lifestock_yield: { max: 20, unit: "t", label: "Livestock", isReversed: true, color: "#f59e0b", icon: "🐄" },
-
-  loss: {
-    max: 1e8,
-    unit: "M USD",
-    label: "Economic Loss",
-    isReversed: true,
-    multiplier: 1e-6,
-    color: "#ef4444",
-    icon: "💸",
-  },
-
-  tourist_arrival: {
-    max: 1e6,
-    unit: "K",
-    label: "Tourist Arrivals",
-    isReversed: false,
-    multiplier: 0.001,
-    color: "#8b5cf6",
-    icon: "✈️",
-  },
-
-  people: {
-    max: 1e5,
-    unit: "K",
-    label: "People Affected",
-    isReversed: true,
-    multiplier: 0.001,
-    color: "#dc2626",
-    icon: "👥",
-  },
-
-  population_growth: {
-    max: 3,
-    unit: "%",
-    label: "Population Growth",
-    isReversed: false,
-    color: "#64748b",
-    icon: "📈",
-  },
+  rainfall: { max: 200, unit: "mm", label: "Rainfall Anomaly", isReversed: false, color: "#06b6d4", icon: "🌧️" },
+  sea: { max: 0.5, unit: "cm", label: "Sea Level Rise", isReversed: false, color: "#2563eb", icon: "🌊" },
 };
 
 export function DoughnutClimateDashboard({
   kpis,
   selectedCountry,
-  isLoading,
+  isLoading
 }: DoughnutClimateDashboardProps) {
+
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
+  const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
 
   const safeKpis = kpis || {};
 
+  // ============================
+  // CLIMATE SIGNAL INDEX (ONLY 4 DRIVERS)
+  // ============================
+  const getClimateSignalIndex = () => {
+    const temp = Math.abs(safeKpis.temp ?? 0);
+    const seaTemp = Math.abs(safeKpis.sea_surface_temperature ?? 0);
+    const rainfall = Math.abs(safeKpis.rainfall ?? 0);
+    const sea = Math.abs(safeKpis.sea ?? 0);
+
+    const tempScore = Math.min(100, (temp / 2.0) * 100);
+    const seaTempScore = Math.min(100, (seaTemp / 2.0) * 100);
+    const rainfallScore = Math.min(100, (rainfall / 200) * 100);
+    const seaScore = Math.min(100, ((sea * 100) / 50) * 100);
+
+    return Math.round(
+      tempScore * 0.35 +
+      seaTempScore * 0.25 +
+      rainfallScore * 0.2 +
+      seaScore * 0.2
+    );
+  };
+
+  const climateIndex = getClimateSignalIndex();
+
+  const getSignalLabel = (v: number) => {
+    if (v < 25) return { label: "Low", color: "text-slate-500" };
+    if (v < 50) return { label: "Moderate", color: "text-blue-500" };
+    if (v < 75) return { label: "High", color: "text-orange-500" };
+    return { label: "Critical", color: "text-red-500" };
+  };
+
+  const signal = getSignalLabel(climateIndex);
+
+  // ONLY CLIMATE DRIVERS IN DOUGHNUT
   const metrics = [
     { key: "temp", value: safeKpis.temp ?? 0 },
     { key: "sea_surface_temperature", value: safeKpis.sea_surface_temperature ?? 0 },
     { key: "rainfall", value: safeKpis.rainfall ?? 0 },
     { key: "sea", value: safeKpis.sea ?? 0 },
-    { key: "climate_altering_land", value: safeKpis.climate_altering_land ?? 0 },
-    { key: "crop_yield", value: safeKpis.crop_yield ?? 0 },
-    { key: "lifestock_yield", value: safeKpis.lifestock_yield ?? 0 },
-    { key: "loss", value: safeKpis.loss ?? 0 },
-    { key: "tourist_arrival", value: safeKpis.tourist_arrival ?? 0 },
-    { key: "people", value: safeKpis.people ?? 0 },
-    { key: "population_growth", value: safeKpis.population_growth ?? 0 },
   ];
 
-  const climateIndex =
-    metrics.reduce((acc, m) => {
-      const t = thresholds[m.key];
-      const normalized = Math.min(100, (Math.abs(m.value) / t.max) * 100);
-      return acc + normalized;
-    }, 0) / metrics.length;
+  const handleMetricEnter = (key: string) => {
+    if (hoverTimer) clearTimeout(hoverTimer);
+    setActiveMetric(key);
+  };
 
-  const MetricRing = ({ m }: any) => {
+  const handleMetricLeave = () => {
+    if (hoverTimer) clearTimeout(hoverTimer);
+    const timer = setTimeout(() => setActiveMetric(null), 100);
+    setHoverTimer(timer);
+  };
+
+  const hasData = metrics.some(m => Math.abs(m.value ?? 0) > 0.01);
+  if (isLoading || !hasData) return null;
+
+  const MetricCircle = ({ m }: { m: any }) => {
     const t = thresholds[m.key];
+    const val = Math.abs(m.value ?? 0);
 
-    const pct = t.isReversed
-      ? 100 - Math.min(100, (Math.abs(m.value) / t.max) * 100)
-      : Math.min(100, (Math.abs(m.value) / t.max) * 100);
+    const pct = Math.min(100, (val / t.max) * 100);
 
-    const displayVal = t.multiplier
-      ? (m.value * t.multiplier).toFixed(1)
-      : m.value.toFixed(1);
+    const displayVal = (m.value ?? 0).toFixed(1);
+
+    const isActive = activeMetric === m.key;
 
     return (
-      <motion.div
-        layout
-        onMouseEnter={() => setActiveMetric(m.key)}
-        onMouseLeave={() => setActiveMetric(null)}
-        className="flex items-center gap-3 cursor-pointer"
-        whileHover={{ scale: 1.03 }}
+      <div
+        className={`flex items-center gap-2 cursor-pointer transition-all duration-300
+          ${isActive ? "scale-110" : "scale-100"}
+        `}
+        onMouseEnter={() => handleMetricEnter(m.key)}
+        onMouseLeave={handleMetricLeave}
       >
         <div className="relative w-12 h-12">
           <svg className="w-12 h-12 transform -rotate-90">
-            <circle cx="24" cy="24" r="18" fill="none" stroke="#e2e8f0" strokeWidth="4" />
-
-            <motion.circle
+            <circle cx="24" cy="24" r="18" fill="none" stroke="#e2e8f0" strokeWidth="3.5" />
+            <circle
               cx="24"
               cy="24"
               r="18"
               fill="none"
               stroke={t.color}
               strokeWidth="4"
-              strokeLinecap="round"
               strokeDasharray={2 * Math.PI * 18}
-              initial={{ strokeDashoffset: 2 * Math.PI * 18 }}
-              animate={{
-                strokeDashoffset: 2 * Math.PI * 18 * (1 - pct / 100),
-              }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
+              strokeDashoffset={2 * Math.PI * 18 * (1 - pct / 100)}
+              strokeLinecap="round"
+              className="transition-all duration-300"
             />
           </svg>
 
           <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold">
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={displayVal}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-              >
-                {displayVal}
-              </motion.span>
-            </AnimatePresence>
+            {displayVal}
           </div>
         </div>
 
-        <div>
+        <div className="flex-1">
           <div className="text-xs font-medium">
             {t.icon} {t.label}
           </div>
           <div className="text-[10px] text-slate-400">
-            {pct.toFixed(0)}% intensity
+            {pct.toFixed(0)}% of threshold
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   };
-
-  if (isLoading) return null;
 
   return (
     <div className="w-full max-w-6xl mx-auto mb-12">
 
-      {/* ================= HEADER ================= */}
+      {/* ========================= */}
+      {/* CLIMATE SIGNAL INDEX */}
+      {/* ========================= */}
       <div className="text-center mb-8">
-        <span className="text-sm text-slate-500">{selectedCountry}</span>
 
-        {/* CLIMATE SIGNAL INDEX */}
-        <div className="mt-2">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={selectedCountry}
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.4 }}
-              className="text-5xl font-bold text-slate-900"
-            >
-              {climateIndex.toFixed(0)}
-            </motion.div>
-          </AnimatePresence>
+        <div className="text-xs font-semibold tracking-widest text-slate-500">
+          CLIMATE SIGNAL INDEX
+        </div>
 
-          <div className="text-xs text-slate-500 mt-1">
-            Climate Signal Index
+        <div className="flex items-center justify-center gap-3 mt-2">
+          <div className="text-5xl font-bold text-slate-900">
+            {climateIndex}
+          </div>
+
+          <div className={`text-sm font-semibold ${signal.color}`}>
+            {signal.label}
           </div>
         </div>
+
+        <div className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+          Based on temperature, rainfall anomaly, sea surface temperature and sea level rise
+        </div>
+
+        <div className="w-full max-w-xs mx-auto mt-3 h-2 bg-slate-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-blue-400 via-orange-400 to-red-500 transition-all duration-700"
+            style={{ width: `${climateIndex}%` }}
+          />
+        </div>
+
+        <div className="text-sm font-semibold tracking-wide text-slate-500 mt-6">
+          SIGNAL DETECTION · {selectedCountry}
+        </div>
+
+        <h3 className="text-lg font-bold text-slate-800 mt-1">
+          A measurable climate signal is emerging
+        </h3>
       </div>
 
-      {/* ================= GRID ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* ========================= */}
+      {/* ONLY CLIMATE DOUGHNUTS */}
+      {/* ========================= */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+
         {metrics.map((m) => (
-          <MetricRing key={m.key} m={m} />
+          <MetricCircle key={m.key} m={m} />
         ))}
+
       </div>
     </div>
   );
