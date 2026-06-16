@@ -27,25 +27,25 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth }: Climat
         {hasTempData && (
           <div className="p-2">
             <div className="font-semibold text-base text-slate-800 mb-2">Surface Temperature</div>
-            <LineChart width={chartWidth} height={260} data={dataMap.temp} />
+            <LineChart width={chartWidth} height={260} data={dataMap.temp} dataType="surfaceTempAnomaly" selectedCountry={selectedCountry} />
           </div>
         )}
         {hasSeaData && (
           <div className="p-2">
             <div className="font-semibold text-base text-slate-800 mb-2">Sea Level Anomaly</div>
-            <LineChart width={chartWidth} height={260} data={dataMap.sea} />
+            <LineChart width={chartWidth} height={260} data={dataMap.sea} dataType="seaLevelAnomaly" selectedCountry={selectedCountry}  />
           </div>
         )}
         {hasSSTData && (
           <div className="p-2">
             <div className="font-semibold text-base text-slate-800 mb-2">Sea Surface Temperature</div>
-            <LineChart width={chartWidth} height={260} data={dataMap.sea_surface_temperature} />
+            <LineChart width={chartWidth} height={260} data={dataMap.sea_surface_temperature}  dataType="seaSurfaceTempAnomaly" selectedCountry={selectedCountry} />
           </div>
         )}
-        {hasRainfallData && (
+        {hasRainfallData && ( 
           <div className="p-2">
             <div className="font-semibold text-base text-slate-800 mb-2">Precipitation Anomaly</div>
-            <LineChart width={chartWidth} height={260} data={dataMap.rainfall} />
+            <LineChart width={chartWidth} height={260} data={dataMap.rainfall} dataType="precipitationAnomaly" selectedCountry={selectedCountry} />
           </div>
         )}
       </div>
