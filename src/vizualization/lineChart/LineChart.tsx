@@ -76,7 +76,6 @@ export const LineChart = ({
   xAxisLabel = "Year",
   yAxisLabel,
   title,
-  insight = "This chart shows how climate indicators have evolved over time, revealing trends and anomalies.",
   valueFormatter,
 }: LineChartProps) => {
   const boundsWidth = width - MARGIN.left - MARGIN.right;
@@ -241,13 +240,6 @@ export const LineChart = ({
 
   return (
     <div className="w-full">
-      {/* Header with Storytelling */}
-      <div className="mb-4">
-          <p className="text-xs text-slate-600 leading-relaxed">
-             {insight}
-          </p>
-      </div>
-
       {/* Key Findings Summary Cards */}
       <div className="mb-5 grid grid-cols-3 gap-2">
         <div className="text-center p-2 rounded-lg" style={{ backgroundColor: percentChange > 0 ? '#fef2f2' : '#ecfeff' }}>
