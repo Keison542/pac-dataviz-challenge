@@ -1,10 +1,9 @@
 "use client";
 
-import { scaleLinear, scaleBand } from "d3-scale";
-import { useMemo, useState, useCallback, useRef } from "react";
+import { scaleLinear } from "d3-scale";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { line, curveCardinal } from "d3-shape";
 import { LineItem } from "@/vizualization/lineChart/LineItem";
-import type { InteractionData } from "@/vizualization/lineChart/types/interaction";
 
 const MARGIN = { top: 60, right: 60, bottom: 100, left: 120 };
 
@@ -36,16 +35,21 @@ export const TrendLine = ({
   stackBy = "year",
   insight = "The trend line reveals how disaster economic losses have evolved over time.",
 }: Props) => {
+  const [isClient, setIsClient] = useState(false);
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
   const [hoveredPoint, setHoveredPoint] = useState<{ x: number; y: number; value: number; year: number } | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isLineHovered, setIsLineHovered] = useState(false);
-  const [animate, setAnimate] = useState(false);
   
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  // Set client-side flag
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const stackKeys = useMemo(() => {
     if (stackBy === "year") {
@@ -164,13 +168,6 @@ export const TrendLine = ({
   }, [trendData]);
 
   useEffect(() => {
-    if (!hasData) return;
-    setAnimate(false);
-    const timer = setTimeout(() => setAnimate(true), 80);
-    return () => clearTimeout(timer);
-  }, [data, hasData]);
-
-  useEffect(() => {
     return () => {
       if (hoverTimerRef.current) {
         clearTimeout(hoverTimerRef.current);
@@ -210,6 +207,20 @@ export const TrendLine = ({
       setIsLineHovered(false);
     }
   };
+
+  // Don't render on server
+  if (!isClient) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white"
+        style={{ width, height }}
+      >
+        <div className="text-center p-6">
+          <div className="animate-pulse">Loading chart...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!hasData) {
     return (
@@ -319,7 +330,7 @@ export const TrendLine = ({
               opacity="0.3"
             />
 
-            {/* Main line */}
+            {/* Main line - using your LineItem component */}
             <LineItem
               path={linePath}
               color={lineColor}
@@ -366,11 +377,6 @@ export const TrendLine = ({
                     fill={pointColor}
                     stroke="#fff"
                     strokeWidth={2.5}
-                    style={{
-                      transform: isHovered ? "scale(1.15)" : "scale(1)",
-                      transition: "transform 0.15s ease",
-                      filter: isHovered ? `drop-shadow(0 0 6px ${pointColor})` : "none"
-                    }}
                   />
                   
                   {/* Value label for important points */}
@@ -538,7 +544,7 @@ export const TrendLine = ({
           </g>
         </svg>
 
-        {/* Tooltip - No blinking, stable positioning */}
+        {/* Tooltip */}
         {hoveredPoint && !isLineHovered && (
           <div
             style={{
