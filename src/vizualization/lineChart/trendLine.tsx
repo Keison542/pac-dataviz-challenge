@@ -227,7 +227,7 @@ export const TrendLine = ({
         style={{ width, height }}
       >
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">📊</div>
+          <div className="text-4xl mb-3 opacity-30"></div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             No economic loss data available for the selected filter
@@ -266,20 +266,17 @@ export const TrendLine = ({
       </div>
 
       {/* Insight Text - Without country selection */}
-      <div className="mb-5 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
           Over the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
-          disaster economic losses have shown a <span className={`font-semibold ${growthRate > 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}
-          </span>.
-          The total economic loss across all years was <span className="font-semibold text-cyan-700">{formatTick(totalLoss)}</span>, 
-          with an annual average of <span className="font-semibold text-cyan-700">{formatTick(averageLoss)}</span>. 
-          The highest loss was recorded in <span className="font-semibold text-amber-600">{worstYear?.year}</span> 
-          at <span className="font-semibold text-amber-600">{worstYear ? formatCompact(worstYear.total) : "—"}</span>, 
-          while the lowest was in <span className="font-semibold text-emerald-600">{bestYear?.year}</span> 
-          at <span className="font-semibold text-emerald-600">{bestYear ? formatCompact(bestYear.total) : "—"}</span>.
+          disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
+          The total economic loss across all years was {formatTick(totalLoss)}, 
+          with an annual average of {formatTick(averageLoss)}. 
+          The highest loss was recorded in {worstYear?.year}
+          at {worstYear ? formatCompact(worstYear.total) : "—"}, 
+          while the lowest was in {bestYear?.year} 
+          at {bestYear ? formatCompact(bestYear.total) : "—"}.
         </p>
-      </div>
+      
 
       {/* Line Chart */}
       <div className="relative">
