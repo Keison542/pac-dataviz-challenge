@@ -219,25 +219,8 @@ export const TrendLine = ({
 
   return (
     <div className="w-full font-sans">
-      {/* Insight text - MOVED ABOVE the chart */}
-      <div className="mb-4 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
-        <p className="text-sm text-slate-700 leading-relaxed">
-          Over the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
-          disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
-          The total economic loss across all years was {formatTick(totalLoss)}, 
-          with an annual average of {formatTick(averageLoss)}.
-        </p>
-        <p className="text-sm text-slate-700 leading-relaxed mt-2">
-          The highest loss was recorded in {worstYear?.year} 
-          at {worstYear ? formatCompact(worstYear.total) : "—"}, 
-          while the lowest was in {bestYear?.year} 
-          at {bestYear ? formatCompact(bestYear.total) : "—"}.
-          The smooth curved line helps visualize the overall trend pattern over time.
-        </p>
-      </div>
-
       {/* Stats Cards */}
-      <div className="mb-6 grid grid-cols-4 gap-3">
+      <div className="mb-4 grid grid-cols-4 gap-3">
         <div className="text-center p-3 bg-cyan-50 rounded-lg border border-cyan-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
           <div className="text-xl font-bold text-cyan-700">{formatTick(totalLoss)}</div>
           <div className="text-xs text-slate-500 mt-1">Total Economic Loss</div>
@@ -260,10 +243,20 @@ export const TrendLine = ({
         </div>
       </div>
 
-      {/* Original insight text (optional - can be removed or kept) */}
-      <div className="mb-4">
-        <p className="text-sm text-slate-600 leading-relaxed">
-          {insight}
+      {/* Insight Text - RIGHT BELOW STATS CARDS */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
+        <p className="text-sm text-slate-700 leading-relaxed">
+          Over the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
+          disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
+          The total economic loss across all years was {formatTick(totalLoss)}, 
+          with an annual average of {formatTick(averageLoss)}.
+        </p>
+        <p className="text-sm text-slate-700 leading-relaxed mt-2">
+          The highest loss was recorded in {worstYear?.year} 
+          at {worstYear ? formatCompact(worstYear.total) : "—"}, 
+          while the lowest was in {bestYear?.year} 
+          at {bestYear ? formatCompact(bestYear.total) : "—"}.
+          The smooth curved line helps visualize the overall trend pattern over time.
         </p>
       </div>
 
