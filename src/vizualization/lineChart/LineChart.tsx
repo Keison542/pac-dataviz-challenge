@@ -2,11 +2,14 @@
 
 import { DisasterLossRecord } from "@/climatedata/economic_consequence/direct_disaster_economic_loss";
 import { AffectedPeopleRecord } from "@/climatedata/human_consequence/number_of_persons_affected";
+import { sexColorScale, climateColorScale } from "@/lib/utils";
 import { scaleLinear } from "d3-scale";
 import { line, area, curveMonotoneX } from "d3-shape";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { CircleItem } from "./CircleItem";
 import { LineItem } from "./LineItem";
 import { InteractionData } from "./types/interaction";
+import { AXIS_COLOR, AXIS_FONT_SIZE } from "../constant";
 
 const MARGIN = { top: 50, right: 40, bottom: 70, left: 75 };
 
@@ -79,12 +82,13 @@ export const LineChart = ({
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
-  const [tooltipVisible, setTooltipVisible] = useState(false);
-  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isLineHovered, setIsLineHovered] = useState(false);
   const [animate, setAnimate] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   
-  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Refs for hover management
+  const pointHoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lineHoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const hasData = data.length > 0;
 
@@ -118,73 +122,65 @@ export const LineChart = ({
 
   const isClimateData = !(data.length > 0 && "Sex" in data[0]);
 
-  useEffect(() => {
-    return () => {
-      if (hoverTimerRef.current) {
-        clearTimeout(hoverTimerRef.current);
-      }
-    };
+  // Clear all timers
+  const clearTimers = useCallback(() => {
+    if (pointHoverTimerRef.current) {
+      clearTimeout(pointHoverTimerRef.current);
+      pointHoverTimerRef.current = null;
+    }
+    if (lineHoverTimerRef.current) {
+      clearTimeout(lineHoverTimerRef.current);
+      lineHoverTimerRef.current = null;
+    }
   }, []);
 
-  // Handle point hover with explicit mouse position
-  const handleMouseEnter = useCallback((event: React.MouseEvent, d: any, x: number, y: number) => {
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
+  // Handle point hover with mouse event for better positioning
+  const handlePointEnter = useCallback((event: React.MouseEvent, x: number, y: number, value: number, year: number, category: string) => {
+    clearTimers();
     
+    // Get mouse position for tooltip
     const mouseX = event.clientX;
     const mouseY = event.clientY;
     
-    setTooltipPosition({ 
-      x: mouseX + 15, 
-      y: mouseY - 40 
-    });
-    
-    setHoveredPoint({
-      year: d.year,
-      value: d.value,
-      category: d.category,
-    });
-    setTooltipVisible(true);
+    setTooltipPosition({ x: mouseX + 15, y: mouseY - 40 });
+    setHoveredPoint({ x, y, value, year, category });
     
     if (setHoveredDataPoint) {
       setHoveredDataPoint({
         x: mouseX,
         y: mouseY,
-        label: `${selectedCountry || "Unknown"} • ${d.year}`,
-        value: d.value,
+        label: `${selectedCountry || "Unknown"} • ${year}`,
+        value,
       });
     }
-  }, [setHoveredDataPoint, selectedCountry]);
+  }, [setHoveredDataPoint, selectedCountry, clearTimers]);
 
-  const handleMouseLeave = useCallback(() => {
-    hoverTimerRef.current = setTimeout(() => {
-      setTooltipVisible(false);
+  const handlePointLeave = useCallback(() => {
+    clearTimers();
+    pointHoverTimerRef.current = setTimeout(() => {
       setHoveredPoint(null);
-      if (setHoveredDataPoint) {
-        setHoveredDataPoint(null);
-      }
+      setHoveredDataPoint?.(null);
+      pointHoverTimerRef.current = null;
     }, 100);
-  }, [setHoveredDataPoint]);
+  }, [setHoveredDataPoint, clearTimers]);
 
+  // Handle line hover
   const handleLineHover = useCallback((hovered: boolean) => {
+    clearTimers();
+    
     if (hovered) {
-      if (hoverTimerRef.current) {
-        clearTimeout(hoverTimerRef.current);
-        hoverTimerRef.current = null;
-      }
       setIsLineHovered(true);
-      setTooltipVisible(false);
       setHoveredPoint(null);
-      if (setHoveredDataPoint) {
-        setHoveredDataPoint(null);
-      }
+      setHoveredDataPoint?.(null);
     } else {
-      setIsLineHovered(false);
+      lineHoverTimerRef.current = setTimeout(() => {
+        setIsLineHovered(false);
+        lineHoverTimerRef.current = null;
+      }, 100);
     }
-  }, [setHoveredDataPoint]);
+  }, [setHoveredDataPoint, clearTimers]);
 
+  // Empty state
   if (!hasData) {
     return (
       <div 
@@ -229,6 +225,7 @@ export const LineChart = ({
     .y1(d => yScale(d.value))
     .curve(curveMonotoneX);
 
+  // Get color for the line
   const getLineColor = () => {
     if (percentChange > 0) return "#e11d48";
     if (percentChange < 0) return "#0891b2";
@@ -249,8 +246,10 @@ export const LineChart = ({
 
   const lineColor = getLineColor();
 
-  // Debug: Log selectedCountry to console
-  console.log("LineChart selectedCountry:", selectedCountry);
+  // Get the display country name (ensure it's never "Regional")
+  const displayCountry = selectedCountry && selectedCountry !== "Regional" 
+    ? selectedCountry 
+    : (selectedCountry === "Regional" ? "Pacific Region" : "No country selected");
 
   return (
     <div className="w-full">
@@ -290,214 +289,191 @@ export const LineChart = ({
         </p>
       </div>
       
-      <div className="relative" style={{ width, height }}>
-        <svg 
-          width={width} 
-          height={height} 
-          className="overflow-visible"
-          style={{ cursor: isLineHovered ? 'pointer' : 'default' }}
-        >
-          <defs>
-            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={getGradientStart()} stopOpacity="0.25" />
-              <stop offset="100%" stopColor={getGradientEnd()} stopOpacity="0.02" />
-            </linearGradient>
-            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={getGradientStart()} />
-              <stop offset="100%" stopColor={getGradientEnd()} />
-            </linearGradient>
-          </defs>
+      <svg width={width} height={height} className="overflow-visible">
+        <defs>
+          <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={getGradientStart()} stopOpacity="0.25" />
+            <stop offset="100%" stopColor={getGradientEnd()} stopOpacity="0.02" />
+          </linearGradient>
 
-          <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-            {/* Grid */}
-            {xScale.ticks(8).map((v, i) => (
-              <line
-                key={`x-${i}`}
-                x1={xScale(v)} x2={xScale(v)}
-                y1={0} y2={boundsHeight}
-                stroke="#e2e8f0"
-                strokeWidth="1"
-                strokeDasharray="4 4"
-                opacity="0.5"
-              />
-            ))}
-            {yScale.ticks(6).map((v, i) => (
-              <line
-                key={`y-${i}`}
-                x1="0" x2={boundsWidth}
-                y1={yScale(v)} y2={yScale(v)}
-                stroke="#e2e8f0"
-                strokeWidth="1"
-                strokeDasharray="4 4"
-                opacity="0.5"
-              />
-            ))}
+          <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={getGradientStart()} />
+            <stop offset="100%" stopColor={getGradientEnd()} />
+          </linearGradient>
+        </defs>
 
-            {/* Zero line */}
+        <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+          {/* Grid */}
+          {xScale.ticks(8).map((v, i) => (
             <line
-              x1={0} x2={boundsWidth}
-              y1={yScale(0)} y2={yScale(0)}
-              stroke="#94a3b8"
-              strokeWidth="1.5"
-              strokeDasharray="6 4"
+              key={`x-${i}`}
+              x1={xScale(v)} x2={xScale(v)}
+              y1={0} y2={boundsHeight}
+              stroke="#e2e8f0"
+              strokeWidth="1"
+              strokeDasharray="4 4"
+              opacity="0.5"
             />
+          ))}
+          {yScale.ticks(6).map((v, i) => (
+            <line
+              key={`y-${i}`}
+              x1="0" x2={boundsWidth}
+              y1={yScale(v)} y2={yScale(v)}
+              stroke="#e2e8f0"
+              strokeWidth="1"
+              strokeDasharray="4 4"
+              opacity="0.5"
+            />
+          ))}
 
-            {/* Area Fill */}
-            {isClimateData && (
-              <path
-                d={areaBuilder(processedData) || ""}
-                fill="url(#areaGradient)"
-                opacity={animate ? 1 : 0}
-                style={{ transition: "opacity 1s ease-out" }}
-              />
-            )}
+          {/* Zero line */}
+          <line
+            x1={0} x2={boundsWidth}
+            y1={yScale(0)} y2={yScale(0)}
+            stroke="#94a3b8"
+            strokeWidth="1.5"
+            strokeDasharray="6 4"
+          />
 
-            {/* Main Line */}
-            <LineItem
-              path={lineBuilder(processedData) || ""}
-              color="url(#lineGradient)"
-              strokeWidth={isClimateData ? 3.5 : 3}
+          {/* Area Fill */}
+          {isClimateData && (
+            <path
+              d={areaBuilder(processedData) || ""}
+              fill="url(#areaGradient)"
               opacity={animate ? 1 : 0}
-              onHover={handleLineHover}
+              style={{ transition: "opacity 1s ease-out" }}
             />
+          )}
 
-            {/* Data Points */}
-            {processedData.map((d, i) => {
-              const x = xScale(d.year);
-              const y = yScale(d.value);
-              const isPointHovered = hoveredPoint?.year === d.year && tooltipVisible;
-              const isMax = d.value === maxValue;
-              const isMin = d.value === minValue;
+          {/* Main Line using LineItem */}
+          <LineItem
+            path={lineBuilder(processedData) || ""}
+            color="url(#lineGradient)"
+            strokeWidth={isClimateData ? 3.5 : 3}
+            opacity={animate ? 1 : 0}
+            onHover={handleLineHover}
+          />
 
-              const showPoint = isClimateData 
-                ? (isPointHovered || isMax || isMin || i % 3 === 0 || i === 0 || i === processedData.length - 1)
-                : true;
+          {/* Data Points */}
+          {processedData.map((d, i) => {
+            const x = xScale(d.year);
+            const y = yScale(d.value);
+            const isPointHovered = hoveredPoint?.year === d.year;
+            const isMax = d.value === maxValue;
+            const isMin = d.value === minValue;
 
-              if (!showPoint) return null;
+            const showPoint = isClimateData 
+              ? (isPointHovered || isMax || isMin || i % 3 === 0 || i === 0 || i === processedData.length - 1)
+              : true;
 
-              return (
-                <g 
-                  key={i}
-                  onMouseEnter={(e) => handleMouseEnter(e, d, x, y)}
-                  onMouseLeave={handleMouseLeave}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {isPointHovered && !isLineHovered && (
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r={12}
-                      fill="none"
-                      stroke={lineColor}
-                      strokeWidth="2"
-                      opacity="0.4"
-                    />
-                  )}
-                  
+            if (!showPoint) return null;
+
+            return (
+              <g key={i}>
+                <CircleItem
+                  x={x}
+                  y={y}
+                  r={isPointHovered ? 8 : (isMax || isMin ? 6 : 4.5)}
+                  color={isMax ? "#f59e0b" : isMin ? "#3b82f6" : lineColor}
+                  opacity={isLineHovered && !isPointHovered ? 0.4 : 1}
+                  onMouseEnter={(e) => handlePointEnter(e, x, y, d.value, d.year, d.category)}
+                  onMouseLeave={handlePointLeave}
+                  isSelected={isPointHovered}
+                />
+                {isPointHovered && !isLineHovered && (
                   <circle
-                    cx={x}
-                    cy={y}
-                    r={isPointHovered ? 8 : (isMax || isMin ? 6 : 4.5)}
-                    fill={isMax ? "#f59e0b" : isMin ? "#3b82f6" : lineColor}
-                    stroke="white"
+                    cx={x} cy={y}
+                    r={12}
+                    fill="none"
+                    stroke={lineColor}
+                    strokeOpacity="0.3"
                     strokeWidth="2"
-                    opacity={isLineHovered && !isPointHovered ? 0.5 : 1}
-                    style={{ transition: "r 0.1s ease" }}
                   />
-                </g>
-              );
-            })}
+                )}
+              </g>
+            );
+          })}
 
-            {/* X Axis Labels */}
-            {xScale.ticks(8).map((v, i) => (
-              <text
-                key={`x-${i}`}
-                x={xScale(v)}
-                y={boundsHeight + 25}
-                textAnchor="middle"
-                fontSize="11"
-                fill="#64748b"
-              >
-                {v}
-              </text>
-            ))}
-
-            {/* Y Axis Labels */}
-            {yScale.ticks(6).map((v, i) => (
-              <text
-                key={`y-${i}`}
-                x={-10}
-                y={yScale(v) + 4}
-                textAnchor="end"
-                fontSize="11"
-                fill="#64748b"
-              >
-                {valueFormatter ? valueFormatter(v) : formatYAxisTick(v, dataType)}
-              </text>
-            ))}
-
-            {/* Axis Titles */}
+          {/* X Axis Labels */}
+          {xScale.ticks(8).map((v, i) => (
             <text
-              x={boundsWidth / 2}
-              y={boundsHeight + 52}
+              key={`x-${i}`}
+              x={xScale(v)}
+              y={boundsHeight + 25}
               textAnchor="middle"
               fontSize="11"
               fill="#64748b"
-              fontWeight="500"
             >
-              {xAxisLabel}
+              {v}
             </text>
+          ))}
 
+          {/* Y Axis Labels */}
+          {yScale.ticks(6).map((v, i) => (
             <text
-              transform={`rotate(-90) translate(${-boundsHeight / 2}, -50)`}
-              textAnchor="middle"
+              key={`y-${i}`}
+              x={-10}
+              y={yScale(v) + 4}
+              textAnchor="end"
               fontSize="11"
               fill="#64748b"
-              fontWeight="500"
             >
-              {yAxisLabel || (isClimateData ? "Anomaly Value" : "Value")}
+              {valueFormatter ? valueFormatter(v) : formatYAxisTick(v, dataType)}
             </text>
-          </g>
-        </svg>
+          ))}
 
-        {/* Tooltip - Now shows the ACTUAL selected country name */}
-        {tooltipVisible && hoveredPoint && !isLineHovered && (
-          <div
-            style={{
-              position: 'fixed',
-              left: tooltipPosition.x,
-              top: tooltipPosition.y,
-              backgroundColor: 'white',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              padding: '8px 12px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              zIndex: 99999,
-              pointerEvents: 'none',
-              minWidth: '160px',
-            }}
+          {/* Axis Titles */}
+          <text
+            x={boundsWidth / 2}
+            y={boundsHeight + 52}
+            textAnchor="middle"
+            fontSize="11"
+            fill="#64748b"
+            fontWeight="500"
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: lineColor }}></div>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155', letterSpacing: '0.5px' }}>
-                {hoveredPoint.year}
-              </span>
-            </div>
-            <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>
-              {valueFormatter ? valueFormatter(hoveredPoint.value) : formatNumber(hoveredPoint.value)}
-            </div>
-            {/* THIS IS THE FIX - Shows actual country name */}
-            <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
-              {selectedCountry || "No country selected"}
-            </div>
-            {hoveredPoint.category !== "Value" && (
-              <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
-                {hoveredPoint.category}
-              </div>
-            )}
+            {xAxisLabel}
+          </text>
+
+          <text
+            transform={`rotate(-90) translate(${-boundsHeight / 2}, -50)`}
+            textAnchor="middle"
+            fontSize="11"
+            fill="#64748b"
+            fontWeight="500"
+          >
+            {yAxisLabel || (isClimateData ? "Anomaly Value" : "Value")}
+          </text>
+        </g>
+      </svg>
+
+      {/* Tooltip - Now shows the actual selected country */}
+      {hoveredPoint && !isLineHovered && (
+        <div
+          className="fixed pointer-events-none bg-white border border-slate-200 shadow-lg px-4 py-2 rounded-lg z-50"
+          style={{
+            left: tooltipPosition.x,
+            top: tooltipPosition.y,
+            minWidth: '180px',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: lineColor }}></div>
+            <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+              {hoveredPoint.year}
+            </span>
           </div>
-        )}
-      </div>
+          <div className="text-lg font-bold text-slate-800 tabular-nums">
+            {valueFormatter ? valueFormatter(hoveredPoint.value) : hoveredPoint.value.toLocaleString()}
+          </div>
+          <div className="text-xs text-slate-500 mt-0.5">
+            {displayCountry}
+          </div>
+          <div className="text-[10px] text-slate-400 mt-1">
+            {hoveredPoint.category !== "Value" && hoveredPoint.category}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
