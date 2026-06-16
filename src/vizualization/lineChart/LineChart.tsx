@@ -352,7 +352,7 @@ export const LineChart = ({
         style={{ width, height }}
       >
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">📊</div>
+          <div className="text-4xl mb-3 opacity-30"></div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Climate Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             No {chartLabel.toLowerCase()} data available for {selectedCountry}
@@ -395,16 +395,13 @@ export const LineChart = ({
 
       {/* Insight Text */}
       {stats.minDataYear && stats.maxDataYear && (
-        <div className="mb-5 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
+        
           <p className="text-sm text-slate-700 leading-relaxed">
-            For <span className="font-semibold text-cyan-700">{selectedCountry}</span>, {chartLabel.toLowerCase()} has shown a{' '}
-            <span className={`font-semibold ${stats.percentChange > 0 ? 'text-red-600' : 'text-green-600'}`}>
-              {stats.trendDirection} trend of {Math.abs(stats.percentChange).toFixed(1)}%
-            </span> over the recorded period ({stats.minDataYear} - {stats.maxDataYear}). 
-            The highest value was <span className="font-semibold text-amber-600">{stats.maxValue.toFixed(2)}{unit}</span> recorded in {stats.maxYear},
-            while the lowest was <span className="font-semibold text-blue-600">{stats.minValue.toFixed(2)}{unit}</span> in {stats.minYear}.
+            For {selectedCountry}, {chartLabel.toLowerCase()} has shown a{' '}{stats.trendDirection} trend of {Math.abs(stats.percentChange).toFixed(1)}% over the recorded period ({stats.minDataYear} - {stats.maxDataYear}). 
+            The highest value was {stats.maxValue.toFixed(2)}{unit} recorded in {stats.maxYear},
+            while the lowest was {stats.minValue.toFixed(2)}{unit} in {stats.minYear}.
           </p>
-        </div>
+       
       )}
 
       {/* Chart */}
