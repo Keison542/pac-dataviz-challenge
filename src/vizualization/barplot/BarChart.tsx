@@ -338,7 +338,6 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
 
       {/* Narrative Paragraph */}
       {topCountry && totalSum > 0 && (
-        <div className="mb-5 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100 transition-all duration-200 hover:shadow-sm">
           <p className="text-sm text-slate-700 leading-relaxed">
             {topCountry.country} leads with{' '}
             {currentMetric.format(topCountry.value)} — 
@@ -346,7 +345,6 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
             {topVsSecond > 20 && ` This is ${topVsSecond.toFixed(0)}% higher than ${secondCountry?.country}, the second most affected nation.`}
             {' '}The top 3 countries alone account for {top3Percentage.toFixed(0)}% of all recorded {currentMetric.title.toLowerCase().split(' by')[0]}.
           </p>
-        </div>
       )}
 
       {/* Chart */}
