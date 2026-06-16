@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface DoughnutClimateDashboardProps {
   kpis: any;
@@ -10,25 +11,26 @@ interface DoughnutClimateDashboardProps {
 }
 
 const thresholds: Record<string, any> = {
-  temp: { max: 2.0, unit: "°C", label: "Temperature", isReversed: false, color: "#f97316", icon: "🌡️" },
-  sea_surface_temperature: { max: 2.0, unit: "°C", label: "Sea Surface Temp", isReversed: false, color: "#0ea5e9", icon: "🌊" },
-  rainfall: { max: 200, unit: "mm", label: "Rainfall Anomaly", isReversed: false, color: "#06b6d4", icon: "🌧️" },
-  sea: { max: 0.5, unit: "cm", label: "Sea Level Rise", isReversed: false, color: "#2563eb", icon: "🌊" },
+  temp: { max: 2.0, unit: "°C", label: "Temperature", color: "#f97316", icon: "🌡️" },
+  sea_surface_temperature: { max: 2.0, unit: "°C", label: "Sea Surface Temp", color: "#0ea5e9", icon: "🌊" },
+  rainfall: { max: 200, unit: "mm", label: "Rainfall Anomaly", color: "#06b6d4", icon: "🌧️" },
+  sea: { max: 0.5, unit: "cm", label: "Sea Level Rise", color: "#2563eb", icon: "🌊" },
 };
 
 export function DoughnutClimateDashboard({
   kpis,
   selectedCountry,
-  isLoading
+  isLoading,
 }: DoughnutClimateDashboardProps) {
 
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
+  const [shock, setShock] = useState(false);
 
   const safeKpis = kpis || {};
 
   // ============================
-  // CLIMATE SIGNAL INDEX (ONLY 4 DRIVERS)
+  // CLIMATE SIGNAL INDEX
   // ============================
   const getClimateSignalIndex = () => {
     const temp = Math.abs(safeKpis.temp ?? 0);
@@ -60,7 +62,15 @@ export function DoughnutClimateDashboard({
 
   const signal = getSignalLabel(climateIndex);
 
-  // ONLY CLIMATE DRIVERS IN DOUGHNUT
+  // Shock trigger (reactive system behavior)
+  useEffect(() => {
+    if (climateIndex > 70) {
+      setShock(true);
+      const t = setTimeout(() => setShock(false), 600);
+      return () => clearTimeout(t);
+    }
+  }, [climateIndex]);
+
   const metrics = [
     { key: "temp", value: safeKpis.temp ?? 0 },
     { key: "sea_surface_temperature", value: safeKpis.sea_surface_temperature ?? 0 },
@@ -89,21 +99,21 @@ export function DoughnutClimateDashboard({
     const pct = Math.min(100, (val / t.max) * 100);
 
     const displayVal = (m.value ?? 0).toFixed(1);
-
     const isActive = activeMetric === m.key;
 
     return (
-      <div
-        className={`flex items-center gap-2 cursor-pointer transition-all duration-300
-          ${isActive ? "scale-110" : "scale-100"}
-        `}
+      <motion.div
+        layout
+        whileHover={{ scale: 1.05 }}
         onMouseEnter={() => handleMetricEnter(m.key)}
         onMouseLeave={handleMetricLeave}
+        className={`flex items-center gap-2 cursor-pointer transition-all`}
       >
         <div className="relative w-12 h-12">
           <svg className="w-12 h-12 transform -rotate-90">
             <circle cx="24" cy="24" r="18" fill="none" stroke="#e2e8f0" strokeWidth="3.5" />
-            <circle
+
+            <motion.circle
               cx="24"
               cy="24"
               r="18"
@@ -111,9 +121,11 @@ export function DoughnutClimateDashboard({
               stroke={t.color}
               strokeWidth="4"
               strokeDasharray={2 * Math.PI * 18}
-              strokeDashoffset={2 * Math.PI * 18 * (1 - pct / 100)}
-              strokeLinecap="round"
-              className="transition-all duration-300"
+              initial={{ strokeDashoffset: 2 * Math.PI * 18 }}
+              animate={{
+                strokeDashoffset: 2 * Math.PI * 18 * (1 - pct / 100),
+              }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
             />
           </svg>
 
@@ -130,12 +142,18 @@ export function DoughnutClimateDashboard({
             {pct.toFixed(0)}% of threshold
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto mb-12">
+    <motion.div
+      animate={{
+        backgroundColor: shock ? "rgba(239, 68, 68, 0.04)" : "transparent",
+      }}
+      transition={{ duration: 0.5 }}
+      className="w-full max-w-6xl mx-auto mb-12 rounded-xl"
+    >
 
       {/* ========================= */}
       {/* CLIMATE SIGNAL INDEX */}
@@ -147,23 +165,52 @@ export function DoughnutClimateDashboard({
         </div>
 
         <div className="flex items-center justify-center gap-3 mt-2">
-          <div className="text-5xl font-bold text-slate-900">
-            {climateIndex}
-          </div>
 
-          <div className={`text-sm font-semibold ${signal.color}`}>
-            {signal.label}
-          </div>
+          {/* INDEX (ANIMATED) */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={climateIndex}
+              initial={{ opacity: 0, scale: 0.8, y: 10 }}
+              animate={{
+                opacity: 1,
+                scale: shock ? 1.15 : 1,
+                y: 0,
+                color: shock ? "#dc2626" : "#0f172a",
+              }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.35 }}
+              className="text-5xl font-bold"
+            >
+              {climateIndex}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* SIGNAL LABEL */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={signal.label}
+              animate={{
+                scale: shock ? 1.1 : 1,
+              }}
+              transition={{ duration: 0.3 }}
+              className={`text-sm font-semibold ${signal.color}`}
+            >
+              {signal.label}
+            </motion.div>
+          </AnimatePresence>
+
         </div>
 
         <div className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-          Based on temperature, rainfall anomaly, sea surface temperature and sea level rise
+          Climate signal derived from temperature, rainfall anomaly, sea surface temperature and sea level rise
         </div>
 
+        {/* PROGRESS BAR */}
         <div className="w-full max-w-xs mx-auto mt-3 h-2 bg-slate-200 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-blue-400 via-orange-400 to-red-500 transition-all duration-700"
-            style={{ width: `${climateIndex}%` }}
+          <motion.div
+            className="h-full bg-gradient-to-r from-blue-400 via-orange-400 to-red-500"
+            animate={{ width: `${climateIndex}%` }}
+            transition={{ duration: 0.6 }}
           />
         </div>
 
@@ -177,15 +224,14 @@ export function DoughnutClimateDashboard({
       </div>
 
       {/* ========================= */}
-      {/* ONLY CLIMATE DOUGHNUTS */}
+      {/* CLIMATE METRICS ONLY */}
       {/* ========================= */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-
         {metrics.map((m) => (
           <MetricCircle key={m.key} m={m} />
         ))}
-
       </div>
-    </div>
+
+    </motion.div>
   );
 }
