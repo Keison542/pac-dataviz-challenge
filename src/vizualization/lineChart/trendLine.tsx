@@ -266,7 +266,7 @@ export const TrendLine = ({
         </div>
       </div>
 
-      {/* Insight Text - NOW WITH DYNAMIC COUNTRY MENTION like Bubble Chart */}
+      {/* Insight Text - NOW WITH COUNTRY NAME MENTIONED */}
       <div className="mb-5 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
         <p className="text-sm text-slate-700 leading-relaxed">
           {selectedCountry ? (
@@ -297,7 +297,7 @@ export const TrendLine = ({
         </p>
       </div>
 
-      {/* Line Chart */}
+      {/* Line Chart - rest remains the same */}
       <div className="relative">
         <svg 
           ref={svgRef}
@@ -340,14 +340,12 @@ export const TrendLine = ({
               />
             ))}
 
-            {/* Area under curve */}
             <path 
               d={areaPath} 
               fill="url(#areaGradient)" 
               opacity="0.3"
             />
 
-            {/* Main line */}
             <LineItem
               path={linePath}
               color={lineColor}
@@ -356,7 +354,6 @@ export const TrendLine = ({
               onHover={handleLineHover}
             />
 
-            {/* Data points */}
             {trendData.map((d, i) => {
               const x = xScale(d.year);
               const y = yScale(d.total);
@@ -411,7 +408,6 @@ export const TrendLine = ({
               );
             })}
 
-            {/* X Axis */}
             {xAxisTicks.map((year, i) => (
               <g key={`x-axis-${i}`}>
                 <line
@@ -435,7 +431,6 @@ export const TrendLine = ({
               </g>
             ))}
 
-            {/* Y Axis */}
             {yAxisTicks.map((v, i) => (
               <g key={`y-axis-${i}`}>
                 <line
@@ -460,7 +455,6 @@ export const TrendLine = ({
               </g>
             ))}
 
-            {/* Axis Titles */}
             <text 
               x={boundsWidth / 2} 
               y={boundsHeight + 48} 
@@ -482,7 +476,6 @@ export const TrendLine = ({
               Total Economic Loss (USD)
             </text>
 
-            {/* Peak annotation */}
             {worstYear && (
               <g>
                 <line
@@ -518,7 +511,6 @@ export const TrendLine = ({
               </g>
             )}
 
-            {/* Trend arrow */}
             {trendData.length > 1 && (
               <g>
                 <path
