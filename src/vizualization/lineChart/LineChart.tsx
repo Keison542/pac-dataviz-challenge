@@ -76,10 +76,7 @@ export const LineChart = ({
   
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ALL HOOKS MUST BE CALLED IN THE SAME ORDER EVERY TIME
-  // Move all useMemo BEFORE any conditional returns
-
-  // Safety check for data - ALWAYS define this useMemo
+  // Safety check for data
   const safeData = useMemo(() => {
     if (!data || !Array.isArray(data)) {
       return [];
@@ -89,14 +86,14 @@ export const LineChart = ({
 
   const hasData = safeData.length > 0;
 
-  // Process climate driver data - ALWAYS defined
+  // Process climate driver data
   const processedData = useMemo(() => {
     if (!hasData) return [];
     return [...safeData]
       .sort((a, b) => a.year - b.year);
   }, [safeData, hasData]);
 
-  // Calculate statistics - ALWAYS defined
+  // Calculate statistics
   const stats = useMemo(() => {
     if (processedData.length === 0) {
       return {
@@ -139,7 +136,7 @@ export const LineChart = ({
     };
   }, [processedData]);
 
-  // Generate x-axis ticks - ALWAYS defined
+  // Generate x-axis ticks
   const xAxisTicks = useMemo(() => {
     if (processedData.length === 0) return [];
     const yearsArray = processedData.map(d => d.year);
@@ -148,19 +145,41 @@ export const LineChart = ({
     return yearsArray.filter((_, i) => i % step === 0);
   }, [processedData, boundsWidth]);
 
-  // Generate y-axis ticks - ALWAYS defined
+  // Generate y-axis ticks - FIXED for sea level
   const yAxisTicks = useMemo(() => {
     if (processedData.length === 0) return [0, 0.25, 0.5, 0.75, 1];
-    const maxValueY = Math.max(...processedData.map(d => Math.abs(d.value)), 1);
+    
+    const values = processedData.map(d => d.value);
+    const minVal = Math.min(0, ...values);
+    const maxVal = Math.max(...values);
+    
+    // For sea level, use a smaller step
+    let step;
+    const range = maxVal - minVal;
+    
+    if (dataType === "seaLevelAnomaly") {
+      // Sea level: use 0.05m steps
+      const roughStep = range / 4;
+      const stepSize = Math.pow(10, Math.floor(Math.log10(roughStep)));
+      step = Math.max(stepSize, 0.01);
+    } else if (dataType === "surfaceTempAnomaly" || dataType === "seaSurfaceTempAnomaly") {
+      // Temperature: use 0.2°C steps
+      step = Math.max(range / 4, 0.2);
+    } else {
+      // Rainfall: use larger steps
+      step = Math.max(range / 4, 10);
+    }
+    
     const ticks: number[] = [];
-    const step = maxValueY / 4;
-    for (let i = 0; i <= 4; i++) {
-      ticks.push(i * step);
+    let current = Math.floor(minVal / step) * step;
+    while (current <= maxVal + step) {
+      ticks.push(Number(current.toFixed(4)));
+      current += step;
     }
     return ticks;
-  }, [processedData]);
+  }, [processedData, dataType]);
 
-  // Scales - ALWAYS defined (with fallback domains)
+  // Scales - FIXED y-scale with proper padding
   const yScale = useMemo(() => {
     if (processedData.length === 0) {
       return scaleLinear().domain([0, 1]).range([boundsHeight, 0]);
@@ -168,9 +187,26 @@ export const LineChart = ({
     const values = processedData.map(d => d.value);
     const minValueAll = Math.min(0, ...values);
     const maxValueAll = Math.max(...values);
-    const domain = [minValueAll * 0.95, Math.max(maxValueAll * 1.08, 0.01)];
-    return scaleLinear().domain(domain).range([boundsHeight, 0]);
-  }, [processedData, boundsHeight]);
+    
+    // Calculate proper padding based on data type
+    let padding = 0.1;
+    if (dataType === "seaLevelAnomaly") {
+      padding = 0.15; // More padding for sea level
+    } else if (dataType === "surfaceTempAnomaly" || dataType === "seaSurfaceTempAnomaly") {
+      padding = 0.12;
+    }
+    
+    const range = maxValueAll - minValueAll;
+    const padValue = Math.max(range * padding, 0.01);
+    
+    // Ensure we don't have a zero domain
+    const domainMin = minValueAll - padValue;
+    const domainMax = Math.max(maxValueAll + padValue, 0.01);
+    
+    return scaleLinear()
+      .domain([domainMin, domainMax])
+      .range([boundsHeight, 0]);
+  }, [processedData, boundsHeight, dataType]);
 
   const xScale = useMemo(() => {
     if (processedData.length === 0) {
@@ -183,7 +219,7 @@ export const LineChart = ({
     return scaleLinear().domain(domain).range([0, boundsWidth]);
   }, [processedData, boundsWidth]);
 
-  // Color functions - ALWAYS defined
+  // Color functions
   const getLineColor = useMemo(() => {
     if (stats.percentChange > 0) return "#e11d48";
     if (stats.percentChange < 0) return "#0891b2";
@@ -262,10 +298,13 @@ export const LineChart = ({
   };
 
   const formatValue = (value: number) => {
+    if (dataType === "seaLevelAnomaly") {
+      return `${value.toFixed(3)}${unit}`;
+    }
     return `${value.toFixed(2)}${unit}`;
   };
 
-  // Line builder - ALWAYS defined
+  // Line builder
   const lineBuilder = useMemo(() => {
     return line<any>()
       .x(d => xScale(d.year))
@@ -281,7 +320,7 @@ export const LineChart = ({
       .curve(curveMonotoneX);
   }, [xScale, yScale, boundsHeight]);
 
-  // NOW we can have conditional returns (after all hooks)
+  // Conditional returns (after all hooks)
   if (!isClient || !isMounted) {
     return (
       <div 
@@ -306,7 +345,7 @@ export const LineChart = ({
         style={{ width, height }}
       >
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30"></div>
+          <div className="text-4xl mb-3 opacity-30">📊</div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Climate Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             No {chartLabel.toLowerCase()} data available for {selectedCountry}
@@ -324,17 +363,17 @@ export const LineChart = ({
       {/* Stats Cards */}
       <div className="mb-4 grid grid-cols-4 gap-3">
         <div className="text-center p-3 bg-cyan-50 rounded-lg border border-cyan-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
-          <div className="text-xl font-bold text-cyan-700">{stats.averageValue.toFixed(2)}{unit}</div>
+          <div className="text-xl font-bold text-cyan-700">{stats.averageValue.toFixed(dataType === "seaLevelAnomaly" ? 3 : 2)}{unit}</div>
           <div className="text-xs text-slate-500 mt-1">Average</div>
-          
+          <div className="text-[10px] text-slate-400">{selectedCountry}</div>
         </div>
         <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
-          <div className="text-xl font-bold text-amber-700">{stats.maxValue.toFixed(2)}{unit}</div>
+          <div className="text-xl font-bold text-amber-700">{stats.maxValue.toFixed(dataType === "seaLevelAnomaly" ? 3 : 2)}{unit}</div>
           <div className="text-xs text-slate-500 mt-1">Peak Year</div>
           <div className="text-[11px] text-amber-600 font-medium">{stats.maxYear || '—'}</div>
         </div>
         <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
-          <div className="text-xl font-bold text-blue-700">{stats.minValue.toFixed(2)}{unit}</div>
+          <div className="text-xl font-bold text-blue-700">{stats.minValue.toFixed(dataType === "seaLevelAnomaly" ? 3 : 2)}{unit}</div>
           <div className="text-xs text-slate-500 mt-1">Lowest Year</div>
           <div className="text-[11px] text-blue-600 font-medium">{stats.minYear || '—'}</div>
         </div>
@@ -349,13 +388,16 @@ export const LineChart = ({
 
       {/* Insight Text */}
       {stats.minDataYear && stats.maxDataYear && (
+        <div className="mb-5 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-100">
           <p className="text-sm text-slate-700 leading-relaxed">
-            For {selectedCountry}, {chartLabel.toLowerCase()} has shown a{' '}
-            {stats.trendDirection} trend of {Math.abs(stats.percentChange).toFixed(1)}% over the recorded period ({stats.minDataYear} - {stats.maxDataYear}). 
-            The highest value was {stats.maxValue.toFixed(2)}{unit} recorded in {stats.maxYear},
-            while the lowest was {stats.minValue.toFixed(2)}{unit} in {stats.minYear}.
+            For <span className="font-semibold text-cyan-700">{selectedCountry}</span>, {chartLabel.toLowerCase()} has shown a{' '}
+            <span className={`font-semibold ${stats.percentChange > 0 ? 'text-red-600' : 'text-green-600'}`}>
+              {stats.trendDirection} trend of {Math.abs(stats.percentChange).toFixed(1)}%
+            </span> over the recorded period ({stats.minDataYear} - {stats.maxDataYear}). 
+            The highest value was <span className="font-semibold text-amber-600">{stats.maxValue.toFixed(dataType === "seaLevelAnomaly" ? 3 : 2)}{unit}</span> recorded in {stats.maxYear},
+            while the lowest was <span className="font-semibold text-blue-600">{stats.minValue.toFixed(dataType === "seaLevelAnomaly" ? 3 : 2)}{unit}</span> in {stats.minYear}.
           </p>
-      
+        </div>
       )}
 
       {/* Chart */}
@@ -518,7 +560,7 @@ export const LineChart = ({
               </g>
             ))}
 
-            {/* Y Axis Labels */}
+            {/* Y Axis Labels - FIXED formatting for sea level */}
             {yAxisTicks.map((v, i) => (
               <g key={`y-axis-${i}`}>
                 <line
@@ -538,7 +580,7 @@ export const LineChart = ({
                   fontWeight="500"
                   className="select-none"
                 >
-                  {formatValue(v)}
+                  {dataType === "seaLevelAnomaly" ? v.toFixed(3) : v.toFixed(2)}{unit}
                 </text>
               </g>
             ))}
