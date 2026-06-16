@@ -26,8 +26,8 @@ type Props = {
 
 const MARGIN = {
   top: 60,
-  right: 30,
-  bottom: 40,
+  right: 60,
+  bottom: 50,
   left: 120,
 };
 
@@ -163,8 +163,8 @@ const METRIC_CONFIGS = {
   }
 };
 
-// Animated bar component with spring effects
-const AnimatedBar = ({ width, height, y, fill, rx, onMouseEnter, onMouseLeave, isHovered, isNegative }: any) => {
+// Animated bar component
+const AnimatedBar = ({ width, height, y, x, fill, rx, onMouseEnter, onMouseLeave, isHovered }: any) => {
   const springProps = useSpring({
     width: width,
     opacity: isHovered ? 0.95 : 0.85,
@@ -176,15 +176,12 @@ const AnimatedBar = ({ width, height, y, fill, rx, onMouseEnter, onMouseLeave, i
     config: { tension: 200, friction: 20 },
   });
 
-  // For negative bars, we need to position from the right
-  const xPosition = isNegative ? -width : 0;
-
   return (
     <>
       {/* Glow effect on hover */}
       {isHovered && (
         <animated.rect
-          x={isNegative ? xPosition - 4 : 0}
+          x={x - 4}
           y={y - 2}
           width={width + 8}
           height={height + 4}
@@ -195,7 +192,7 @@ const AnimatedBar = ({ width, height, y, fill, rx, onMouseEnter, onMouseLeave, i
         />
       )}
       <animated.rect
-        x={isNegative ? xPosition : 0}
+        x={x}
         y={y}
         width={springProps.width}
         height={height}
@@ -237,9 +234,9 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
   const minValue = Math.min(...ranked.map(d => d.value), 0);
   const maxValue = Math.max(...ranked.map(d => d.value), 1);
   
-  // Add some padding
-  const paddedMin = minValue < 0 ? minValue * 1.1 : -maxValue * 0.05;
-  const paddedMax = maxValue * 1.1;
+  // Add padding
+  const paddedMin = minValue < 0 ? minValue * 1.15 : -maxValue * 0.1;
+  const paddedMax = maxValue > 0 ? maxValue * 1.15 : 1;
 
   const totalSum = ranked.reduce((sum, d) => sum + d.value, 0);
   const totalCountries = ranked.length;
@@ -287,7 +284,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
 
   return (
     <div className="w-full">
-      {/* Metric Selector - Single Row with hover effects */}
+      {/* Metric Selector */}
       <div className="mb-4 overflow-x-auto">
         <div className="flex gap-2 min-w-max pb-2">
           {(Object.keys(METRIC_CONFIGS) as Array<keyof typeof METRIC_CONFIGS>).map(key => {
@@ -325,7 +322,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
         </div>
       </div>
 
-      {/* Header with Storytelling */}
+      {/* Header */}
       <div className="mb-4">
         <h3 className="text-base font-semibold text-slate-800 mb-1">{currentMetric.title}</h3>
         <p className="text-xs text-slate-600 leading-relaxed">
@@ -333,12 +330,12 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
         </p>
         {hasNegative && (
           <p className="text-xs text-amber-600 mt-1">
-            ⚠️ Negative values indicate improvement or reduction in this metric
+            ⚠️ Negative values indicate improvement or reduction
           </p>
         )}
       </div>
 
-      {/* Key Findings Summary Cards with hover effects */}
+      {/* Key Findings Summary Cards */}
       {topCountry && totalSum > 0 && (
         <div className="mb-5 grid grid-cols-4 gap-2">
           <div className="text-center p-2 rounded-lg transition-all duration-200 hover:shadow-md" style={{ backgroundColor: `${currentMetric.color}10` }}>
@@ -368,7 +365,7 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
 
       {/* Narrative Paragraph */}
       {topCountry && totalSum > 0 && (
-        <p className="text-sm text-slate-700 leading-relaxed">
+        <p className="text-sm text-slate-700 leading-relaxed mb-4">
           {topCountry.country} leads with{' '}
           {currentMetric.format(topCountry.value)} — 
           representing {topPercentage}% of the total regional impact.
@@ -441,15 +438,19 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
             </text>
           ))}
 
-          {/* Bars with animated effects */}
+          {/* Bars - country labels on left, bars from zero */}
           {ranked.map((d, i) => {
             const y = yScale(d.country)!;
+            const barHeight = yScale.bandwidth();
             const isTop = i === 0 && d.value > 0;
             const isSecond = i === 1 && d.value > 0;
             const isThird = i === 2 && d.value > 0;
             const isHovered = hoveredCountry === d.country;
             const isNegative = d.value < 0;
             const barWidth = Math.abs(xScale(d.value) - zeroPosition);
+            
+            // Bar starts at zero position and extends left or right
+            const barX = isNegative ? xScale(d.value) : zeroPosition;
             
             let barColor;
             if (isNegative) {
@@ -464,28 +465,12 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
               barColor = "url(#barGradient)";
             }
             
-            // For negative bars, we start from the right (zero position)
-            const barX = isNegative ? xScale(d.value) : zeroPosition;
-            
             return (
               <g key={d.country}>
-                <AnimatedBar
-                  width={barWidth}
-                  height={yScale.bandwidth()}
-                  y={y}
-                  x={barX}
-                  fill={barColor}
-                  rx={4}
-                  isHovered={isHovered}
-                  isNegative={isNegative}
-                  onMouseEnter={() => setHoveredCountry(d.country)}
-                  onMouseLeave={() => setHoveredCountry(null)}
-                />
-                
-                {/* Country label with hover effect */}
+                {/* Country label - positioned to the far left */}
                 <text
                   x={-12}
-                  y={y + yScale.bandwidth() / 2}
+                  y={y + barHeight / 2}
                   textAnchor="end"
                   dominantBaseline="middle"
                   fontSize={11}
@@ -496,6 +481,8 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
                     transform: isHovered ? "translateX(-2px)" : "translateX(0)",
                     transition: "transform 0.2s ease"
                   }}
+                  onMouseEnter={() => setHoveredCountry(d.country)}
+                  onMouseLeave={() => setHoveredCountry(null)}
                 >
                   {d.country}
                   {isTop && <tspan className="text-red-500"> </tspan>}
@@ -503,27 +490,37 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
                   {isThird && <tspan className="text-amber-500"> </tspan>}
                 </text>
 
-                {/* Value label - positioned correctly for positive/negative */}
-                {barWidth > 30 && (
+                {/* Bar */}
+                <AnimatedBar
+                  width={barWidth}
+                  height={barHeight}
+                  y={y}
+                  x={barX}
+                  fill={barColor}
+                  rx={4}
+                  isHovered={isHovered}
+                  onMouseEnter={() => setHoveredCountry(d.country)}
+                  onMouseLeave={() => setHoveredCountry(null)}
+                />
+
+                {/* Value label on bar or beside it */}
+                {barWidth > 40 ? (
                   <text
                     x={isNegative ? xScale(d.value) + 8 : zeroPosition + barWidth - 8}
-                    y={y + yScale.bandwidth() / 2}
+                    y={y + barHeight / 2}
                     textAnchor={isNegative ? "start" : "end"}
                     dominantBaseline="middle"
                     fontSize={11}
-                    fill={isNegative ? "#94a3b8" : "#ffffff"}
+                    fill={isNegative ? "#475569" : "#ffffff"}
                     fontWeight={isHovered ? 700 : 600}
                     className="transition-all duration-200"
                   >
                     {currentMetric.formatNumber(d.value)}
                   </text>
-                )}
-
-                {/* Value label outside bar (if bar is too narrow) */}
-                {barWidth <= 30 && (
+                ) : (
                   <text
                     x={isNegative ? xScale(d.value) - 8 : zeroPosition + barWidth + 8}
-                    y={y + yScale.bandwidth() / 2}
+                    y={y + barHeight / 2}
                     textAnchor={isNegative ? "end" : "start"}
                     dominantBaseline="middle"
                     fontSize={11}
@@ -554,12 +551,14 @@ export function MultiMetricRankedDashboard({ width, height, data, selectedCountr
 
       {/* Distribution Insight Footer */}
       {ranked.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-slate-100">
           <p className="text-xs text-slate-500 text-center leading-relaxed">
             The top 3 countries ({ranked.slice(0, 3).filter(d => d.value > 0).map(d => d.country).join(", ") || "N/A"}) 
             account for {top3Percentage.toFixed(1)}% of the total {currentMetric.formatNumber(totalSum)} {currentMetric.unit}.
             {bottomCountry && ` The lowest among all is ${bottomCountry.country} with ${currentMetric.formatNumber(bottomCountry.value)}.`}
             {hasNegative && ` Negative values indicate improvement.`}
           </p>
+        </div>
       )}
     </div>
   );
