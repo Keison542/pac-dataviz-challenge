@@ -123,8 +123,8 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* CLIMATE DRIVERS */}
-        <div className="bg-orange-50 rounded-xl border border-orange-200 p-3">
-          <div className="bg-orange-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
+        <div className="rounded-xl border border-orange-200 p-3">
+          <div className="-mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
             <span className="text-white text-sm font-semibold">Climate Drivers</span>
           </div>
           <div className="space-y-3">
@@ -134,7 +134,7 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
 
         {/* ENVIRONMENTAL IMPACT */}
         <div className="bg-teal-50 rounded-xl border border-teal-200 p-3">
-          <div className="bg-teal-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
+          <div className="-mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
             <span className="text-white text-sm font-semibold"> Environmental Impacts</span>
           </div>
           <div className="space-y-3">
@@ -144,7 +144,7 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
 
         {/* ECONOMIC CONSEQUENCE */}
         <div className="bg-amber-50 rounded-xl border border-amber-200 p-3">
-          <div className="bg-amber-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
+          <div className="-mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
             <span className="text-white text-sm font-semibold"> Economic Impacts</span>
           </div>
           <div className="space-y-3">
@@ -154,7 +154,7 @@ export function DoughnutClimateDashboard({ kpis, selectedCountry, isLoading }: D
 
         {/* HUMAN CONSEQUENCE */}
         <div className="bg-purple-50 rounded-xl border border-purple-200 p-3">
-          <div className="bg-purple-500 -mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
+          <div className="-mt-3 -mx-3 mb-3 px-3 py-2 rounded-t-xl">
             <span className="text-white text-sm font-semibold">Human Impacts</span>
           </div>
           <div className="space-y-3">
