@@ -249,16 +249,15 @@ export const TrendLine = ({
           Over the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
           disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}.
           The total economic loss across all years was {formatTick(totalLoss)}, 
-          with an annual average of {formatTick(averageLoss)}.
-        </p>
-        <p className="text-sm text-slate-700 leading-relaxed mt-2">
-          The highest loss was recorded in {worstYear?.year} 
+          with an annual average of {formatTick(averageLoss)}.The highest loss was recorded in {worstYear?.year} 
           at {worstYear ? formatCompact(worstYear.total) : "—"}, 
           while the lowest was in {bestYear?.year} 
           at {bestYear ? formatCompact(bestYear.total) : "—"}.
-          The smooth curved line helps visualize the overall trend pattern over time.
         </p>
       </div>
+        <p className="text-sm text-slate-700 leading-relaxed mt-2">
+          The smooth curved line helps visualize the overall trend pattern over time.
+        </p>
 
       {/* Line Chart */}
       <div className="relative">
