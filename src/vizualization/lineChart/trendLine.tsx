@@ -202,7 +202,7 @@ export const TrendLine = ({
         style={{ width, height }}
       >
         <div className="text-center p-6">
-          <div className="text-4xl mb-3 opacity-30">📈</div>
+          <div className="text-4xl mb-3 opacity-30"></div>
           <h3 className="text-base font-semibold text-slate-700 mb-1">No Data Available</h3>
           <p className="text-xs text-slate-400 max-w-xs">
             No economic loss data available for the selected filter
@@ -530,19 +530,16 @@ export const TrendLine = ({
         <div className="bg-slate-50 rounded-lg p-4 transition-all duration-200 hover:shadow-sm">
           <div className="space-y-2 text-sm text-slate-600">
             <p className="leading-relaxed">
-              Over the <span className="font-semibold text-slate-700">{trendData.length}-year period</span> ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
-              disaster economic losses have shown a 
-              <span className={`font-semibold ${growthRate > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                {' '}{Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}
-              </span>
-              . The total economic loss across all years was <span className="font-semibold text-slate-700">{formatTick(totalLoss)}</span>, 
-              with an annual average of <span className="font-semibold text-slate-700">{formatTick(averageLoss)}</span>.
+              Over the {trendData.length}-year period ({trendData[0]?.year} - {trendData[trendData.length - 1]?.year}), 
+              disaster economic losses have shown a {Math.abs(growthRate).toFixed(1)}% {growthRate > 0 ? 'increase' : 'decrease'}
+              . The total economic loss across all years was {formatTick(totalLoss), 
+              with an annual average of {formatTick(averageLoss)}.
             </p>
             <p className="leading-relaxed">
-              The highest loss was recorded in <span className="font-semibold text-amber-600">{worstYear?.year}</span> 
-              at <span className="font-semibold text-amber-600">{worstYear ? formatCompact(worstYear.total) : "—"}</span>, 
-              while the lowest was in <span className="font-semibold text-emerald-600">{bestYear?.year}</span> 
-              at <span className="font-semibold text-emerald-600">{bestYear ? formatCompact(bestYear.total) : "—"}</span>.
+              The highest loss was recorded in {worstYear?.year} 
+              at {worstYear ? formatCompact(worstYear.total) : "—"}, 
+              while the lowest was in {bestYear?.year} 
+              at {bestYear ? formatCompact(bestYear.total) : "—"}.
               The smooth curved line helps visualize the overall trend pattern over time.
             </p>
             
