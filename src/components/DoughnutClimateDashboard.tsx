@@ -9,7 +9,7 @@ interface DoughnutClimateDashboardProps {
 }
 
 const thresholds: Record<string, any> = {
-  temp: { max: 2.0, unit: "°C", label: "Surface Temp", icon: "", color: "#D85A30", isReversed: false },
+  temp: { max: 2.0, unit: "°C", label: "Surface Temp", isReversed: false },
   sea_surface_temperature: { max: 2.0, unit: "°C", label: "Sea Surface Temp", icon: "", color: "#2AA7FF", isReversed: false },
   rainfall: { max: 200, unit: "mm", label: "Rainfall", icon: "", color: "#2E86AB", isReversed: false },
   sea: { max: 0.5, unit: "cm", label: "Sea Level", icon: "", color: "#185FA5", isReversed: false, multiplier: 100 },
