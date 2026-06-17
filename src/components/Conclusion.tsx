@@ -12,76 +12,87 @@ export function Conclusion({
   return (
     <div className="text-center mt-20 pt-10 border-t border-slate-200">
 
-      {/* TITLE (assertive, not decorative) */}
-      <div className="text-[1.6rem] font-semibold text-slate-900 mb-4">
-        The Evidence Is Now Structural
+      <div className="text-[1.8rem] font-semibold text-slate-900 mb-4">
+        What the Data Reveals
       </div>
 
-      {/* MAIN NARRATIVE */}
-      <div className="text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+      <div className="max-w-3xl mx-auto text-slate-600 leading-relaxed space-y-5">
 
-        For <span className="font-medium text-slate-900">{selectedCountry}</span>,
-        climate signals are no longer isolated events — they form a connected system of change.
+        <p>
+          Across the Pacific, climate change is not appearing as a single isolated
+          trend. Rising temperatures, changing rainfall patterns, warming oceans,
+          and sea-level rise are occurring simultaneously and reinforcing one another.
+        </p>
 
-        <br /><br />
+        <p>
+          The evidence shows that environmental pressures are translating into
+          real-world consequences. Agricultural productivity becomes less stable,
+          livelihood assets face increasing stress, economic losses accumulate,
+          and communities experience growing exposure to climate-related risks.
+        </p>
 
-        Rising temperatures are reinforcing environmental instability, which cascades into
-        economic disruption and ultimately reshapes human livelihoods.
+        <p>
+          The interaction analysis demonstrates that these impacts do not occur
+          independently. A change in one part of the climate system often produces
+          cascading effects across environmental, economic, and human systems.
+          This interconnectedness is one of the defining characteristics of climate
+          vulnerability in Pacific Island nations.
+        </p>
 
-      </div>
+        {seaTrend > 0 && (
+          <div className="my-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
+            <div className="text-xs uppercase tracking-wide text-slate-500 mb-1">
+              Key Observation
+            </div>
 
-      {/* EVIDENCE CALLOUT (important upgrade) */}
-      {seaTrend > 0 && (
-        <div className="mt-6 mx-auto max-w-xl rounded-lg border bg-slate-50 p-4">
-          <div className="text-xs text-slate-500 mb-1">
-            Observed Signal
+            <div className="text-xl font-semibold text-slate-900">
+              Sea levels increased by {seaTrend.toFixed(1)}%
+            </div>
+
+            <div className="text-sm text-slate-500 mt-2">
+              Rising seas represent one of the clearest long-term signals visible
+              across the region and amplify risks to coastal communities,
+              infrastructure, and livelihoods.
+            </div>
           </div>
+        )}
 
-          <div className="text-lg font-semibold text-slate-900">
-            Sea levels have risen {seaTrend.toFixed(1)}%
-          </div>
-
-          <div className="text-xs text-slate-500 mt-1">
-            This shift is not linear — it is accelerating across multiple systems.
-          </div>
-        </div>
-      )}
-
-      {/* SYSTEM CHAIN (visual emphasis upgrade) */}
-      <div className="mt-8 text-sm text-slate-700">
-        <div className="font-medium text-slate-900 mb-2">
-          Observed System Chain
-        </div>
-
-        <div className="flex flex-wrap justify-center gap-2 text-xs">
-          <span className="px-3 py-1 rounded-full bg-slate-100">
-            Climate Drivers
-          </span>
-          <span>→</span>
-          <span className="px-3 py-1 rounded-full bg-slate-100">
-            Environmental Impact
-          </span>
-          <span>→</span>
-          <span className="px-3 py-1 rounded-full bg-slate-100">
-            Economic Consequence
-          </span>
-          <span>→</span>
-          <span className="px-3 py-1 rounded-full bg-slate-100">
-            Human Impact
-          </span>
-        </div>
+        <p>
+          While each country experiences climate impacts differently, the broader
+          pattern remains consistent across the {countriesCount} Pacific Island
+          nations and territories represented in this analysis: climate change is
+          affecting environmental systems, economic resilience, and human wellbeing
+          at the same time.
+        </p>
       </div>
 
-      {/* GLOBAL CONTEXT */}
-      <div className="mt-6 text-sm text-slate-500">
-        Across <span className="text-slate-900 font-medium">{countriesCount}</span> Pacific Island nations and territories,
-        these patterns repeat with structural consistency.
+      <div className="mt-10 flex flex-wrap justify-center gap-2 text-xs">
+        <span className="px-3 py-1 rounded-full bg-slate-100">
+          Climate Drivers
+        </span>
+        <span>→</span>
+        <span className="px-3 py-1 rounded-full bg-slate-100">
+          Environmental Change
+        </span>
+        <span>→</span>
+        <span className="px-3 py-1 rounded-full bg-slate-100">
+          Livelihood Impacts
+        </span>
+        <span>→</span>
+        <span className="px-3 py-1 rounded-full bg-slate-100">
+          Economic Consequences
+        </span>
+        <span>→</span>
+        <span className="px-3 py-1 rounded-full bg-slate-100">
+          Human Outcomes
+        </span>
       </div>
 
-      {/* CLOSING STATEMENT (award-style ending) */}
-      <div className="mt-10 text-[1.1rem] font-medium text-slate-900 max-w-xl mx-auto leading-relaxed">
-        The question is no longer whether the system is changing —
-        but how quickly adaptation can match its pace.
+      <div className="mt-12 max-w-2xl mx-auto text-[1.15rem] font-medium text-slate-900 leading-relaxed">
+        The central insight is not that individual climate indicators are changing.
+        It is that environmental, economic, and human systems are becoming
+        increasingly connected through climate impacts, making resilience a
+        whole-system challenge rather than a sector-specific one.
       </div>
     </div>
   );
