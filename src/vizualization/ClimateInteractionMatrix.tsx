@@ -38,7 +38,7 @@ export default function ClimateInteractionMatrix({
   data,
   selectedCountry,
   width,
-  height = 420,
+  height = 460,
 }: Props) {
   const [hover, setHover] = useState<MatrixCell | null>(null);
 
@@ -47,146 +47,150 @@ export default function ClimateInteractionMatrix({
     [data, selectedCountry]
   );
 
-  const latest = filtered[filtered.length - 1];
+  const latest = filtered.at(-1);
 
   const matrix: MatrixCell[] = useMemo(() => {
     if (!latest) return [];
+
+    const t = Math.abs(latest.temp);
+    const r = Math.abs(latest.rainfall);
+    const s = Math.abs(latest.sea);
+    const ss = Math.abs(latest.sea_surface_temperature);
 
     return [
       {
         row: "Surface Temperature",
         col: "Environmental",
-        value: clamp(Math.abs(latest.temp) * 0.8),
-        narrative:
-          "Rising temperatures reduce crop productivity and stress ecosystems.",
+        value: clamp(t * 0.9),
+        narrative: "Rising heat reshapes ecosystem stability and crop viability.",
       },
       {
         row: "Surface Temperature",
         col: "Economic",
-        value: clamp(Math.abs(latest.temp) * 0.6),
-        narrative:
-          "Heat stress reduces agricultural output and increases economic loss.",
+        value: clamp(t * 0.75),
+        narrative: "Heat stress reduces productivity and raises system-wide costs.",
       },
       {
         row: "Surface Temperature",
         col: "Human",
-        value: clamp(Math.abs(latest.temp) * 0.5),
-        narrative:
-          "Direct heat exposure increases health risks and displacement.",
+        value: clamp(t * 0.7),
+        narrative: "Heat exposure directly increases health and displacement risk.",
       },
       {
         row: "Surface Temperature",
         col: "Disaster Risk",
-        value: clamp(Math.abs(latest.temp) * 0.4),
-        narrative:
-          "Higher baseline temperatures intensify extreme weather events.",
+        value: clamp(t * 0.8),
+        narrative: "Higher baseline temperatures amplify extreme event severity.",
       },
 
       {
         row: "Sea Surface Temperature",
         col: "Disaster Risk",
-        value: clamp(latest.sea_surface_temperature * 0.9),
-        narrative:
-          "Warmer oceans increase cyclone intensity and storm formation.",
+        value: clamp(ss * 0.95),
+        narrative: "Warmer oceans intensify cyclones and storm formation.",
       },
 
       {
         row: "Sea Level",
         col: "Human",
-        value: clamp(latest.sea * 1.0),
-        narrative:
-          "Sea level rise directly threatens coastal settlements and livelihoods.",
+        value: clamp(s),
+        narrative: "Sea level rise directly threatens coastal settlements.",
       },
 
       {
         row: "Rainfall",
         col: "Environmental",
-        value: clamp(Math.abs(latest.rainfall) * 0.7),
-        narrative:
-          "Rainfall variability destabilizes agriculture and ecosystems.",
+        value: clamp(r * 0.75),
+        narrative: "Rainfall variability destabilises ecosystems and agriculture.",
       },
       {
         row: "Rainfall",
         col: "Disaster Risk",
-        value: clamp(Math.abs(latest.rainfall) * 0.8),
-        narrative:
-          "Extreme rainfall increases flooding and landslide frequency.",
+        value: clamp(r * 0.9),
+        narrative: "Extreme rainfall increases flooding and landslides.",
       },
       {
         row: "Rainfall",
         col: "Economic",
-        value: clamp(Math.abs(latest.rainfall) * 0.5),
-        narrative:
-          "Flooding disrupts infrastructure and economic activity.",
+        value: clamp(r * 0.65),
+        narrative: "Flooding disrupts infrastructure and economic continuity.",
       },
     ];
   }, [latest]);
 
-  const getValue = (r: string, c: string) =>
+  const getCell = (r: string, c: string) =>
     matrix.find((m) => m.row === r && m.col === c);
+
+  const hoverRow = hover?.row;
+  const hoverCol = hover?.col;
 
   return (
     <div className="w-full">
 
       {/* Header */}
-      <div className="mb-4 text-center">
+      <div className="text-center mb-5">
         <h3 className="text-lg font-semibold text-slate-800">
-          Climate System Interaction Matrix
+          Climate System Interaction Map
         </h3>
-        <p className="text-xs text-slate-500 max-w-xl mx-auto mt-1">
-          This matrix shows how climate drivers structurally interact with impact domains.
-          Darker cells indicate stronger systemic coupling.
+        <p className="text-xs text-slate-500 max-w-xl mx-auto">
+          Climate drivers do not act independently — they reinforce or amplify each other across systems.
         </p>
       </div>
 
-      {/* Matrix Grid */}
+      {/* GRID */}
       <div
-        className="grid gap-2 mx-auto"
+        className="mx-auto grid gap-2"
         style={{
-          gridTemplateColumns: `140px repeat(${COLS.length}, 1fr)`,
+          gridTemplateColumns: `160px repeat(${COLS.length}, 1fr)`,
           width,
         }}
       >
-        {/* Top-left empty */}
         <div />
 
-        {/* Column headers */}
         {COLS.map((col) => (
           <div
             key={col}
-            className="text-[10px] text-slate-500 font-semibold text-center"
+            className="text-[11px] text-slate-500 font-semibold text-center"
           >
             {col}
           </div>
         ))}
 
-        {/* Rows */}
         {ROWS.map((row) => (
           <>
-            {/* Row label */}
             <div
               key={row}
-              className="text-[11px] font-medium text-slate-600 flex items-center"
+              className="text-[12px] font-medium text-slate-600 flex items-center"
+              style={{
+                opacity: hoverRow && hoverRow !== row ? 0.35 : 1,
+              }}
             >
               {row}
             </div>
 
-            {/* Cells */}
             {COLS.map((col) => {
-              const cell = getValue(row, col);
+              const cell = getCell(row, col);
               const intensity = cell?.value ?? 0;
+
+              const isActive =
+                hover
+                  ? hover.row === row || hover.col === col
+                  : false;
 
               return (
                 <div
                   key={row + col}
                   onMouseEnter={() => cell && setHover(cell)}
                   onMouseLeave={() => setHover(null)}
-                  className="relative h-14 rounded-md border border-slate-100 cursor-pointer transition-all"
+                  className="relative h-14 rounded-md border border-slate-100 transition-all cursor-pointer"
                   style={{
-                    background: `rgba(59,130,246,${intensity})`,
+                    background: `rgba(59,130,246,${
+                      intensity * (isActive ? 1 : 0.6)
+                    })`,
+                    transform: isActive ? "scale(1.02)" : "scale(1)",
+                    transition: "all 0.2s ease",
                   }}
                 >
-                  {/* value label */}
                   {cell && (
                     <div className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-slate-900">
                       {Math.round(intensity * 100)}
@@ -199,21 +203,20 @@ export default function ClimateInteractionMatrix({
         ))}
       </div>
 
-      {/* Narrative insight */}
+      {/* STORY PANEL */}
       {hover && (
-        <div className="mt-6 p-4 border border-slate-200 rounded-lg bg-white shadow-sm">
-          <div className="text-xs font-semibold text-slate-800 mb-1">
+        <div className="mt-6 p-4 border rounded-lg bg-white shadow-sm">
+          <div className="text-xs font-semibold text-slate-800">
             {hover.row} → {hover.col}
           </div>
-          <div className="text-xs text-slate-600">
+          <div className="text-xs text-slate-600 mt-1">
             {hover.narrative}
           </div>
           <div className="text-[10px] text-slate-400 mt-2">
-            Coupling strength: {Math.round(hover.value * 100)} / 100
+            Coupling strength: {Math.round(hover.value * 100)}/100
           </div>
         </div>
       )}
-
     </div>
   );
 }
