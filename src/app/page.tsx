@@ -12,7 +12,7 @@ import { CausalChainSection } from "@/components/CausalChainSection";
 import { Conclusion } from "@/components/Conclusion";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { useClimateData } from "@/hooks/useClimateData";
-// import { StoryTransition } from "@/components/StoryTransition";
+import { StoryTransition } from "@/components/StoryTransition";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
