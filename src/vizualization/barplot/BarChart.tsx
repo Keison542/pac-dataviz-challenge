@@ -26,11 +26,8 @@ type Props = {
 
 const METRIC_CONFIGS = {
   economicLoss: {
-    title: "Economic Loss by Country",
-    insight: "Who bears the highest financial burden from disasters?",
+    label: "Economic Loss",
     color: "#0891b2",
-    gradientStart: "#0891b2",
-    gradientEnd: "#06b6d4",
     unit: "USD",
     format: (v: number) => {
       const absV = Math.abs(v);
@@ -38,87 +35,57 @@ const METRIC_CONFIGS = {
       if (absV >= 1_000_000) return `$${(absV / 1_000_000).toFixed(1)}M`;
       if (absV >= 1_000) return `$${(absV / 1_000).toFixed(1)}K`;
       return `$${absV}`;
-    },
-    formatNumber: (v: number) => {
-      const absV = Math.abs(v);
-      if (absV >= 1_000_000_000) return `${(absV / 1_000_000_000).toFixed(1)}B`;
-      if (absV >= 1_000_000) return `${(absV / 1_000_000).toFixed(1)}M`;
-      if (absV >= 1_000) return `${(absV / 1_000).toFixed(1)}K`;
-      return `${absV}`;
     }
   },
   cropYield: {
-    title: "Crop Yield Impact by Country",
-    insight: "Which nations face the greatest agricultural productivity loss?",
+    label: "Crop Yield",
     color: "#10b981",
-    gradientStart: "#059669",
-    gradientEnd: "#10b981",
     unit: "t/ha",
-    format: (v: number) => `${Math.abs(v).toFixed(1)} t/ha`,
-    formatNumber: (v: number) => `${Math.abs(v).toFixed(1)}`
+    format: (v: number) => `${Math.abs(v).toFixed(1)} t/ha`
   },
   touristArrivals: {
-    title: "Tourist Arrivals by Country",
-    insight: "Which tourism-dependent economies are most vulnerable?",
+    label: "Tourist Arrivals",
     color: "#14b8a6",
-    gradientStart: "#0d9488",
-    gradientEnd: "#14b8a6",
     unit: "visitors",
-    format: (v: number) => `${Math.abs(v)} visitors`,
-    formatNumber: (v: number) => `${Math.abs(v)}`
+    format: (v: number) => `${Math.abs(v).toLocaleString()} visitors`
   },
   livestockYield: {
-    title: "Livestock Yield by Country",
-    insight: "Which nations face livestock production challenges?",
+    label: "Livestock Yield",
     color: "#f59e0b",
-    gradientStart: "#d97706",
-    gradientEnd: "#f59e0b",
     unit: "tons",
-    format: (v: number) => `${Math.abs(v)} tons`,
-    formatNumber: (v: number) => `${Math.abs(v)}`
+    format: (v: number) => `${Math.abs(v).toLocaleString()} tons`
   },
   climateAlteringLand: {
-    title: "Climate-Altering Land by Country",
-    insight: "Which nations have the most land affected by climate change?",
+    label: "Climate-Altering Land",
     color: "#8b5cf6",
-    gradientStart: "#7c3aed",
-    gradientEnd: "#8b5cf6",
-    unit: "hectares",
-    format: (v: number) => `${Math.abs(v)} ha`,
-    formatNumber: (v: number) => `${Math.abs(v)}`
+    unit: "ha",
+    format: (v: number) => `${Math.abs(v).toLocaleString()} ha`
   },
   populationGrowth: {
-    title: "Population Growth by Country",
-    insight: "Which nations have the highest population growth rates?",
+    label: "Population Growth",
     color: "#ec4898",
-    gradientStart: "#db2777",
-    gradientEnd: "#ec4898",
     unit: "%",
-    format: (v: number) => `${Math.abs(v)}%`,
-    formatNumber: (v: number) => `${Math.abs(v)}`
+    format: (v: number) => `${Math.abs(v).toFixed(1)}%`
   },
   affectedPersons: {
-    title: "People Affected by Country",
-    insight: "Which nations have the highest number of people affected?",
+    label: "People Affected",
     color: "#ef4444",
-    gradientStart: "#dc2626",
-    gradientEnd: "#ef4444",
     unit: "people",
-    format: (v: number) => `${Math.abs(v)} people`,
-    formatNumber: (v: number) => `${Math.abs(v)}`
+    format: (v: number) => `${Math.abs(v).toLocaleString()} people`
   }
 };
 
-const AnimatedBar = ({
-  width,
-  height,
-  y,
-  x,
-  fill,
-  isHovered,
-  onMouseEnter,
-  onMouseLeave
-}: any) => {
+// Get all metric keys
+const METRIC_KEYS = Object.keys(METRIC_CONFIGS) as Array<keyof typeof METRIC_CONFIGS>;
+
+// Normalize function: 0 to 1 scale
+const normalize = (value: number, max: number) => {
+  if (max === 0) return 0;
+  return Math.min(value / max, 1);
+};
+
+// Animated Bar Component
+const AnimatedBar = ({ width, height, y, x, fill, isHovered, onMouseEnter, onMouseLeave }: any) => {
   const springProps = useSpring({
     width,
     opacity: isHovered ? 1 : 0.85,
@@ -126,140 +93,301 @@ const AnimatedBar = ({
   });
 
   return (
-    <>
-      <animated.rect
-        x={x}
-        y={y}
-        width={springProps.width}
-        height={height}
-        fill={fill}
-        rx={4}
-        opacity={springProps.opacity}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        style={{ cursor: "pointer" }}
-      />
-    </>
+    <animated.rect
+      x={x}
+      y={y}
+      width={springProps.width}
+      height={height}
+      fill={fill}
+      rx={4}
+      opacity={springProps.opacity}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      style={{ cursor: "pointer" }}
+    />
   );
 };
 
-export function MultiMetricRankedDashboard({
-  width,
-  height,
-  data
-}: Props) {
-  const [selectedMetric, setSelectedMetric] =
-    useState<keyof typeof METRIC_CONFIGS>("economicLoss");
-
+export function MultiMetricRankedDashboard({ width, height, data }: Props) {
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
-
   const [tooltip, setTooltip] = useState<null | {
     x: number;
     y: number;
     country: string;
-    value: number;
+    values: Record<string, number>;
+    compositeScore: number;
   }>(null);
 
-  const currentMetric = METRIC_CONFIGS[selectedMetric];
-  const currentData = data[selectedMetric];
+  // ─── 1. Build country-wise data for ALL 7 metrics ───
+  const countryData = useMemo(() => {
+    const map = new Map<string, Record<string, number>>();
 
-  const ranked = useMemo(() => {
-    if (!currentData) return [];
-    const map = new Map<string, number>();
-
-    currentData.forEach((d) => {
-      map.set(d.country, (map.get(d.country) ?? 0) + d.value);
+    METRIC_KEYS.forEach((key) => {
+      const records = data[key] || [];
+      records.forEach((d) => {
+        if (!map.has(d.country)) {
+          map.set(d.country, {});
+        }
+        const entry = map.get(d.country)!;
+        entry[key] = (entry[key] || 0) + d.value;
+      });
     });
 
-    return Array.from(map.entries())
-      .map(([country, value]) => ({ country, value }))
-      .sort((a, b) => b.value - a.value);
-  }, [currentData]);
+    return Array.from(map.entries()).map(([country, values]) => ({
+      country,
+      values
+    }));
+  }, [data]);
 
-  const widthInner = width - 140;
-  const heightInner = height - 100;
+  // ─── 2. Compute max values per metric for normalization ───
+  const maxValues = useMemo(() => {
+    const maxes: Record<string, number> = {};
+    METRIC_KEYS.forEach((key) => {
+      let max = 0;
+      countryData.forEach((c) => {
+        const val = c.values[key] || 0;
+        if (val > max) max = val;
+      });
+      maxes[key] = max || 1;
+    });
+    return maxes;
+  }, [countryData]);
+
+  // ─── 3. Compute composite score per country ───
+  const ranked = useMemo(() => {
+    return countryData
+      .map((c) => {
+        let composite = 0;
+        METRIC_KEYS.forEach((key) => {
+          const raw = c.values[key] || 0;
+          composite += normalize(raw, maxValues[key]);
+        });
+        return {
+          country: c.country,
+          values: c.values,
+          compositeScore: composite
+        };
+      })
+      .sort((a, b) => b.compositeScore - a.compositeScore);
+  }, [countryData, maxValues]);
+
+  // ─── 4. Find top and bottom ───
+  const topCountry = ranked[0];
+  const bottomCountry = ranked[ranked.length - 1];
+
+  // ─── 5. Get total composite sum ───
+  const totalComposite = ranked.reduce((sum, d) => sum + d.compositeScore, 0);
+
+  // ─── 6. Chart dimensions ───
+  const leftMargin = 120;
+  const topMargin = 40;
+  const chartWidth = width - leftMargin - 20;
+  const chartHeight = height - topMargin - 20;
+
+  const maxComposite = Math.max(...ranked.map((d) => d.compositeScore), 1);
 
   const yScale = scaleBand()
     .domain(ranked.map((d) => d.country))
-    .range([0, heightInner])
+    .range([0, chartHeight])
     .padding(0.25);
 
   const xScale = scaleLinear()
-    .domain([0, Math.max(...ranked.map((d) => d.value), 1)])
-    .range([0, widthInner]);
+    .domain([0, maxComposite * 1.15])
+    .range([0, chartWidth]);
+
+  // ─── 7. Tooltip handlers ───
+  const handleMouseEnter = (country: string) => {
+    setHoveredCountry(country);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredCountry(null);
+    setTooltip(null);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent, country: string, values: Record<string, number>, composite: number) => {
+    const rect = (e.target as SVGRectElement).getBoundingClientRect();
+    setTooltip({
+      x: rect.left,
+      y: rect.top,
+      country,
+      values,
+      compositeScore: composite
+    });
+  };
+
+  if (!ranked.length) {
+    return (
+      <div className="flex items-center justify-center" style={{ width, height }}>
+        <p className="text-slate-500">No data available</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full">
 
-      {/* TOOLTIP */}
-      {tooltip && (
-        <div
-          className="absolute z-50 bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none"
-          style={{
-            left: tooltip.x + 10,
-            top: tooltip.y + 10,
-            transform: "translate(0,0)"
-          }}
-        >
-          <div className="font-semibold">{tooltip.country}</div>
-          <div>
-            {currentMetric.format(tooltip.value)}
-          </div>
-        </div>
-      )}
+      {/* ─── Header ─── */}
+      <div className="mb-4">
+        <h3 className="text-base font-semibold text-slate-800">
+          Regional Vulnerability Index
+        </h3>
+        <p className="text-sm text-slate-600">
+          Composite score across 7 key climate impact metrics
+        </p>
+      </div>
 
+      {/* ─── Summary Cards ─── */}
+      <div className="mb-4 grid grid-cols-3 gap-2">
+        <div className="rounded-lg bg-cyan-50 p-2 text-center">
+          <div className="text-lg font-bold text-cyan-700">
+            {topCountry?.country || "—"}
+          </div>
+          <div className="text-xs text-slate-500">Highest Vulnerability</div>
+        </div>
+        <div className="rounded-lg bg-amber-50 p-2 text-center">
+          <div className="text-lg font-bold text-amber-700">
+            {bottomCountry?.country || "—"}
+          </div>
+          <div className="text-xs text-slate-500">Lowest Vulnerability</div>
+        </div>
+        <div className="rounded-lg bg-purple-50 p-2 text-center">
+          <div className="text-lg font-bold text-purple-700">
+            {ranked.length}
+          </div>
+          <div className="text-xs text-slate-500">Countries Analyzed</div>
+        </div>
+      </div>
+
+      {/* ─── Chart ─── */}
       <svg width={width} height={height}>
-        <g transform="translate(120,40)">
+        <g transform={`translate(${leftMargin},${topMargin})`}>
+          {/* Country labels */}
           {ranked.map((d) => {
             const y = yScale(d.country)!;
-            const barWidth = xScale(d.value);
+            return (
+              <text
+                key={d.country}
+                x={-10}
+                y={y + yScale.bandwidth() / 2 + 4}
+                textAnchor="end"
+                fontSize={11}
+                fill={hoveredCountry === d.country ? "#0f172a" : "#475569"}
+                fontWeight={hoveredCountry === d.country ? "bold" : "normal"}
+              >
+                {d.country}
+              </text>
+            );
+          })}
+
+          {/* Bars */}
+          {ranked.map((d) => {
+            const y = yScale(d.country)!;
+            const barWidth = xScale(d.compositeScore);
+            const isHovered = hoveredCountry === d.country;
 
             return (
               <g key={d.country}>
-                <text
-                  x={-10}
-                  y={y + 12}
-                  textAnchor="end"
-                  fontSize={11}
-                  fill="#475569"
-                >
-                  {d.country}
-                </text>
-
+                {/* Bar */}
                 <AnimatedBar
                   x={0}
                   y={y}
                   width={barWidth}
                   height={yScale.bandwidth()}
-                  fill={currentMetric.gradientStart}
-                  isHovered={hoveredCountry === d.country}
-                  onMouseEnter={() => setHoveredCountry(d.country)}
-                  onMouseLeave={() => setHoveredCountry(null)}
+                  fill="url(#barGradient)"
+                  isHovered={isHovered}
+                  onMouseEnter={() => handleMouseEnter(d.country)}
+                  onMouseLeave={handleMouseLeave}
                 />
 
-                {/* hover capture layer */}
+                {/* Hover capture + tooltip trigger */}
                 <rect
                   x={0}
                   y={y}
                   width={barWidth}
                   height={yScale.bandwidth()}
                   fill="transparent"
-                  onMouseMove={(e) => {
-                    const rect = (e.target as SVGRectElement).getBoundingClientRect();
-                    setTooltip({
-                      x: rect.left,
-                      y: rect.top,
-                      country: d.country,
-                      value: d.value
-                    });
-                  }}
-                  onMouseLeave={() => setTooltip(null)}
+                  onMouseMove={(e) => handleMouseMove(e, d.country, d.values, d.compositeScore)}
+                  onMouseLeave={handleMouseLeave}
+                  style={{ cursor: "pointer" }}
                 />
+
+                {/* Composite score label */}
+                {barWidth > 40 && (
+                  <text
+                    x={barWidth - 6}
+                    y={y + yScale.bandwidth() / 2 + 4}
+                    textAnchor="end"
+                    fontSize={10}
+                    fill="#ffffff"
+                    fontWeight="600"
+                  >
+                    {d.compositeScore.toFixed(2)}
+                  </text>
+                )}
               </g>
             );
           })}
+
+          {/* X-axis label */}
+          <text
+            x={chartWidth / 2}
+            y={chartHeight + 30}
+            textAnchor="middle"
+            fontSize={11}
+            fill="#64748b"
+          >
+            Composite Vulnerability Score
+          </text>
+
+          {/* Gradient definition */}
+          <defs>
+            <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#0891b2" />
+              <stop offset="100%" stopColor="#06b6d4" />
+            </linearGradient>
+          </defs>
         </g>
       </svg>
+
+      {/* ─── Tooltip ─── */}
+      {tooltip && (
+        <div
+          className="absolute z-50 max-w-xs rounded-lg bg-slate-900 px-4 py-3 text-xs text-white shadow-lg pointer-events-none"
+          style={{
+            left: tooltip.x + 10,
+            top: tooltip.y - 20,
+            transform: "translate(0,0)"
+          }}
+        >
+          <div className="mb-1 font-semibold text-amber-300">{tooltip.country}</div>
+          <div className="mb-1 text-sm font-bold text-cyan-300">
+            Score: {tooltip.compositeScore.toFixed(2)}
+          </div>
+          <div className="border-t border-slate-700 pt-1 mt-1">
+            {METRIC_KEYS.map((key) => {
+              const config = METRIC_CONFIGS[key];
+              const val = tooltip.values[key] || 0;
+              return (
+                <div key={key} className="flex justify-between gap-4">
+                  <span style={{ color: config.color }}>{config.label}:</span>
+                  <span className="font-mono text-amber-300">{config.format(val)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Footer Insight ─── */}
+      {topCountry && bottomCountry && (
+        <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
+          <p>
+            {topCountry.country} has the highest composite vulnerability index,
+            while {bottomCountry.country} has the lowest across all 7 metrics.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
