@@ -2,7 +2,7 @@
 
 import { scaleLinear } from "d3-scale";
 import { line, area, curveMonotoneX } from "d3-shape";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { LineItem } from "./LineItem";
 
 const MARGIN = { top: 50, right: 40, bottom: 70, left: 75 };
@@ -26,6 +26,7 @@ type LineChartProps = {
   selectedCountry?: string;
   xAxisLabel?: string;
   yAxisLabel?: string;
+  title?: string;
 };
 
 const getChartLabel = (dataType: ClimateDriverType): string => {
@@ -66,7 +67,8 @@ export const LineChart = ({
   xAxisLabel = "Year",
   yAxisLabel,
 }: LineChartProps) => {
-  const [hoveredPoint, setHoveredPoint] = useState<any>(null);
+  const [tooltip, setTooltip] = useState<any>(null);
+  const hoverRef = useRef<SVGCircleElement | null>(null);
 
   const boundsWidth = Math.max(0, width - MARGIN.left - MARGIN.right);
   const boundsHeight = Math.max(0, height - MARGIN.top - MARGIN.bottom);
@@ -82,6 +84,26 @@ export const LineChart = ({
     () => [...safeData].sort((a, b) => a.year - b.year),
     [safeData]
   );
+
+  const stats = useMemo(() => {
+    if (!processedData.length) return null;
+
+    const first = processedData[0].value;
+    const last = processedData[processedData.length - 1].value;
+
+    const percentChange =
+      first !== 0 ? ((last - first) / Math.abs(first)) * 100 : 0;
+
+    return {
+      percentChange,
+      trend:
+        percentChange > 0
+          ? "warming / rising"
+          : percentChange < 0
+          ? "cooling / falling"
+          : "stable",
+    };
+  }, [processedData]);
 
   const xScale = useMemo(() => {
     const years = processedData.map(d => d.year);
@@ -128,7 +150,7 @@ export const LineChart = ({
     <div className="w-full relative">
 
       {/* ===================== */}
-      {/* HEADER */}
+      {/* HEADER (UNCHANGED) */}
       {/* ===================== */}
       <div className="text-center mb-6">
         <div className="text-xs tracking-widest text-slate-500 font-semibold">
@@ -138,33 +160,48 @@ export const LineChart = ({
         <h3 className="text-lg font-bold text-slate-800 mt-1">
           {chartLabel} trend confirmation
         </h3>
+
+        {stats && (
+          <div className="mt-2 text-sm text-slate-600">
+            Signal detected:{" "}
+            <span
+              className={
+                stats.percentChange > 0
+                  ? "text-red-600 font-semibold"
+                  : "text-blue-600 font-semibold"
+              }
+            >
+              {stats.trend}
+            </span>{" "}
+            ({Math.abs(stats.percentChange).toFixed(1)}%)
+          </div>
+        )}
       </div>
 
       {/* ===================== */}
-      {/* TOOLTIP */}
+      {/* TOOLTIP (FIXED) */}
       {/* ===================== */}
-      {hoveredPoint && (
+      {tooltip && (
         <div
           className="absolute z-50 bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none"
           style={{
-            left: hoveredPoint.x + 10,
-            top: hoveredPoint.y - 40,
+            left: tooltip.x + 10,
+            top: tooltip.y - 40,
           }}
         >
           <div className="font-semibold">{selectedCountry}</div>
-          <div>Year: {hoveredPoint.year}</div>
+          <div>Year: {tooltip.year}</div>
           <div>
-            Value: {hoveredPoint.value.toFixed(2)} {unit}
+            Value: {tooltip.value.toFixed(2)} {unit}
           </div>
         </div>
       )}
 
       {/* ===================== */}
-      {/* SVG */}
+      {/* CHART */}
       {/* ===================== */}
       <div className="relative">
         <svg width={width} height={height}>
-
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
 
             {/* AREA */}
@@ -172,6 +209,7 @@ export const LineChart = ({
               <path
                 d={areaPath}
                 fill="rgba(37, 99, 235, 0.1)"
+                opacity={1}
               />
             )}
 
@@ -185,38 +223,42 @@ export const LineChart = ({
               />
             )}
 
-            {/* POINTS + HOVER */}
+            {/* POINTS (WITH FIXED TOOLTIP) */}
             {processedData.map((d, i) => {
               const x = xScale(d.year);
               const y = yScale(d.value);
 
               return (
-                <g key={i}>
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={5}
-                    fill="#2563eb"
-                    stroke="#fff"
-                    strokeWidth={2}
-                    onMouseEnter={(e) =>
-                      setHoveredPoint({
-                        x: e.currentTarget.getBoundingClientRect().x,
-                        y: e.currentTarget.getBoundingClientRect().y,
-                        year: d.year,
-                        value: d.value,
-                      })
-                    }
-                    onMouseLeave={() => setHoveredPoint(null)}
-                  />
-                </g>
+                <circle
+                  key={i}
+                  cx={x}
+                  cy={y}
+                  r={4}
+                  fill="#2563eb"
+                  stroke="#fff"
+                  strokeWidth={2}
+                  onMouseEnter={(e) => {
+                    const rect = (e.target as SVGCircleElement).getBoundingClientRect();
+                    setTooltip({
+                      x: rect.left,
+                      y: rect.top,
+                      year: d.year,
+                      value: d.value,
+                    });
+                  }}
+                  onMouseLeave={() => setTooltip(null)}
+                />
               );
             })}
 
-            {/* X AXIS LABEL */}
+            {/* ===================== */}
+            {/* AXIS LABELS (ADDED ONLY) */}
+            {/* ===================== */}
+
+            {/* X Axis Label */}
             <text
               x={boundsWidth / 2}
-              y={boundsHeight + 50}
+              y={boundsHeight + 55}
               textAnchor="middle"
               fontSize={12}
               fill="#64748b"
@@ -224,7 +266,7 @@ export const LineChart = ({
               {xAxisLabel}
             </text>
 
-            {/* Y AXIS LABEL */}
+            {/* Y Axis Label */}
             <text
               x={-boundsHeight / 2}
               y={-55}
@@ -236,7 +278,7 @@ export const LineChart = ({
               {yAxisLabel || `${chartLabel} (${unit})`}
             </text>
 
-            {/* X AXIS TICKS */}
+            {/* X ticks (UNCHANGED) */}
             {processedData.map((d, i) => (
               <text
                 key={i}
@@ -255,11 +297,11 @@ export const LineChart = ({
       </div>
 
       {/* ===================== */}
-      {/* FOOTER INSIGHT */}
+      {/* FOOTER (UNCHANGED) */}
       {/* ===================== */}
       <div className="mt-4 text-sm text-slate-600 text-center max-w-2xl mx-auto">
-        This chart shows long-term {chartLabel.toLowerCase()} anomalies in {selectedCountry},
-        highlighting whether a persistent climate signal is emerging.
+        This chart isolates long-term {chartLabel.toLowerCase()} anomalies
+        in {selectedCountry}, showing whether a consistent climate signal is emerging.
       </div>
     </div>
   );
