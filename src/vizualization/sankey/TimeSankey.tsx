@@ -6,113 +6,134 @@ type Props = {
   data: any[];
   selectedCountry: string;
   width: number;
+  height: number;
 };
 
-const DRIVERS = [
+const VARIABLES = [
   { key: "temp", label: "Temp" },
   { key: "sea_surface_temperature", label: "Sea Temp" },
   { key: "sea", label: "Sea Level" },
   { key: "rainfall", label: "Rainfall" },
-];
-
-const OUTCOMES = [
   { key: "crop_yield", label: "Crops" },
   { key: "lifestock_yield", label: "Livestock" },
-  { key: "climate_altering_land", label: "Land" },
   { key: "loss", label: "Economic Loss" },
   { key: "people", label: "People" },
 ];
 
-function norm(v: number) {
-  return Math.max(0, Math.min(1, Math.abs(v)));
+function corr(x: number[], y: number[]) {
+  const n = x.length;
+  const mx = x.reduce((a, b) => a + b, 0) / n;
+  const my = y.reduce((a, b) => a + b, 0) / n;
+
+  let num = 0;
+  let dx = 0;
+  let dy = 0;
+
+  for (let i = 0; i < n; i++) {
+    const vx = x[i] - mx;
+    const vy = y[i] - my;
+    num += vx * vy;
+    dx += vx * vx;
+    dy += vy * vy;
+  }
+
+  return num / Math.sqrt(dx * dy || 1);
 }
 
-export default function CausalImpactMatrix({
+export default function ClimateSystemCorrelationNetwork({
   data,
   selectedCountry,
   width,
+  height,
 }: Props) {
   const filtered = useMemo(
     () => data.filter(d => d.country === selectedCountry),
     [data, selectedCountry]
   );
 
-  const latest = filtered[filtered.length - 1];
-
   const matrix = useMemo(() => {
-    if (!latest) return [];
+    const result: number[][] = [];
 
-    return DRIVERS.map(driver => {
-      const dVal = norm(latest[driver.key] || 0);
+    VARIABLES.forEach(v1 => {
+      const row: number[] = [];
 
-      return OUTCOMES.map(outcome => {
-        const oVal = norm(latest[outcome.key] || 0);
+      VARIABLES.forEach(v2 => {
+        const x = filtered.map(d => d[v1.key] || 0);
+        const y = filtered.map(d => d[v2.key] || 0);
 
-        // 🔥 SAME INTUITION AS YOUR SANKEY (not fake causality, just coupling strength)
-        return Math.min(1, (dVal * 0.7 + oVal * 0.3));
+        row.push(corr(x, y));
       });
+
+      result.push(row);
     });
-  }, [latest]);
 
-  const cell = Math.min(80, (width - 140) / OUTCOMES.length);
+    return result;
+  }, [filtered]);
 
-  if (!latest) {
+  const cellSize = Math.min(60, (width - 120) / VARIABLES.length);
+
+  if (!filtered.length) {
     return (
       <div className="text-sm text-slate-500">
-        No data available for matrix
+        No data available for correlation model
       </div>
     );
   }
 
   return (
-    <div className="w-full mt-10">
+    <div className="w-full mt-8">
       <h3 className="text-base font-semibold text-slate-800 mb-1">
-        System Coupling Matrix
+        Climate System Correlation Model
       </h3>
-      <p className="text-xs text-slate-500 mb-4">
-        Shows relative strength between climate drivers and downstream impacts.
+      <p className="text-xs text-slate-600 mb-4">
+        Statistical relationships across climate, environmental, economic, and human systems.
       </p>
 
-      <svg width={width} height={260}>
-        {/* Column labels */}
-        {OUTCOMES.map((o, i) => (
+      <svg width={width} height={width}>
+        {/* Labels */}
+        {VARIABLES.map((v, i) => (
           <text
-            key={o.key}
-            x={120 + i * cell}
+            key={v.key}
+            x={100 + i * cellSize}
             y={20}
-            fontSize={10}
+            fontSize={9}
             fill="#475569"
             textAnchor="middle"
           >
-            {o.label}
+            {v.label}
           </text>
         ))}
 
-        {/* Rows */}
-        {DRIVERS.map((d, row) => (
-          <g key={d.key}>
+        {VARIABLES.map((v1, row) => (
+          <g key={v1.key}>
             <text
               x={10}
-              y={60 + row * cell}
-              fontSize={10}
+              y={60 + row * cellSize}
+              fontSize={9}
               fill="#64748b"
             >
-              {d.label}
+              {v1.label}
             </text>
 
-            {OUTCOMES.map((_, col) => {
-              const val = matrix[row][col];
+            {VARIABLES.map((v2, col) => {
+              const value = matrix[row][col];
+
+              const intensity = Math.abs(value);
+              const color =
+                value > 0
+                  ? `rgba(239,68,68,${intensity})`
+                  : `rgba(59,130,246,${intensity})`;
 
               return (
                 <rect
-                  key={col}
-                  x={110 + col * cell}
-                  y={40 + row * cell}
-                  width={cell - 6}
-                  height={cell - 6}
-                  rx={6}
-                  fill={`rgba(14,165,233,${val})`}
+                  key={v2.key}
+                  x={90 + col * cellSize}
+                  y={40 + row * cellSize}
+                  width={cellSize - 4}
+                  height={cellSize - 4}
+                  fill={color}
                   stroke="#e2e8f0"
+                  rx={4}
                 />
               );
             })}
