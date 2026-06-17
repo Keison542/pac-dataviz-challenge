@@ -21,52 +21,65 @@ type Props = {
 const MARGIN = {
   top: 50,
   right: 40,
-  bottom: 100,
-  left: 140,
+  bottom: 110,
+  left: 150,
 };
 
-// AnimatedBubble component - similar to LineItem but for circles
-const AnimatedBubble = ({ 
-  cx, cy, r, fill, fillOpacity, stroke, strokeWidth, 
-  isLargest, isHovered, onMouseEnter, onMouseLeave 
+/**
+ * Animated bubble emphasizing human impact (livelihood disruption)
+ */
+const AnimatedBubble = ({
+  cx,
+  cy,
+  r,
+  fill,
+  fillOpacity,
+  stroke,
+  strokeWidth,
+  isLargest,
+  isHovered,
+  onMouseEnter,
+  onMouseLeave,
 }: any) => {
   const springProps = useSpring({
-    r: isHovered ? r + 4 : r,
-    fillOpacity: isHovered ? 1 : fillOpacity,
+    r: isHovered ? r + 5 : r,
+    fillOpacity: isHovered ? 0.95 : fillOpacity,
     strokeWidth: isHovered ? 3 : strokeWidth,
     config: { tension: 200, friction: 20 },
   });
 
   const glowSpring = useSpring({
-    opacity: isHovered ? 0.4 : 0,
+    opacity: isHovered ? 0.35 : 0,
     config: { tension: 200, friction: 20 },
   });
 
   return (
     <>
-      {/* Outer glow for largest bubble */}
+      {/* Highlight for largest livelihood disruption event */}
       {isLargest && !isHovered && (
         <circle
           cx={cx}
           cy={cy}
-          r={r + 4}
+          r={r + 5}
           fill="none"
           stroke={stroke}
           strokeWidth="2"
-          opacity="0.3"
+          opacity="0.25"
         />
       )}
-      {/* Glow effect on hover */}
+
+      {/* Hover glow */}
       {isHovered && (
         <animated.circle
           cx={cx}
           cy={cy}
-          r={r + 8}
+          r={r + 10}
           fill={fill}
           opacity={glowSpring.opacity}
           style={{ filter: "blur(6px)" }}
         />
       )}
+
       <animated.circle
         cx={cx}
         cy={cy}
@@ -83,22 +96,16 @@ const AnimatedBubble = ({
   );
 };
 
-export function BubbleChart({
-  width,
-  height,
-  data
-}: Props) {
+export function BubbleChart({ width, height, data }: Props) {
   const [hovered, setHovered] = useState<DataPoint | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [isClient, setIsClient] = useState(false);
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => setIsClient(true), []);
 
   const countries = useMemo(
     () => Array.from(new Set(data.map((d) => d.country))).sort(),
@@ -110,34 +117,33 @@ export function BubbleChart({
     [data]
   );
 
-  const maxValue = useMemo(() => Math.max(...data.map((d) => d.value), 1), [data]);
-  const totalAffected = useMemo(() => data.reduce((sum, d) => sum + d.value, 0), [data]);
-  
+  const maxValue = useMemo(
+    () => Math.max(...data.map((d) => d.value), 1),
+    [data]
+  );
+
+  const totalAffected = useMemo(
+    () => data.reduce((s, d) => s + d.value, 0),
+    [data]
+  );
+
   const largestEvent = useMemo(() => {
-    return data.reduce((max, d) => d.value > max.value ? d : max, data[0]);
+    return data.reduce((max, d) => (d.value > max.value ? d : max), data[0]);
   }, [data]);
 
-  const yearTotals = useMemo(() => {
-    const totals = new Map<number, number>();
-    data.forEach(d => {
-      totals.set(d.year, (totals.get(d.year) || 0) + d.value);
+  const worstYear = useMemo(() => {
+    const map = new Map<number, number>();
+    data.forEach((d) => {
+      map.set(d.year, (map.get(d.year) || 0) + d.value);
     });
-    let maxYear = 0;
-    let maxTotal = 0;
-    totals.forEach((total, year) => {
-      if (total > maxTotal) {
-        maxTotal = total;
-        maxYear = year;
-      }
-    });
-    return { year: maxYear, total: maxTotal };
-  }, [data]);
 
-  const xAxisTicks = useMemo(() => {
-    const maxTicks = Math.max(5, Math.min(8, Math.floor(boundsWidth / 80)));
-    const step = Math.ceil(years.length / maxTicks);
-    return years.filter((_, i) => i % step === 0);
-  }, [years, boundsWidth]);
+    let best = { year: 0, total: 0 };
+    map.forEach((total, year) => {
+      if (total > best.total) best = { year, total };
+    });
+
+    return best;
+  }, [data]);
 
   const xScale = useMemo(
     () =>
@@ -158,159 +164,163 @@ export function BubbleChart({
   );
 
   const radiusScale = useMemo(
-    () => scaleSqrt().domain([0, maxValue]).range([4, 38]),
+    () => scaleSqrt().domain([0, maxValue]).range([4, 42]),
     [maxValue]
   );
 
+  /**
+   * Human impact severity scale (livelihood framing)
+   */
   const colorScale = (value: number) => {
-    if (value > maxValue * 0.8) return "#e11d48";
-    if (value > maxValue * 0.5) return "#f43f5e";
-    if (value > maxValue * 0.3) return "#fb7185";
-    return "#fda4af";
+    const ratio = value / maxValue;
+
+    if (ratio > 0.8) return "#b91c1c"; // catastrophic livelihood loss
+    if (ratio > 0.5) return "#ef4444"; // severe displacement
+    if (ratio > 0.3) return "#f97316"; // major disruption
+    return "#f59e0b"; // moderate/localized impact
   };
 
-  const formatNumber = (value: number): string => {
+  const formatNumber = (value: number) => {
     if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
     if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
     return value.toString();
   };
 
-  const handleBubbleHover = useCallback((event: React.MouseEvent, point: DataPoint | null) => {
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-    
-    if (point) {
-      // Position tooltip near cursor
-      const mouseX = event.clientX;
-      const mouseY = event.clientY;
-      setTooltipPosition({ x: mouseX + 15, y: mouseY - 40 });
-      setHovered(point);
-    } else {
-      hoverTimerRef.current = setTimeout(() => {
-        setHovered(null);
-      }, 100);
-    }
-  }, []);
+  const handleBubbleHover = useCallback(
+    (event: React.MouseEvent, point: DataPoint | null) => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
 
-  // Cleanup timer on unmount
+      if (point) {
+        setTooltipPosition({
+          x: event.clientX + 15,
+          y: event.clientY - 40,
+        });
+        setHovered(point);
+      } else {
+        hoverTimerRef.current = setTimeout(() => setHovered(null), 80);
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     return () => {
-      if (hoverTimerRef.current) {
-        clearTimeout(hoverTimerRef.current);
-      }
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     };
   }, []);
 
   if (!isClient) {
     return (
-      <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white" style={{ width, height }}>
-        <div className="text-center">
-          <div className="animate-pulse">Loading chart...</div>
-        </div>
+      <div className="flex items-center justify-center border rounded-xl bg-white"
+        style={{ width, height }}>
+        Loading chart...
       </div>
     );
   }
 
   if (!data.length) {
     return (
-      <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white" style={{ width, height }}>
-        <div className="text-center">
-          <div className="text-4xl mb-2 opacity-30">○</div>
-          <p className="text-sm text-slate-500">No data available</p>
-        </div>
+      <div className="flex items-center justify-center border rounded-xl bg-white"
+        style={{ width, height }}>
+        No livelihood impact data available
       </div>
     );
   }
 
   return (
     <div className="w-full">
+
+      {/* 👇 LIVELIHOOD-FOCUSED SUMMARY */}
       <div className="mb-5 grid grid-cols-3 gap-2">
-        <div className="text-center p-2 bg-rose-50 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
+        <div className="p-2 bg-rose-50 rounded-lg text-center">
           <div className="text-lg font-bold text-rose-700">
             {formatNumber(totalAffected)}
           </div>
-          <div className="text-xs text-slate-500">total people affected</div>
+          <div className="text-xs text-slate-500">
+            people impacted across region
+          </div>
         </div>
-        <div className="text-center p-2 bg-amber-50 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
-          <div className="text-lg font-bold text-amber-700">
+
+        <div className="p-2 bg-orange-50 rounded-lg text-center">
+          <div className="text-lg font-bold text-orange-700">
             {formatNumber(largestEvent?.value || 0)}
           </div>
-          <div className="text-xs text-slate-500">largest single event</div>
-          <div className="text-[10px] text-slate-400">{largestEvent?.country}, {largestEvent?.year}</div>
-        </div>
-        <div className="text-center p-2 bg-emerald-50 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
-          <div className="text-lg font-bold text-emerald-700">
-            {yearTotals.year || "—"}
+          <div className="text-xs text-slate-500">
+            worst single livelihood shock
           </div>
-          <div className="text-xs text-slate-500">worst year</div>
-          <div className="text-[10px] text-slate-400">{formatNumber(yearTotals.total)} affected</div>
+          <div className="text-[10px] text-slate-400">
+            {largestEvent?.country}, {largestEvent?.year}
+          </div>
+        </div>
+
+        <div className="p-2 bg-amber-50 rounded-lg text-center">
+          <div className="text-lg font-bold text-amber-700">
+            {worstYear.year || "—"}
+          </div>
+          <div className="text-xs text-slate-500">
+            most disrupted year
+          </div>
+          <div className="text-[10px] text-slate-400">
+            {formatNumber(worstYear.total)} affected
+          </div>
         </div>
       </div>
 
-      {largestEvent && (
-          <p className="text-sm text-slate-700 leading-relaxed">
-            The data reveals that {largestEvent.country} experienced the 
-            single largest disaster impact in {largestEvent.year}, with{' '}
-            {largestEvent.value.toLocaleString()} people affected.
-            {yearTotals.year && ` The most devastating year across all Pacific nations was ${yearTotals.year}, when ${formatNumber(yearTotals.total)} people were displaced or impacted.`}
-          </p>
-      )}
+      {/* INSIGHT */}
+      <p className="text-sm text-slate-700 leading-relaxed mb-4">
+        This view highlights how disasters translate into real livelihood disruption across countries and years.
+        The most severe impact was recorded in {largestEvent?.country} ({largestEvent?.year}),
+        affecting {formatNumber(largestEvent?.value || 0)} people.
+      </p>
 
-      <div className="mb-3 flex flex-wrap items-center gap-4 text-xs">
+      {/* LEGEND */}
+      <div className="mb-3 flex flex-wrap items-center gap-3 text-xs">
         <span className="text-slate-500">Bubble size = people affected</span>
-        <div className="flex items-center gap-2">
-          <span className="text-slate-500">Severity:</span>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-rose-500"></div>
-            <span className="text-slate-400">High</span>
-            <div className="w-3 h-3 rounded-full bg-rose-300 ml-2"></div>
-            <span className="text-slate-400">Medium</span>
-            <div className="w-3 h-3 rounded-full bg-rose-200 ml-2"></div>
-            <span className="text-slate-400">Low</span>
-          </div>
-        </div>
+        <span className="text-slate-500">Color = severity of livelihood disruption</span>
       </div>
 
+      {/* CHART */}
       <div className="relative">
         <svg width={width} height={height} className="overflow-visible">
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-            {xAxisTicks.map((year) => {
-              const xPos = (xScale(year) ?? 0) + xScale.bandwidth() / 2;
+
+            {/* GRID */}
+            {years.map((year) => {
+              const x = (xScale(year) ?? 0) + xScale.bandwidth() / 2;
               return (
                 <line
-                  key={`grid-${year}`}
-                  x1={xPos}
-                  x2={xPos}
+                  key={year}
+                  x1={x}
+                  x2={x}
                   y1={0}
                   y2={boundsHeight}
-                  stroke="#e2e8f0"
-                  strokeWidth="1"
-                  strokeDasharray="4 4"
+                  stroke="#eef2f7"
                 />
               );
             })}
 
-            {countries.map((country) => (
-              <line
-                key={country}
-                x1={0}
-                x2={boundsWidth}
-                y1={(yScale(country) ?? 0) + yScale.bandwidth() / 2}
-                y2={(yScale(country) ?? 0) + yScale.bandwidth() / 2}
-                stroke="#f1f5f9"
-                strokeWidth="1"
-              />
-            ))}
+            {countries.map((c) => {
+              const y = (yScale(c) ?? 0) + yScale.bandwidth() / 2;
+              return (
+                <line
+                  key={c}
+                  x1={0}
+                  x2={boundsWidth}
+                  y1={y}
+                  y2={y}
+                  stroke="#f1f5f9"
+                />
+              );
+            })}
 
+            {/* BUBBLES */}
             {data.map((d, i) => {
               const cx = (xScale(d.year) ?? 0) + xScale.bandwidth() / 2;
               const cy = (yScale(d.country) ?? 0) + yScale.bandwidth() / 2;
+
               const r = radiusScale(d.value);
               const isLargest = d === largestEvent;
               const isHovered = hovered === d;
-              const bubbleColor = colorScale(d.value);
 
               return (
                 <AnimatedBubble
@@ -318,160 +328,49 @@ export function BubbleChart({
                   cx={cx}
                   cy={cy}
                   r={r}
-                  fill={bubbleColor}
+                  fill={colorScale(d.value)}
                   fillOpacity={0.85}
-                  stroke="#e11d48"
-                  strokeWidth={isLargest ? 3 : 1.5}
+                  stroke="#fff"
+                  strokeWidth={isLargest ? 2.5 : 1}
                   isLargest={isLargest}
                   isHovered={isHovered}
-                  onMouseEnter={(e: React.MouseEvent) => handleBubbleHover(e, d)}
-                  onMouseLeave={(e: React.MouseEvent) => handleBubbleHover(e, null)}
+                  onMouseEnter={(e: React.MouseEvent) =>
+                    handleBubbleHover(e, d)
+                  }
+                  onMouseLeave={(e: React.MouseEvent) =>
+                    handleBubbleHover(e, null)
+                  }
                 />
               );
             })}
 
-            {data.map((d, i) => {
-              const cx = (xScale(d.year) ?? 0) + xScale.bandwidth() / 2;
-              const cy = (yScale(d.country) ?? 0) + yScale.bandwidth() / 2;
-              const r = radiusScale(d.value);
-              const isHovered = hovered === d;
-              
-              if (r <= 25) return null;
-              
-              return (
-                <text
-                  key={`label-${i}`}
-                  x={cx}
-                  y={cy + 3}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontSize={isHovered ? "10" : "9"}
-                  fontWeight="bold"
-                  fill="#ffffff"
-                  className="pointer-events-none transition-all duration-200"
-                  style={{
-                    transform: isHovered ? "scale(1.05)" : "scale(1)",
-                    transition: "all 0.2s ease"
-                  }}
-                >
-                  {formatNumber(d.value)}
-                </text>
-              );
-            })}
-
-            {xAxisTicks.map((year) => {
-              const xPos = (xScale(year) ?? 0) + xScale.bandwidth() / 2;
-              const isWorstYear = year === yearTotals.year;
-              
-              return (
-                <g key={`x-tick-${year}`}>
-                  <line
-                    x1={xPos}
-                    y1={boundsHeight}
-                    x2={xPos}
-                    y2={boundsHeight + 5}
-                    stroke="#94a3b8"
-                    strokeWidth="1"
-                  />
-                  <text
-                    x={xPos}
-                    y={boundsHeight + 20}
-                    textAnchor="start"
-                    fontSize={isWorstYear ? "11" : "10"}
-                    fill={isWorstYear ? "#d97706" : "#64748b"}
-                    fontWeight={isWorstYear ? "bold" : "normal"}
-                    transform={`rotate(45, ${xPos}, ${boundsHeight + 20})`}
-                    className="select-none whitespace-nowrap"
-                  >
-                    {year}
-                    {isWorstYear && " ●"}
-                  </text>
-                </g>
-              );
-            })}
-
-            {countries.map((country) => {
-              const yPos = (yScale(country) ?? 0) + yScale.bandwidth() / 2;
-              const isLargestCountry = country === largestEvent?.country;
-              const isHoveredCountry = hovered?.country === country;
-              
-              return (
-                <g key={`y-tick-${country}`}>
-                  <line
-                    x1={-5}
-                    y1={yPos}
-                    x2={0}
-                    y2={yPos}
-                    stroke="#94a3b8"
-                    strokeWidth="1"
-                  />
-                  <text
-                    x={-12}
-                    y={yPos + 3}
-                    textAnchor="end"
-                    dominantBaseline="middle"
-                    fontSize="11"
-                    fill={isLargestCountry ? "#e11d48" : (isHoveredCountry ? "#f43f5e" : "#475569")}
-                    fontWeight={isLargestCountry || isHoveredCountry ? "bold" : "normal"}
-                    className="select-none transition-all duration-200"
-                    style={{
-                      transform: isHoveredCountry ? "translateX(-4px)" : "translateX(0)",
-                      transition: "transform 0.2s ease"
-                    }}
-                  >
-                    {country}
-                    {isLargestCountry && " "}
-                  </text>
-                </g>
-              );
-            })}
-
-            <text
-              x={boundsWidth / 2}
-              y={boundsHeight + 65}
-              textAnchor="middle"
-              fill="#64748b"
-              fontSize="11"
-              fontWeight="500"
-            >
-              Year
-            </text>
           </g>
         </svg>
 
-        {/* Tooltip - Positioned near cursor */}
+        {/* TOOLTIP */}
         {hovered && (
           <div
             style={{
-              position: 'fixed',
+              position: "fixed",
               left: tooltipPosition.x,
               top: tooltipPosition.y,
-              backgroundColor: 'white',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              padding: '10px 14px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              zIndex: 99999,
-              pointerEvents: 'none',
-              minWidth: '160px',
+              background: "white",
+              border: "1px solid #e2e8f0",
+              padding: "10px 12px",
+              borderRadius: 8,
+              boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
+              minWidth: 160,
+              pointerEvents: "none",
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#e11d48' }}></div>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155' }}>
-                {hovered.country} • {hovered.year}
-              </span>
+            <div style={{ fontSize: 11, color: "#475569" }}>
+              {hovered.country} • {hovered.year}
             </div>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: '#e11d48' }}>
-              {hovered.value.toLocaleString()}
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>
+              {formatNumber(hovered.value)}
             </div>
-            <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
-              people affected by disasters
-            </div>
-            <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
-              {hovered.value > 100000 ? "Catastrophic event" : 
-               hovered.value > 50000 ? "Major disaster" : 
-               hovered.value > 10000 ? "Significant impact" : "Regional impact"}
+            <div style={{ fontSize: 10, color: "#64748b" }}>
+              people affected → livelihood disruption
             </div>
           </div>
         )}
