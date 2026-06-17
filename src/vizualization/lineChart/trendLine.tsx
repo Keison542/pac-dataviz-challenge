@@ -1,259 +1,185 @@
 "use client";
 
 import { scaleLinear } from "d3-scale";
-import { useMemo, useState, useRef, useEffect } from "react";
-import { line, curveCardinal } from "d3-shape";
-import { LineItem } from "@/vizualization/lineChart/LineItem";
+import { line, area, curveMonotoneX } from "d3-shape";
+import { useState, useMemo, useEffect } from "react";
+import { LineItem } from "./LineItem";
 
-const MARGIN = { top: 60, right: 60, bottom: 90, left: 110 };
+const MARGIN = { top: 50, right: 40, bottom: 70, left: 75 };
 
-export type UnifiedDatum = {
-  country: string;
+export type ClimateDriverType =
+  | "surfaceTempAnomaly"
+  | "seaSurfaceTempAnomaly"
+  | "precipitationAnomaly"
+  | "seaLevelAnomaly";
+
+type ClimateDataPoint = {
   year: number;
   value: number;
 };
 
-type Props = {
+type LineChartProps = {
   width: number;
   height: number;
-  data: UnifiedDatum[];
+  data: ClimateDataPoint[];
+  dataType: ClimateDriverType;
   selectedCountry?: string;
-  setSelectedCountry: (c: string) => void;
-  highlightMode?: "economic" | "human" | "system";
+  xAxisLabel?: string;
+  yAxisLabel?: string;
+  title?: string;
 };
 
-export const TrendLine = ({
+export const LineChart = ({
   width,
   height,
   data,
-  selectedCountry,
-  setSelectedCountry,
-  highlightMode = "economic",
-}: Props) => {
-  const [hoveredPoint, setHoveredPoint] = useState<UnifiedDatum | null>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
+  dataType,
+  selectedCountry = "Selected Country",
+  xAxisLabel = "Year",
+  yAxisLabel = "Value",
+}: LineChartProps) => {
+  const [tooltip, setTooltip] = useState<any>(null);
+  const [animate, setAnimate] = useState(false);
 
-  const boundsWidth = width - MARGIN.left - MARGIN.right;
-  const boundsHeight = height - MARGIN.top - MARGIN.bottom;
+  const boundsWidth = Math.max(0, width - MARGIN.left - MARGIN.right);
+  const boundsHeight = Math.max(0, height - MARGIN.top - MARGIN.bottom);
 
-  // ----------------------------
-  // DATA AGGREGATION
-  // ----------------------------
-  const trendData = useMemo(() => {
-    const map = new Map<number, number>();
-
-    data.forEach((d) => {
-      map.set(d.year, (map.get(d.year) || 0) + (d.value || 0));
-    });
-
-    return Array.from(map.entries())
-      .map(([year, value]) => ({ year, value }))
-      .sort((a, b) => a.year - b.year);
+  const safeData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
+    return data.filter(d => d && typeof d.year === "number" && typeof d.value === "number");
   }, [data]);
 
-  const maxValue = Math.max(...trendData.map((d) => d.value), 1);
-
-  // ----------------------------
-  // SCALES
-  // ----------------------------
-  const xScale = useMemo(
-    () =>
-      scaleLinear()
-        .domain([
-          trendData[0]?.year ?? 0,
-          trendData.at(-1)?.year ?? 1,
-        ])
-        .range([0, boundsWidth]),
-    [trendData, boundsWidth]
+  const processedData = useMemo(
+    () => [...safeData].sort((a, b) => a.year - b.year),
+    [safeData]
   );
 
-  const yScale = useMemo(
+  const xScale = useMemo(() => {
+    const years = processedData.map(d => d.year);
+    return scaleLinear()
+      .domain([Math.min(...years), Math.max(...years)])
+      .range([0, boundsWidth]);
+  }, [processedData, boundsWidth]);
+
+  const yScale = useMemo(() => {
+    const values = processedData.map(d => d.value);
+    return scaleLinear()
+      .domain([Math.min(...values), Math.max(...values)])
+      .range([boundsHeight, 0]);
+  }, [processedData, boundsHeight]);
+
+  const lineBuilder = useMemo(
     () =>
-      scaleLinear()
-        .domain([0, maxValue * 1.1])
-        .range([boundsHeight, 0]),
-    [maxValue, boundsHeight]
+      line<any>()
+        .x(d => xScale(d.year))
+        .y(d => yScale(d.value))
+        .curve(curveMonotoneX),
+    [xScale, yScale]
   );
 
-  // ----------------------------
-  // LINE PATH
-  // ----------------------------
-  const linePath = useMemo(() => {
-    return (
-      line<{ year: number; value: number }>()
-        .x((d) => xScale(d.year))
-        .y((d) => yScale(d.value))
-        .curve(curveCardinal.tension(0.7))(trendData) || ""
-    );
-  }, [trendData, xScale, yScale]);
+  const areaBuilder = useMemo(
+    () =>
+      area<any>()
+        .x(d => xScale(d.year))
+        .y0(boundsHeight)
+        .y1(d => yScale(d.value))
+        .curve(curveMonotoneX),
+    [xScale, yScale, boundsHeight]
+  );
 
-  // ----------------------------
-  // KEY STORY POINTS
-  // ----------------------------
-  const worstPoint = useMemo(() => {
-    return trendData.reduce((max, d) =>
-      d.value > max.value ? d : max,
-      trendData[0]
-    );
-  }, [trendData]);
+  useEffect(() => {
+    setAnimate(false);
+    const t = setTimeout(() => setAnimate(true), 80);
+    return () => clearTimeout(t);
+  }, [data]);
 
-  const first = trendData[0];
-  const last = trendData.at(-1);
+  if (!processedData.length) return null;
 
-  const growth =
-    first && last && first.value !== 0
-      ? ((last.value - first.value) / first.value) * 100
-      : 0;
-
-  // ----------------------------
-  // NARRATIVE TEXT (adaptive to section 2)
-  // ----------------------------
-  const narrative =
-    highlightMode === "economic"
-      ? "Economic losses signal the first structural stress in livelihoods."
-      : highlightMode === "human"
-      ? "Rising impacts translate directly into human exposure."
-      : "Long-term livelihood systems begin reorganizing under climate pressure.";
-
-  const format = (v: number) =>
-    v >= 1e6
-      ? `${(v / 1e6).toFixed(1)}M`
-      : v >= 1e3
-      ? `${(v / 1e3).toFixed(0)}K`
-      : v.toString();
-
-  if (!trendData.length) {
-    return (
-      <div className="flex items-center justify-center text-sm text-slate-500">
-        No livelihood data available
-      </div>
-    );
-  }
+  const linePath = lineBuilder(processedData);
+  const areaPath = areaBuilder(processedData);
 
   return (
-    <div className="w-full font-sans">
+    <div className="w-full relative">
 
-      {/* =========================
-          NARRATIVE HEADER (NOT KPI GRID)
-      ========================== */}
-      <div className="mb-4 text-center max-w-xl mx-auto">
-        <div className="text-sm font-medium text-slate-700">
-          Livelihood Pressure Curve
-        </div>
-
-        <p className="text-xs text-slate-500 mt-1">
-          {narrative}
+      {/* HEADER */}
+      <div className="text-center mb-6">
+        <h3 className="text-lg font-bold text-slate-800">
+          Climate Signal: {dataType}
+        </h3>
+        <p className="text-xs text-slate-500">
+          Trend visualization for {selectedCountry}
         </p>
-
-        <div className="text-[11px] text-slate-400 mt-2">
-          Growth: {growth.toFixed(1)}% · Peak impact year: {worstPoint?.year}
-        </div>
       </div>
 
-      {/* =========================
-          CHART
-      ========================== */}
-      <div className="relative">
-        <svg
-          ref={svgRef}
-          width={width}
-          height={height}
-          className="overflow-visible"
-        >
-          <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+      {/* SVG */}
+      <svg width={width} height={height}>
+        <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
 
-            {/* SOFT GRID (reduced visual dominance) */}
-            <line
-              x1={0}
-              x2={boundsWidth}
-              y1={yScale(0)}
-              y2={yScale(0)}
-              stroke="#e2e8f0"
-              strokeWidth={1}
-            />
+          {/* AREA */}
+          {areaPath && (
+            <path d={areaPath} fill="#60a5fa" opacity={0.15} />
+          )}
 
-            {/* AREA BACKGROUND */}
-            <path
-              d={`${linePath} L ${xScale(last?.year || 0)} ${boundsHeight} L ${xScale(first?.year || 0)} ${boundsHeight} Z`}
-              fill="#06b6d4"
-              opacity={0.12}
-            />
-
-            {/* MAIN LINE */}
+          {/* LINE */}
+          {linePath && (
             <LineItem
               path={linePath}
-              color={
-                highlightMode === "human"
-                  ? "#0ea5e9"
-                  : highlightMode === "system"
-                  ? "#14b8a6"
-                  : "#06b6d4"
-              }
-              opacity={0.9}
+              color="#2563eb"
               strokeWidth={3}
+              opacity={animate ? 1 : 0}
               onHover={() => {}}
             />
+          )}
 
-            {/* STORY PEAK MARKER */}
-            {worstPoint && (
-              <circle
-                cx={xScale(worstPoint.year)}
-                cy={yScale(worstPoint.value)}
-                r={6}
-                fill="#ef4444"
-                opacity={0.9}
-              />
-            )}
+          {/* POINTS WITH TOOLTIP */}
+          {processedData.map((d, i) => (
+            <circle
+              key={i}
+              cx={xScale(d.year)}
+              cy={yScale(d.value)}
+              r={4}
+              fill="#2563eb"
+              onMouseEnter={(e) =>
+                setTooltip({
+                  x: e.clientX,
+                  y: e.clientY,
+                  year: d.year,
+                  value: d.value,
+                })
+              }
+              onMouseLeave={() => setTooltip(null)}
+            />
+          ))}
 
-            {/* SIMPLIFIED POINTS */}
-            {trendData.map((d, i) => (
-              <circle
-                key={i}
-                cx={xScale(d.year)}
-                cy={yScale(d.value)}
-                r={3}
-                fill="#06b6d4"
-                opacity={0.6}
-                onMouseEnter={() => setHoveredPoint(d)}
-                onMouseLeave={() => setHoveredPoint(null)}
-              />
-            ))}
+          {/* AXIS LABELS (NEW) */}
+          <text x={boundsWidth / 2} y={boundsHeight + 55} textAnchor="middle" fontSize={11} fill="#64748b">
+            {xAxisLabel}
+          </text>
 
-            {/* X LABELS (minimal) */}
-            {trendData
-              .filter((_, i) => i % Math.ceil(trendData.length / 5) === 0)
-              .map((d, i) => (
-                <text
-                  key={i}
-                  x={xScale(d.year)}
-                  y={boundsHeight + 20}
-                  textAnchor="middle"
-                  fontSize={10}
-                  fill="#94a3b8"
-                >
-                  {d.year}
-                </text>
-              ))}
-          </g>
-        </svg>
+          <text
+            transform="rotate(-90)"
+            x={-boundsHeight / 2}
+            y={-55}
+            textAnchor="middle"
+            fontSize={11}
+            fill="#64748b"
+          >
+            {yAxisLabel}
+          </text>
 
-        {/* =========================
-            STORY TOOLTIP
-        ========================== */}
-        {hoveredPoint && (
-          <div className="absolute top-2 right-2 bg-white border border-slate-200 rounded-lg p-3 shadow-sm">
-            <div className="text-xs font-semibold text-slate-700">
-              {hoveredPoint.year}
-            </div>
-            <div className="text-sm font-bold text-slate-900">
-              {format(hoveredPoint.value)}
-            </div>
-            <div className="text-[10px] text-slate-500">
-              livelihood impact recorded
-            </div>
-          </div>
-        )}
-      </div>
+        </g>
+      </svg>
+
+      {/* TOOLTIP */}
+      {tooltip && (
+        <div
+          className="absolute bg-white border shadow-md rounded px-2 py-1 text-xs"
+          style={{ left: tooltip.x + 10, top: tooltip.y + 10 }}
+        >
+          <div>{tooltip.year}</div>
+          <div className="font-bold">{tooltip.value}</div>
+        </div>
+      )}
     </div>
   );
 };
