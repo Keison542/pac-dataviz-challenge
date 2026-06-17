@@ -20,75 +20,66 @@ const MARGIN = { top: 40, right: 20, bottom: 80, left: 140 };
 export function BubbleChart({ width, height, data }: Props) {
   const [hovered, setHovered] = useState<DataPoint | null>(null);
 
-  const countries = useMemo(
-    () => Array.from(new Set(data.map((d) => d.country))),
-    [data]
-  );
+  const countries = useMemo(() => Array.from(new Set(data.map(d => d.country))), [data]);
+  const years = useMemo(() => Array.from(new Set(data.map(d => d.year))), [data]);
 
-  const years = useMemo(
-    () => Array.from(new Set(data.map((d) => d.year))),
-    [data]
-  );
-
-  const maxValue = Math.max(...data.map((d) => d.value), 1);
+  const maxValue = Math.max(...data.map(d => d.value), 1);
 
   const x = scaleBand().domain(years).range([0, width]).padding(0.3);
   const y = scaleBand().domain(countries).range([0, height]).padding(0.3);
   const r = scaleSqrt().domain([0, maxValue]).range([4, 40]);
 
-  const color = (v: number) => {
-    const p = v / maxValue;
-    if (p > 0.8) return "#b91c1c";
-    if (p > 0.5) return "#ef4444";
-    if (p > 0.3) return "#f97316";
-    return "#f59e0b";
-  };
-
-  const worst = data.reduce((a, b) => (b.value > a.value ? b : a));
-
   return (
-    <div className="w-full">
+    <div className="w-full relative">
 
       <div className="mb-3">
         <div className="text-sm font-semibold">
-          Livelihood shocks are uneven and clustered
+          Livelihood shocks are uneven
         </div>
         <div className="text-xs text-slate-500">
-          Each bubble = disruption event
+          Bubble size = impact severity
         </div>
       </div>
 
       <svg width={width} height={height}>
         <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
 
-          {data.map((d, i) => {
-            const cx = x(d.year) ?? 0;
-            const cy = y(d.country) ?? 0;
+          {data.map((d, i) => (
+            <circle
+              key={i}
+              cx={x(d.year) ?? 0}
+              cy={y(d.country) ?? 0}
+              r={r(d.value)}
+              fill="#ef4444"
+              opacity={0.75}
+              onMouseEnter={() => setHovered(d)}
+              onMouseLeave={() => setHovered(null)}
+            />
+          ))}
 
-            const isWorst = d === worst;
+          {/* AXIS LABELS */}
+          <text x={width / 2} y={height + 40} textAnchor="middle" fontSize={11} fill="#64748b">
+            Year
+          </text>
 
-            return (
-              <circle
-                key={i}
-                cx={cx}
-                cy={cy}
-                r={r(d.value)}
-                fill={color(d.value)}
-                opacity={0.85}
-                stroke={isWorst ? "#111827" : "#fff"}
-                strokeWidth={isWorst ? 2 : 1}
-                onMouseEnter={() => setHovered(d)}
-                onMouseLeave={() => setHovered(null)}
-              />
-            );
-          })}
+          <text
+            transform="rotate(-90)"
+            x={-height / 2}
+            y={-100}
+            textAnchor="middle"
+            fontSize={11}
+            fill="#64748b"
+          >
+            Countries
+          </text>
 
         </g>
       </svg>
 
+      {/* TOOLTIP */}
       {hovered && (
         <div className="text-xs text-slate-600 mt-2">
-          {hovered.country} ({hovered.year}) → {hovered.value} people impacted
+          {hovered.country} ({hovered.year}) → {hovered.value} impacted
         </div>
       )}
     </div>
