@@ -76,7 +76,7 @@ export const LineChart = ({
   const safeData = useMemo(() => {
     if (!Array.isArray(data)) return [];
     return data.filter(
-      d => d && typeof d.year === "number" && typeof d.value === "number"
+      (d) => d && typeof d.year === "number" && typeof d.value === "number"
     );
   }, [data]);
 
@@ -114,8 +114,11 @@ export const LineChart = ({
 
   const yScale = useMemo(() => {
     const values = processedData.map(d => d.value);
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+    const padding = (maxVal - minVal) * 0.1 || 0.1;
     return scaleLinear()
-      .domain([Math.min(...values), Math.max(...values)])
+      .domain([minVal - padding, maxVal + padding])
       .range([boundsHeight, 0]);
   }, [processedData, boundsHeight]);
 
@@ -144,14 +147,39 @@ export const LineChart = ({
   const chartLabel = getChartLabel(dataType);
   const unit = getUnit(dataType);
 
+  // ─── Generate x-axis ticks (cleaner, fewer ticks) ───
+  const xAxisTicks = useMemo(() => {
+    if (processedData.length === 0) return [];
+    const years = processedData.map(d => d.year);
+    const minYear = Math.min(...years);
+    const maxYear = Math.max(...years);
+    const range = maxYear - minYear;
+
+    // Aim for 5-8 ticks max
+    const targetTicks = Math.min(8, Math.max(5, Math.floor(boundsWidth / 70)));
+    const step = Math.max(1, Math.ceil(range / (targetTicks - 1)));
+
+    // Round step to nice numbers: 1, 2, 5, 10, 20, 50, 100
+    const niceSteps = [1, 2, 5, 10, 20, 50, 100];
+    const niceStep = niceSteps.find(s => s >= step) || step;
+
+    const ticks: number[] = [];
+    let start = Math.floor(minYear / niceStep) * niceStep;
+    while (start <= maxYear) {
+      if (start >= minYear && start <= maxYear) {
+        ticks.push(start);
+      }
+      start += niceStep;
+    }
+    return ticks;
+  }, [processedData, boundsWidth]);
+
   if (!processedData.length) return null;
 
   return (
     <div className="w-full relative">
 
-      {/* ===================== */}
-      {/* HEADER (UNCHANGED) */}
-      {/* ===================== */}
+      {/* ─── HEADER ─── */}
       <div className="text-center mb-6">
         {stats && (
           <div className="mt-2 text-sm text-slate-600">
@@ -170,9 +198,7 @@ export const LineChart = ({
         )}
       </div>
 
-      {/* ===================== */}
-      {/* TOOLTIP (FIXED) */}
-      {/* ===================== */}
+      {/* ─── TOOLTIP ─── */}
       {tooltip && (
         <div
           className="absolute z-50 bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none"
@@ -189,9 +215,7 @@ export const LineChart = ({
         </div>
       )}
 
-      {/* ===================== */}
-      {/* CHART */}
-      {/* ===================== */}
+      {/* ─── CHART ─── */}
       <div className="relative">
         <svg width={width} height={height}>
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
@@ -215,7 +239,7 @@ export const LineChart = ({
               />
             )}
 
-            {/* POINTS (WITH FIXED TOOLTIP) */}
+            {/* POINTS */}
             {processedData.map((d, i) => {
               const x = xScale(d.year);
               const y = yScale(d.value);
@@ -243,9 +267,59 @@ export const LineChart = ({
               );
             })}
 
-            {/* ===================== */}
-            {/* AXIS LABELS (ADDED ONLY) */}
-            {/* ===================== */}
+            {/* ─── X AXIS TICKS (CLEANER) ─── */}
+            {xAxisTicks.map((year) => {
+              const x = xScale(year);
+              return (
+                <g key={year}>
+                  <line
+                    x1={x}
+                    y1={boundsHeight}
+                    x2={x}
+                    y2={boundsHeight + 5}
+                    stroke="#94a3b8"
+                    strokeWidth="1"
+                  />
+                  <text
+                    x={x}
+                    y={boundsHeight + 20}
+                    fontSize={10}
+                    textAnchor="middle"
+                    fill="#94a3b8"
+                  >
+                    {year}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* ─── Y AXIS TICKS ─── */}
+            {yScale.ticks(5).map((value) => {
+              const y = yScale(value);
+              return (
+                <g key={value}>
+                  <line
+                    x1={-5}
+                    y1={y}
+                    x2={0}
+                    y2={y}
+                    stroke="#94a3b8"
+                    strokeWidth="1"
+                  />
+                  <text
+                    x={-8}
+                    y={y + 4}
+                    fontSize={10}
+                    textAnchor="end"
+                    fill="#94a3b8"
+                  >
+                    {value.toFixed(1)}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* ─── AXIS LABELS ─── */}
 
             {/* X Axis Label */}
             <text
@@ -270,27 +344,11 @@ export const LineChart = ({
               {yAxisLabel || `${chartLabel} (${unit})`}
             </text>
 
-            {/* X ticks (UNCHANGED) */}
-            {processedData.map((d, i) => (
-              <text
-                key={i}
-                x={xScale(d.year)}
-                y={boundsHeight + 20}
-                fontSize={10}
-                textAnchor="middle"
-                fill="#94a3b8"
-              >
-                {d.year}
-              </text>
-            ))}
-
           </g>
         </svg>
       </div>
 
-      {/* ===================== */}
-      {/* FOOTER (UNCHANGED) */}
-      {/* ===================== */}
+      {/* ─── FOOTER ─── */}
       <div className="mt-4 text-sm text-slate-600 text-center max-w-2xl mx-auto">
         This chart isolates long-term {chartLabel.toLowerCase()} anomalies
         in {selectedCountry}, showing whether a consistent climate signal is emerging.
