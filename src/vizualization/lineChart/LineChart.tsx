@@ -2,7 +2,7 @@
 
 import { scaleLinear } from "d3-scale";
 import { line, area, curveMonotoneX } from "d3-shape";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { LineItem } from "./LineItem";
 
 const MARGIN = { top: 50, right: 40, bottom: 70, left: 75 };
@@ -67,8 +67,16 @@ export const LineChart = ({
   xAxisLabel = "Year",
   yAxisLabel,
 }: LineChartProps) => {
-  const [tooltip, setTooltip] = useState<any>(null);
-  const hoverRef = useRef<SVGCircleElement | null>(null);
+  const [tooltip, setTooltip] = useState<{
+    x: number;
+    y: number;
+    year: number;
+    value: number;
+  } | null>(null);
+
+  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const tooltipTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const boundsWidth = Math.max(0, width - MARGIN.left - MARGIN.right);
   const boundsHeight = Math.max(0, height - MARGIN.top - MARGIN.bottom);
@@ -147,7 +155,7 @@ export const LineChart = ({
   const chartLabel = getChartLabel(dataType);
   const unit = getUnit(dataType);
 
-  // ─── Generate x-axis ticks (cleaner, fewer ticks) ───
+  // ─── Generate x-axis ticks ───
   const xAxisTicks = useMemo(() => {
     if (processedData.length === 0) return [];
     const years = processedData.map(d => d.year);
@@ -155,11 +163,9 @@ export const LineChart = ({
     const maxYear = Math.max(...years);
     const range = maxYear - minYear;
 
-    // Aim for 5-8 ticks max
     const targetTicks = Math.min(8, Math.max(5, Math.floor(boundsWidth / 70)));
     const step = Math.max(1, Math.ceil(range / (targetTicks - 1)));
 
-    // Round step to nice numbers: 1, 2, 5, 10, 20, 50, 100
     const niceSteps = [1, 2, 5, 10, 20, 50, 100];
     const niceStep = niceSteps.find(s => s >= step) || step;
 
@@ -173,6 +179,46 @@ export const LineChart = ({
     }
     return ticks;
   }, [processedData, boundsWidth]);
+
+  // ─── Tooltip handlers ───
+  const handleMouseEnter = useCallback((event: React.MouseEvent, d: ClimateDataPoint) => {
+    // Clear any pending timer
+    if (tooltipTimerRef.current) {
+      clearTimeout(tooltipTimerRef.current);
+      tooltipTimerRef.current = null;
+    }
+
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    setTooltip({
+      x: x + 15,
+      y: y - 40,
+      year: d.year,
+      value: d.value,
+    });
+    setHoveredPoint(d.year);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    // Delay hiding to allow smooth interaction
+    tooltipTimerRef.current = setTimeout(() => {
+      setTooltip(null);
+      setHoveredPoint(null);
+    }, 100);
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (tooltipTimerRef.current) {
+        clearTimeout(tooltipTimerRef.current);
+      }
+    };
+  }, []);
 
   if (!processedData.length) return null;
 
@@ -201,15 +247,16 @@ export const LineChart = ({
       {/* ─── TOOLTIP ─── */}
       {tooltip && (
         <div
-          className="absolute z-50 bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none"
+          className="fixed z-50 bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none"
           style={{
-            left: tooltip.x + 10,
-            top: tooltip.y - 40,
+            left: tooltip.x,
+            top: tooltip.y,
+            transform: "translate(0, 0)",
           }}
         >
-          <div className="font-semibold">{selectedCountry}</div>
-          <div>Year: {tooltip.year}</div>
-          <div>
+          <div className="font-semibold text-amber-300">{selectedCountry}</div>
+          <div className="text-slate-300">Year: {tooltip.year}</div>
+          <div className="text-slate-300">
             Value: {tooltip.value.toFixed(2)} {unit}
           </div>
         </div>
@@ -217,7 +264,12 @@ export const LineChart = ({
 
       {/* ─── CHART ─── */}
       <div className="relative">
-        <svg width={width} height={height}>
+        <svg
+          ref={svgRef}
+          width={width}
+          height={height}
+          className="overflow-visible"
+        >
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
 
             {/* AREA */}
@@ -239,37 +291,62 @@ export const LineChart = ({
               />
             )}
 
-            {/* POINTS */}
+            {/* ─── POINTS WITH INTERACTION ─── */}
             {processedData.map((d, i) => {
               const x = xScale(d.year);
               const y = yScale(d.value);
+              const isHovered = hoveredPoint === d.year;
+              const pointRadius = isHovered ? 8 : 5;
 
               return (
-                <circle
+                <g
                   key={i}
-                  cx={x}
-                  cy={y}
-                  r={4}
-                  fill="#2563eb"
-                  stroke="#fff"
-                  strokeWidth={2}
-                  onMouseEnter={(e) => {
-                    const rect = (e.target as SVGCircleElement).getBoundingClientRect();
-                    setTooltip({
-                      x: rect.left,
-                      y: rect.top,
-                      year: d.year,
-                      value: d.value,
-                    });
-                  }}
-                  onMouseLeave={() => setTooltip(null)}
-                />
+                  onMouseEnter={(e) => handleMouseEnter(e, d)}
+                  onMouseLeave={handleMouseLeave}
+                  style={{ cursor: "pointer" }}
+                >
+                  {/* Hover glow */}
+                  {isHovered && (
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r={pointRadius + 4}
+                      fill="#2563eb"
+                      opacity={0.2}
+                    />
+                  )}
+
+                  {/* Main circle */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={pointRadius}
+                    fill="#2563eb"
+                    stroke="#fff"
+                    strokeWidth={2.5}
+                  />
+
+                  {/* Year label below point on hover */}
+                  {isHovered && (
+                    <text
+                      x={x}
+                      y={y + 18}
+                      textAnchor="middle"
+                      fontSize={9}
+                      fill="#2563eb"
+                      fontWeight="600"
+                    >
+                      {d.year}
+                    </text>
+                  )}
+                </g>
               );
             })}
 
-            {/* ─── X AXIS TICKS (CLEANER) ─── */}
+            {/* ─── X AXIS TICKS ─── */}
             {xAxisTicks.map((year) => {
               const x = xScale(year);
+              const isHighlighted = processedData.some(d => d.year === year);
               return (
                 <g key={year}>
                   <line
@@ -285,7 +362,7 @@ export const LineChart = ({
                     y={boundsHeight + 20}
                     fontSize={10}
                     textAnchor="middle"
-                    fill="#94a3b8"
+                    fill={isHighlighted ? "#475569" : "#94a3b8"}
                   >
                     {year}
                   </text>
@@ -352,6 +429,7 @@ export const LineChart = ({
       <div className="mt-4 text-sm text-slate-600 text-center max-w-2xl mx-auto">
         This chart isolates long-term {chartLabel.toLowerCase()} anomalies
         in {selectedCountry}, showing whether a consistent climate signal is emerging.
+        <span className="text-amber-600 font-medium"> Hover over points</span> for detailed values.
       </div>
     </div>
   );
