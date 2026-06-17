@@ -5,7 +5,22 @@ import { useMemo, useState, useRef } from "react";
 import { line, curveCardinal } from "d3-shape";
 import { LineItem } from "@/vizualization/lineChart/LineItem";
 
-const MARGIN = { top: 60, right: 60, bottom: 100, left: 110 };
+const MARGIN = { top: 60, right: 60, bottom: 110, left: 110 };
+
+export type UnifiedDatum = {
+  country: string;
+  year: number;
+  value: number;
+};
+
+type Props = {
+  width: number;
+  height: number;
+  data: UnifiedDatum[];
+  selectedCountry?: string;
+  setSelectedCountry: (c: string) => void;
+  highlightMode?: "economic" | "human" | "system";
+};
 
 export const TrendLine = ({
   width,
@@ -14,19 +29,16 @@ export const TrendLine = ({
   selectedCountry,
   setSelectedCountry,
   highlightMode = "economic",
-}) => {
-  const [hovered, setHovered] = useState<any>(null);
+}: Props) => {
+  const [hoveredPoint, setHoveredPoint] = useState<UnifiedDatum | null>(null);
 
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
-  // =========================
-  // DATA AGGREGATION
-  // =========================
   const trendData = useMemo(() => {
     const map = new Map<number, number>();
 
-    data.forEach(d => {
+    data.forEach((d) => {
       map.set(d.year, (map.get(d.year) || 0) + (d.value || 0));
     });
 
@@ -35,15 +47,15 @@ export const TrendLine = ({
       .sort((a, b) => a.year - b.year);
   }, [data]);
 
-  const maxValue = Math.max(...trendData.map(d => d.value), 1);
+  const maxValue = Math.max(...trendData.map((d) => d.value), 1);
 
-  // =========================
-  // SCALES
-  // =========================
   const xScale = useMemo(
     () =>
       scaleLinear()
-        .domain([trendData[0]?.year ?? 0, trendData.at(-1)?.year ?? 1])
+        .domain([
+          trendData[0]?.year ?? 0,
+          trendData.at(-1)?.year ?? 1,
+        ])
         .range([0, boundsWidth]),
     [trendData, boundsWidth]
   );
@@ -56,24 +68,18 @@ export const TrendLine = ({
     [maxValue, boundsHeight]
   );
 
-  // =========================
-  // LINE
-  // =========================
   const linePath = useMemo(() => {
     return (
-      line()
-        .x(d => xScale(d.year))
-        .y(d => yScale(d.value))
+      line<{ year: number; value: number }>()
+        .x((d) => xScale(d.year))
+        .y((d) => yScale(d.value))
         .curve(curveCardinal.tension(0.7))(trendData) || ""
     );
   }, [trendData, xScale, yScale]);
 
-  // =========================
-  // KEY POINTS
-  // =========================
   const worstPoint = useMemo(() => {
-    return trendData.reduce(
-      (max, d) => (d.value > max.value ? d : max),
+    return trendData.reduce((max, d) =>
+      d.value > max.value ? d : max,
       trendData[0]
     );
   }, [trendData]);
@@ -86,106 +92,84 @@ export const TrendLine = ({
       ? ((last.value - first.value) / first.value) * 100
       : 0;
 
-  // =========================
-  // TOOLTIP FORMAT
-  // =========================
+  const narrative =
+    highlightMode === "economic"
+      ? "Economic losses signal the first structural stress in livelihoods."
+      : highlightMode === "human"
+      ? "Rising impacts translate directly into human exposure."
+      : "Long-term livelihood systems begin reorganizing under climate pressure.";
+
   const format = (v: number) =>
     v >= 1e6
       ? `${(v / 1e6).toFixed(1)}M`
       : v >= 1e3
       ? `${(v / 1e3).toFixed(0)}K`
-      : v.toFixed(0);
+      : v.toString();
 
-  if (!trendData.length) {
-    return (
-      <div className="flex items-center justify-center text-sm text-slate-500">
-        No livelihood data available
-      </div>
-    );
-  }
+  if (!trendData.length) return null;
 
   return (
     <div className="w-full font-sans">
 
-      {/* =========================
-          HEADER
-      ========================= */}
+      {/* HEADER */}
       <div className="mb-4 text-center max-w-xl mx-auto">
-        <div className="text-sm font-medium text-slate-700">
+        <div className="text-sm font-semibold text-slate-700">
           Livelihood Pressure Curve
         </div>
 
-        <div className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-slate-500 mt-1">{narrative}</p>
+
+        <div className="text-[11px] text-slate-400 mt-2">
           Growth: {growth.toFixed(1)}% · Peak year: {worstPoint?.year}
         </div>
       </div>
 
-      {/* =========================
-          CHART
-      ========================= */}
+      {/* CHART */}
       <div className="relative">
         <svg width={width} height={height}>
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
 
-            {/* AREA */}
-            <path
-              d={`${linePath} L ${xScale(last?.year || 0)} ${boundsHeight} L ${xScale(first?.year || 0)} ${boundsHeight} Z`}
-              fill="#06b6d4"
-              opacity={0.12}
+            {/* GRID BASE */}
+            <line
+              x1={0}
+              x2={boundsWidth}
+              y1={yScale(0)}
+              y2={yScale(0)}
+              stroke="#e2e8f0"
             />
 
             {/* LINE */}
             <LineItem
               path={linePath}
-              color={
-                highlightMode === "human"
-                  ? "#0ea5e9"
-                  : highlightMode === "system"
-                  ? "#14b8a6"
-                  : "#06b6d4"
-              }
+              color="#06b6d4"
               strokeWidth={3}
               opacity={0.9}
+              onHover={() => {}}
             />
 
-            {/* WORST POINT */}
-            {worstPoint && (
-              <circle
-                cx={xScale(worstPoint.year)}
-                cy={yScale(worstPoint.value)}
-                r={6}
-                fill="#ef4444"
-              />
-            )}
+            {/* POINTS WITH TOOLTIP */}
+            {trendData.map((d, i) => {
+              const x = xScale(d.year);
+              const y = yScale(d.value);
 
-            {/* INTERACTION LAYER (BETTER HOVER) */}
-            {trendData.map((d, i) => (
-              <circle
-                key={i}
-                cx={xScale(d.year)}
-                cy={yScale(d.value)}
-                r={10}
-                fill="transparent"
-                onMouseEnter={(e) => {
-                  const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
+              return (
+                <circle
+                  key={i}
+                  cx={x}
+                  cy={y}
+                  r={hoveredPoint?.year === d.year ? 6 : 3}
+                  fill="#06b6d4"
+                  opacity={0.7}
+                  onMouseEnter={() => setHoveredPoint(d)}
+                  onMouseLeave={() => setHoveredPoint(null)}
+                />
+              );
+            })}
 
-                  setHovered({
-                    year: d.year,
-                    value: d.value,
-                    x: e.clientX - (rect?.left || 0),
-                    y: e.clientY - (rect?.top || 0),
-                  });
-                }}
-                onMouseLeave={() => setHovered(null)}
-              />
-            ))}
-
-            {/* =========================
-                AXIS LABELS (NEW)
-            ========================= */}
+            {/* AXIS LABELS */}
             <text
               x={boundsWidth / 2}
-              y={boundsHeight + 65}
+              y={boundsHeight + 55}
               textAnchor="middle"
               fontSize={11}
               fill="#64748b"
@@ -194,36 +178,43 @@ export const TrendLine = ({
             </text>
 
             <text
-              transform="rotate(-90)"
-              x={-boundsHeight / 2}
-              y={-70}
+              x={-60}
+              y={boundsHeight / 2}
               textAnchor="middle"
               fontSize={11}
               fill="#64748b"
+              transform={`rotate(-90, -60, ${boundsHeight / 2})`}
             >
               Livelihood Impact
             </text>
 
+            {/* X ticks */}
+            {trendData
+              .filter((_, i) => i % Math.ceil(trendData.length / 5) === 0)
+              .map((d, i) => (
+                <text
+                  key={i}
+                  x={xScale(d.year)}
+                  y={boundsHeight + 25}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fill="#94a3b8"
+                >
+                  {d.year}
+                </text>
+              ))}
           </g>
         </svg>
 
-        {/* =========================
-            TOOLTIP (FIXED POSITION)
-        ========================= */}
-        {hovered && (
-          <div
-            className="absolute bg-white border border-slate-200 rounded-md px-3 py-2 shadow-md text-xs"
-            style={{
-              left: hovered.x + 20,
-              top: hovered.y + 20,
-              pointerEvents: "none",
-            }}
-          >
-            <div className="font-semibold text-slate-700">
-              {hovered.year}
+        {/* TOOLTIP */}
+        {hoveredPoint && (
+          <div className="absolute top-2 right-2 bg-white border rounded-lg p-3 shadow-sm">
+            <div className="text-xs font-semibold">{hoveredPoint.year}</div>
+            <div className="text-sm font-bold">
+              {format(hoveredPoint.value)}
             </div>
-            <div className="text-slate-900 font-bold">
-              {format(hovered.value)}
+            <div className="text-[10px] text-slate-500">
+              livelihood impact recorded
             </div>
           </div>
         )}
