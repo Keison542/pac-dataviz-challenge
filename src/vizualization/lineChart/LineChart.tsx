@@ -188,15 +188,13 @@ export const LineChart = ({
       tooltipTimerRef.current = null;
     }
 
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    // Get cursor position relative to the page
+    const mouseX = event.clientX;
+    const mouseY = event.clientY;
 
     setTooltip({
-      x: x + 15,
-      y: y - 40,
+      x: mouseX + 15,  // Offset right of cursor
+      y: mouseY - 10,  // Offset slightly above cursor
       year: d.year,
       value: d.value,
     });
@@ -229,7 +227,7 @@ export const LineChart = ({
       <div className="text-center mb-6">
         {stats && (
           <div className="mt-2 text-sm text-slate-600">
-            Climate signal evidence detected:{" "}
+            Climate evidence detected:{" "}
             <span
               className={
                 stats.percentChange > 0
