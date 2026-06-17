@@ -12,10 +12,17 @@ import { CausalChainSection } from "@/components/CausalChainSection";
 import { Conclusion } from "@/components/Conclusion";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { useClimateData } from "@/hooks/useClimateData";
+import { StoryTransition } from "@/components/StoryTransition";
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
-  show: { opacity: 1, y: 0 },
+  hidden: { opacity: 0, y: 30 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+    },
+  },
 };
 
 export default function Home() {
@@ -54,12 +61,10 @@ export default function Home() {
   return (
     <main className="relative min-h-screen bg-white font-sans text-slate-900">
 
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-5" />
-
       <div className="relative z-10 max-w-[1200px] mx-auto px-6 py-8">
 
         {/* =========================
-            HERO (UNCHANGED BUT FIRST IMPACT)
+            HERO
         ========================== */}
         <Hero
           countries={countries}
@@ -68,11 +73,13 @@ export default function Home() {
         />
 
         <div className="mt-6 mb-10 text-center max-w-3xl mx-auto text-slate-600">
-          The Pacific is not just changing — it is transforming under accelerating climate pressure.
+          The Pacific is not just changing — it is entering a system of cascading climate pressure.
         </div>
 
+        <StoryTransition text="We begin by observing the physical signals of climate change across the Pacific region." />
+
         {/* =========================
-            1. CLIMATE SIGNAL (FADE-IN)
+            1. CLIMATE SIGNAL
         ========================== */}
         {hasClimateData && (
           <motion.section
@@ -80,7 +87,6 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6 }}
             className="py-16"
           >
             <h2 className="text-2xl font-semibold mb-2">
@@ -88,7 +94,7 @@ export default function Home() {
             </h2>
 
             <p className="text-slate-600 mb-8 max-w-2xl">
-              Temperature and sea level trends show consistent, long-term change across Pacific nations.
+              Temperature and sea level trends show consistent long-term change across Pacific nations.
             </p>
 
             <DoughnutClimateDashboard
@@ -97,16 +103,16 @@ export default function Home() {
               selectedCountry={selectedCountry}
             />
 
-            <div className="mt-10">
-              <ClimateDriversSection
-                dataMap={dataMap}
-                tempTrend={tempTrend}
-                chartWidth={chartWidth}
-                selectedCountry={selectedCountry}
-              />
-            </div>
+            <ClimateDriversSection
+              dataMap={dataMap}
+              tempTrend={tempTrend}
+              chartWidth={chartWidth}
+              selectedCountry={selectedCountry}
+            />
           </motion.section>
         )}
+
+        <StoryTransition text="But climate signals alone do not explain why some nations are more affected than others." />
 
         {/* =========================
             2. HUMAN IMPACT
@@ -117,7 +123,6 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6 }}
             className="py-20 border-t border-slate-100"
           >
             <h2 className="text-2xl font-semibold mb-2">
@@ -140,8 +145,10 @@ export default function Home() {
           </motion.section>
         )}
 
+        <StoryTransition text="These pressures do not act independently — they reinforce each other across the system." />
+
         {/* =========================
-            3. SYSTEM VIEW (MOST IMPORTANT SECTION)
+            3. SYSTEM VIEW
         ========================== */}
         {hasCausalData && (
           <motion.section
@@ -149,7 +156,6 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.7 }}
             className="py-20 bg-slate-50 rounded-2xl px-6"
           >
             <h2 className="text-2xl font-semibold mb-2">
@@ -169,6 +175,8 @@ export default function Home() {
           </motion.section>
         )}
 
+        <StoryTransition text="As the system intensifies, inequality becomes the defining factor in climate vulnerability." />
+
         {/* =========================
             4. INEQUALITY MOMENT
         ========================== */}
@@ -178,7 +186,6 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6 }}
             className="py-20"
           >
             <h2 className="text-2xl font-semibold mb-2">
@@ -198,8 +205,10 @@ export default function Home() {
           </motion.section>
         )}
 
+        <StoryTransition text="The Pacific reveals a global truth: climate risk is shaped by unequal resilience." />
+
         {/* =========================
-            5. CONCLUSION (EMOTIONAL PEAK)
+            5. CONCLUSION
         ========================== */}
         {(hasClimateData ||
           hasEconomicData ||
@@ -213,7 +222,6 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.8 }}
             className="py-24 text-center border-t"
           >
             <Conclusion
