@@ -154,12 +154,8 @@ export const LineChart = ({
       {/* ===================== */}
       <div className="text-center mb-6">
         <div className="text-xs tracking-widest text-slate-500 font-semibold">
-          CLIMATE SIGNAL EVIDENCE
+          Climate Signal Evidence
         </div>
-
-        <h3 className="text-lg font-bold text-slate-800 mt-1">
-          {chartLabel} trend confirmation
-        </h3>
 
         {stats && (
           <div className="mt-2 text-sm text-slate-600">
