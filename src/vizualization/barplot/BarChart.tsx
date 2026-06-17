@@ -78,6 +78,38 @@ const METRIC_CONFIGS = {
 // Get all metric keys
 const METRIC_KEYS = Object.keys(METRIC_CONFIGS) as Array<keyof typeof METRIC_CONFIGS>;
 
+// Vulnerability score ranges
+const VULNERABILITY_LEVELS = {
+  high: {
+    label: "High Vulnerability",
+    range: "Score ≥ 4.0",
+    color: "#ef4444",
+    bgColor: "#fef2f2",
+    textColor: "#dc2626"
+  },
+  medium: {
+    label: "Medium Vulnerability",
+    range: "Score 2.5 - 3.9",
+    color: "#f59e0b",
+    bgColor: "#fffbeb",
+    textColor: "#d97706"
+  },
+  low: {
+    label: "Low Vulnerability",
+    range: "Score < 2.5",
+    color: "#10b981",
+    bgColor: "#ecfdf5",
+    textColor: "#059669"
+  }
+};
+
+// Determine vulnerability level based on score
+const getVulnerabilityLevel = (score: number) => {
+  if (score >= 4.0) return "high";
+  if (score >= 2.5) return "medium";
+  return "low";
+};
+
 // Normalize function: 0 to 1 scale
 const normalize = (value: number, max: number) => {
   if (max === 0) return 0;
@@ -116,6 +148,7 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
     country: string;
     values: Record<string, number>;
     compositeScore: number;
+    level: string;
   }>(null);
 
   // ─── 1. Build country-wise data for ALL 7 metrics ───
@@ -207,13 +240,26 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
 
   const handleMouseMove = (e: React.MouseEvent, country: string, values: Record<string, number>, composite: number) => {
     const rect = (e.target as SVGRectElement).getBoundingClientRect();
+    const level = getVulnerabilityLevel(composite);
     setTooltip({
       x: rect.left,
       y: rect.top,
       country,
       values,
-      compositeScore: composite
+      compositeScore: composite,
+      level
     });
+  };
+
+  // ─── 8. Get color based on vulnerability level ───
+  const getBarColor = (score: number) => {
+    const level = getVulnerabilityLevel(score);
+    const colorMap = {
+      high: "#ef4444",
+      medium: "#f59e0b",
+      low: "#10b981"
+    };
+    return colorMap[level];
   };
 
   if (!ranked.length) {
@@ -238,7 +284,7 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
       </div>
 
       {/* ─── Summary Cards ─── */}
-      <div className="mb-4 grid grid-cols-3 gap-2">
+      <div className="mb-4 grid grid-cols-4 gap-2">
         <div className="rounded-lg bg-cyan-50 p-2 text-center">
           <div className="text-lg font-bold text-cyan-700">
             {topCountry?.country || "—"}
@@ -257,6 +303,27 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
           </div>
           <div className="text-xs text-slate-500">Countries Analyzed</div>
         </div>
+        <div className="rounded-lg bg-slate-50 p-2 text-center">
+          <div className="text-lg font-bold text-slate-700">
+            {METRIC_KEYS.length}
+          </div>
+          <div className="text-xs text-slate-500">Metrics Combined</div>
+        </div>
+      </div>
+
+      {/* ─── Vulnerability Level Legend ─── */}
+      <div className="mb-4 flex flex-wrap items-center gap-4 text-xs">
+        <span className="font-medium text-slate-600">Vulnerability Level:</span>
+        {Object.entries(VULNERABILITY_LEVELS).map(([key, level]) => (
+          <div key={key} className="flex items-center gap-1.5">
+            <div
+              className="h-3 w-3 rounded-full"
+              style={{ backgroundColor: level.color }}
+            />
+            <span className="text-slate-600">{level.label}</span>
+            <span className="text-slate-400">({level.range})</span>
+          </div>
+        ))}
       </div>
 
       {/* ─── Chart ─── */}
@@ -265,6 +332,9 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
           {/* Country labels */}
           {ranked.map((d) => {
             const y = yScale(d.country)!;
+            const level = getVulnerabilityLevel(d.compositeScore);
+            const color = VULNERABILITY_LEVELS[level].color;
+            
             return (
               <text
                 key={d.country}
@@ -285,6 +355,7 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
             const y = yScale(d.country)!;
             const barWidth = xScale(d.compositeScore);
             const isHovered = hoveredCountry === d.country;
+            const barColor = getBarColor(d.compositeScore);
 
             return (
               <g key={d.country}>
@@ -294,7 +365,7 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
                   y={y}
                   width={barWidth}
                   height={yScale.bandwidth()}
-                  fill="url(#barGradient)"
+                  fill={barColor}
                   isHovered={isHovered}
                   onMouseEnter={() => handleMouseEnter(d.country)}
                   onMouseLeave={handleMouseLeave}
@@ -337,16 +408,36 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
             fontSize={11}
             fill="#64748b"
           >
-            Composite Vulnerability Score
+            Composite Vulnerability Score →
           </text>
 
-          {/* Gradient definition */}
-          <defs>
-            <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#0891b2" />
-              <stop offset="100%" stopColor="#06b6d4" />
-            </linearGradient>
-          </defs>
+          {/* Reference lines for vulnerability levels */}
+          {[2.5, 4.0].map((score) => {
+            const x = xScale(score);
+            return (
+              <g key={score}>
+                <line
+                  x1={x}
+                  x2={x}
+                  y1={0}
+                  y2={chartHeight}
+                  stroke="#94a3b8"
+                  strokeWidth="1"
+                  strokeDasharray="4 4"
+                  opacity="0.4"
+                />
+                <text
+                  x={x}
+                  y={-8}
+                  textAnchor="middle"
+                  fontSize={8}
+                  fill="#94a3b8"
+                >
+                  {score.toFixed(1)}
+                </text>
+              </g>
+            );
+          })}
         </g>
       </svg>
 
@@ -363,6 +454,17 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
           <div className="mb-1 font-semibold text-amber-300">{tooltip.country}</div>
           <div className="mb-1 text-sm font-bold text-cyan-300">
             Score: {tooltip.compositeScore.toFixed(2)}
+          </div>
+          <div className="mb-1">
+            <span
+              className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+              style={{
+                backgroundColor: VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].bgColor,
+                color: VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].textColor
+              }}
+            >
+              {VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].label}
+            </span>
           </div>
           <div className="border-t border-slate-700 pt-1 mt-1">
             {METRIC_KEYS.map((key) => {
@@ -383,8 +485,11 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
       {topCountry && bottomCountry && (
         <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
           <p>
-            {topCountry.country} has the highest composite vulnerability index,
-            while {bottomCountry.country} has the lowest across all 7 metrics.
+            {topCountry.country} has the highest composite vulnerability index
+            <span className="font-semibold text-red-600"> (High Vulnerability)</span>,
+            while {bottomCountry.country} has the lowest
+            <span className="font-semibold text-green-600"> (Low Vulnerability)</span>
+            across all 7 metrics.
           </p>
         </div>
       )}
