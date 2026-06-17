@@ -153,13 +153,9 @@ export const LineChart = ({
       {/* HEADER (UNCHANGED) */}
       {/* ===================== */}
       <div className="text-center mb-6">
-        <div className="text-xs tracking-widest text-slate-500 font-semibold">
-          Climate Signal Evidence
-        </div>
-
         {stats && (
           <div className="mt-2 text-sm text-slate-600">
-            Signal detected:{" "}
+            Climate signal evidence detected:{" "}
             <span
               className={
                 stats.percentChange > 0
