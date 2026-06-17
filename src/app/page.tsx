@@ -89,9 +89,11 @@ export default function Home() {
             viewport={{ once: true, amount: 0.3 }}
             className="py-16"
           >
-            <h2 className="text-2xl font-semibold mb-2">
+            <h2 className="text-2xl font-semibold mb-2 text-center">
               1. A clear climate signal is emerging
             </h2>
+
+   
 
             <p className="text-slate-600 mb-8 max-w-2xl">
               Temperature and sea level trends show consistent long-term change across Pacific nations.
@@ -125,7 +127,7 @@ export default function Home() {
             viewport={{ once: true, amount: 0.3 }}
             className="py-20 border-t border-slate-100"
           >
-            <h2 className="text-2xl font-semibold mb-2">
+            <h2 className="text-2xl font-semibold mb-2 text-center">
               2. Climate change is already affecting livelihoods
             </h2>
 
@@ -158,7 +160,7 @@ export default function Home() {
             viewport={{ once: true, amount: 0.3 }}
             className="py-20 bg-slate-50 rounded-2xl px-6"
           >
-            <h2 className="text-2xl font-semibold mb-2">
+            <h2 className="text-2xl font-semibold mb-2 text-center" >
               3. These impacts are interconnected
             </h2>
 
@@ -188,7 +190,7 @@ export default function Home() {
             viewport={{ once: true, amount: 0.3 }}
             className="py-20"
           >
-            <h2 className="text-2xl font-semibold mb-2">
+            <h2 className="text-2xl font-semibold mb-2 text-center">
               4. Impact is not evenly distributed
             </h2>
 
