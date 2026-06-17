@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ClimateInteractionMatrix from "@/vizualization/matrix/ClimateInteractionMatrix";
+import ClimateInteractionMatrix from "@/vizualization/ClimateInteractionMatrix";
 import BeeswarmChart from "@/vizualization/beeswarm/BeeswarmChart";
 
 interface Props {
