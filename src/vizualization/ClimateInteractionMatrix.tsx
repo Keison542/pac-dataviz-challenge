@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import ClimateInteractionMatrix from '@/vizualization/ClimateInteractionMatrix';
-
 
 type Props = {
   data: any[];
