@@ -95,7 +95,7 @@ export default function Home() {
 
    
 
-            <p className="text-slate-600 mb-8 max-w-2xl">
+            <p className="text-slate-600 mb-8 max-w-2xl text-center">
               Temperature and sea level trends show consistent long-term change across Pacific nations.
             </p>
 
@@ -131,7 +131,7 @@ export default function Home() {
               2. Climate change is already affecting livelihoods
             </h2>
 
-            <p className="text-slate-600 mb-8 max-w-2xl">
+            <p className="text-slate-600 mb-8 max-w-2xl text-center">
               Agricultural losses, human exposure, and economic stress are rising alongside climate indicators.
             </p>
 
@@ -164,7 +164,7 @@ export default function Home() {
               3. These impacts are interconnected
             </h2>
 
-            <p className="text-slate-600 mb-8 max-w-2xl">
+            <p className="text-slate-600 mb-8 max-w-2xl text-center">
               Climate drivers cascade into environmental and socio-economic consequences.
             </p>
 
@@ -194,7 +194,7 @@ export default function Home() {
               4. Impact is not evenly distributed
             </h2>
 
-            <p className="text-slate-600 mb-8 max-w-2xl">
+            <p className="text-slate-600 mb-8 max-w-2xl text-center">
               Some Pacific nations face significantly higher vulnerability than others.
             </p>
 
