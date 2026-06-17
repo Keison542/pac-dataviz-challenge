@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import ClimateInteractionMatrix from "@/vizualization/ClimateInteractionMatrix";
 import BeeswarmChart from "@/vizualization/beeswarm/BeeswarmChart";
@@ -15,51 +17,50 @@ export function CausalChainSection({
   selectedCountry,
   chartWidth,
 }: Props) {
-  const [activeView, setActiveView] = useState<
-    "matrix" | "beeswarm"
-  >("matrix");
+  const [activeView, setActiveView] = useState<"matrix" | "beeswarm">("matrix");
 
   return (
-    <div className="mb-12">
+    <div className="mb-14">
 
-      {/* HEADER */}
+      {/* HEADER (story-first) */}
       <div className="text-center mb-6">
-        <div className="text-[1.75rem] font-semibold mb-3 text-slate-900">
+        <h2 className="text-2xl font-semibold text-slate-900">
           Climate System Interactions
-        </div>
+        </h2>
 
-        <div className="text-sm text-slate-500 max-w-[720px] mx-auto">
-          This section moves beyond linear cause-effect chains. It reveals how climate drivers
-          simultaneously influence multiple systems across environment, economy, and society.
-        </div>
+        <p className="text-sm text-slate-500 max-w-2xl mx-auto mt-2">
+          Climate impacts are not linear. Each driver reinforces multiple systems at once —
+          creating feedback loops across environment, economy, and society.
+        </p>
 
-        <div className="flex gap-4 justify-center mt-4">
+        {/* segmented control */}
+        <div className="inline-flex mt-5 bg-slate-100 p-1 rounded-full">
           <button
             onClick={() => setActiveView("matrix")}
-            className={`px-6 py-2 rounded-full text-sm border ${
+            className={`px-5 py-2 text-sm rounded-full transition ${
               activeView === "matrix"
-                ? "bg-slate-900 text-white"
-                : "bg-white text-slate-600"
+                ? "bg-white shadow text-slate-900"
+                : "text-slate-500"
             }`}
           >
-            System Matrix
+            System Coupling Map
           </button>
 
           <button
             onClick={() => setActiveView("beeswarm")}
-            className={`px-6 py-2 rounded-full text-sm border ${
+            className={`px-5 py-2 text-sm rounded-full transition ${
               activeView === "beeswarm"
-                ? "bg-slate-900 text-white"
-                : "bg-white text-slate-600"
+                ? "bg-white shadow text-slate-900"
+                : "text-slate-500"
             }`}
           >
-            Distribution View
+            Impact Distribution
           </button>
         </div>
       </div>
 
-      {/* CONTENT */}
-      <div className="p-2">
+      {/* CONTENT FRAME */}
+      <div className="p-3 bg-white rounded-xl border shadow-sm">
         {activeView === "matrix" && (
           <ClimateInteractionMatrix
             data={climateFlowData}
@@ -74,7 +75,7 @@ export function CausalChainSection({
             height={500}
             data={beeswarmData}
             title="Climate Impact Distribution"
-            insight="Each dot represents a measured impact across time and systems."
+            insight="Each point represents a recorded impact event across systems."
           />
         )}
       </div>
