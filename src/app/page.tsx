@@ -1,4 +1,4 @@
-"use client";
+use client";
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -76,6 +76,8 @@ export default function Home() {
           The Pacific is not just changing — it is entering a system of cascading climate pressure.
         </div>
 
+        <StoryTransition text="We begin by observing the physical signals of climate change across the Pacific region." />
+
         {/* =========================
             1. CLIMATE SIGNAL
         ========================== */}
@@ -90,6 +92,8 @@ export default function Home() {
             <h2 className="text-2xl font-semibold mb-2 text-center">
               1. A clear climate signal is emerging
             </h2>
+
+   
 
             <p className="text-slate-600 mb-8 max-w-2xl mx-auto text-center">
               Temperature and sea level trends show consistent long-term change across Pacific nations.
@@ -110,15 +114,7 @@ export default function Home() {
           </motion.section>
         )}
 
-        {/* ─── STORY TRANSITION 1 ─── */}
-        {hasClimateData && (
-          <div className="w-full py-16 flex justify-center bg-white">
-            <StoryTransition 
-              key="transition-1"
-              text="But climate signals alone do not explain why some nations are more affected than others." 
-            />
-          </div>
-        )}
+        <StoryTransition text="But climate signals alone do not explain why some nations are more affected than others." />
 
         {/* =========================
             2. HUMAN IMPACT
@@ -129,8 +125,16 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            className="py-8"
+            className="py-20 border-t border-slate-100"
           >
+            <h2 className="text-2xl font-semibold mb-2 text-center">
+              2. Climate change is already affecting livelihoods
+            </h2>
+
+            <p className="text-slate-600 mb-8 max-w-2xl mx-auto text-center">
+              Agricultural losses, human exposure, and economic stress are rising alongside climate indicators.
+            </p>
+
             <HumanEconomicSection
               selectedCountry={selectedCountry}
               lossTotal={lossTotal}
@@ -143,15 +147,7 @@ export default function Home() {
           </motion.section>
         )}
 
-        {/* ─── STORY TRANSITION 2 ─── */}
-        {(hasEconomicData || hasHumanData || hasSocioeconomicData) && (
-          <div className="w-full py-16 flex justify-center bg-white border-t border-slate-100">
-            <StoryTransition 
-              key="transition-2"
-              text="These pressures do not act independently — they reinforce each other across the system." 
-            />
-          </div>
-        )}
+        <StoryTransition text="These pressures do not act independently — they reinforce each other across the system." />
 
         {/* =========================
             3. SYSTEM VIEW
@@ -162,9 +158,9 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            className="py-16 bg-slate-50 rounded-2xl px-6"
+            className="py-20 bg-slate-50 rounded-2xl px-6"
           >
-            <h2 className="text-2xl font-semibold mb-2 text-center">
+            <h2 className="text-2xl font-semibold mb-2 text-center" >
               3. These impacts are interconnected
             </h2>
 
@@ -181,15 +177,7 @@ export default function Home() {
           </motion.section>
         )}
 
-        {/* ─── STORY TRANSITION 3 ─── */}
-        {hasCausalData && (
-          <div className="w-full py-16 flex justify-center bg-white border-t border-slate-100">
-            <StoryTransition 
-              key="transition-3"
-              text="As the system intensifies, inequality becomes the defining factor in climate vulnerability." 
-            />
-          </div>
-        )}
+        <StoryTransition text="As the system intensifies, inequality becomes the defining factor in climate vulnerability." />
 
         {/* =========================
             4. INEQUALITY MOMENT
@@ -200,7 +188,7 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            className="py-16"
+            className="py-20"
           >
             <h2 className="text-2xl font-semibold mb-2 text-center">
               4. Impact is not evenly distributed
@@ -219,15 +207,7 @@ export default function Home() {
           </motion.section>
         )}
 
-        {/* ─── STORY TRANSITION 4 ─── */}
-        {hasRegionalData && (
-          <div className="w-full py-16 flex justify-center bg-white border-t border-slate-100">
-            <StoryTransition 
-              key="transition-4"
-              text="The Pacific reveals a global truth: climate risk is shaped by unequal resilience." 
-            />
-          </div>
-        )}
+        <StoryTransition text="The Pacific reveals a global truth: climate risk is shaped by unequal resilience." />
 
         {/* =========================
             5. CONCLUSION
@@ -244,7 +224,7 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            className="py-16 text-center border-t"
+            className="py-24 text-center border-t"
           >
             <Conclusion
               selectedCountry={selectedCountry}
