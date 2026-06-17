@@ -3,18 +3,7 @@
 import { useMemo } from "react";
 
 type Props = {
-  data: {
-    temp: number;
-    sea: number;
-    rainfall: number;
-    sea_surface_temperature: number;
-    crop_yield: number;
-    lifestock_yield: number;
-    climate_altering_land: number;
-    loss: number;
-    people: number;
-    population_growth: number;
-  }[];
+  data: any[];
   selectedCountry: string;
   width: number;
 };
@@ -31,11 +20,11 @@ const OUTCOMES = [
   { key: "lifestock_yield", label: "Livestock" },
   { key: "climate_altering_land", label: "Land" },
   { key: "loss", label: "Economic Loss" },
-  { key: "people", label: "People Affected" },
+  { key: "people", label: "People" },
 ];
 
-function clamp(v: number) {
-  return Math.max(0, Math.min(1, v));
+function norm(v: number) {
+  return Math.max(0, Math.min(1, Math.abs(v)));
 }
 
 export default function CausalImpactMatrix({
@@ -43,46 +32,53 @@ export default function CausalImpactMatrix({
   selectedCountry,
   width,
 }: Props) {
-  const matrix = useMemo(() => {
-    const filtered = data.filter(d => d.country === selectedCountry);
-    if (!filtered.length) return [];
+  const filtered = useMemo(
+    () => data.filter(d => d.country === selectedCountry),
+    [data, selectedCountry]
+  );
 
-    const latest = filtered[filtered.length - 1];
+  const latest = filtered[filtered.length - 1];
+
+  const matrix = useMemo(() => {
+    if (!latest) return [];
 
     return DRIVERS.map(driver => {
+      const dVal = norm(latest[driver.key] || 0);
+
       return OUTCOMES.map(outcome => {
-        let value = 0;
+        const oVal = norm(latest[outcome.key] || 0);
 
-        const dVal = Math.abs(latest[driver.key as keyof typeof latest] as number || 0);
-        const oVal = Math.abs(latest[outcome.key as keyof typeof latest] as number || 0);
-
-        // simple causal heuristic (you can refine later)
-        value = clamp((dVal * 0.5 + oVal * 0.5) / 100);
-
-        return value;
+        // 🔥 SAME INTUITION AS YOUR SANKEY (not fake causality, just coupling strength)
+        return Math.min(1, (dVal * 0.7 + oVal * 0.3));
       });
     });
-  }, [data, selectedCountry]);
+  }, [latest]);
 
-  const cellSize = Math.min(90, (width - 120) / OUTCOMES.length);
+  const cell = Math.min(80, (width - 140) / OUTCOMES.length);
 
-  if (!matrix.length) return null;
+  if (!latest) {
+    return (
+      <div className="text-sm text-slate-500">
+        No data available for matrix
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full">
+    <div className="w-full mt-10">
       <h3 className="text-base font-semibold text-slate-800 mb-1">
-        Climate → Impact Strength Map
+        System Coupling Matrix
       </h3>
-      <p className="text-xs text-slate-600 mb-6">
-        Higher intensity shows stronger coupling between climate drivers and system outcomes.
+      <p className="text-xs text-slate-500 mb-4">
+        Shows relative strength between climate drivers and downstream impacts.
       </p>
 
       <svg width={width} height={260}>
-        {/* Column Labels */}
+        {/* Column labels */}
         {OUTCOMES.map((o, i) => (
           <text
             key={o.key}
-            x={110 + i * cellSize}
+            x={120 + i * cell}
             y={20}
             fontSize={10}
             fill="#475569"
@@ -97,25 +93,25 @@ export default function CausalImpactMatrix({
           <g key={d.key}>
             <text
               x={10}
-              y={60 + row * cellSize}
+              y={60 + row * cell}
               fontSize={10}
               fill="#64748b"
-              textAnchor="start"
             >
               {d.label}
             </text>
 
             {OUTCOMES.map((_, col) => {
               const val = matrix[row][col];
+
               return (
                 <rect
-                  key={`${row}-${col}`}
-                  x={100 + col * cellSize}
-                  y={40 + row * cellSize}
-                  width={cellSize - 6}
-                  height={cellSize - 6}
+                  key={col}
+                  x={110 + col * cell}
+                  y={40 + row * cell}
+                  width={cell - 6}
+                  height={cell - 6}
                   rx={6}
-                  fill={`rgba(14, 165, 233, ${val})`}
+                  fill={`rgba(14,165,233,${val})`}
                   stroke="#e2e8f0"
                 />
               );
