@@ -33,7 +33,7 @@ export function HumanEconomicSection({
   });
 
   // =========================
-  // PARALLAX LAYERS (UNCHANGED CORE LOGIC)
+  // PARALLAX LAYERS
   // =========================
   const economicOpacity = useTransform(scrollYProgress, [0, 0.35, 0.5], [1, 1, 0]);
   const economicY = useTransform(scrollYProgress, [0, 0.5], [0, -60]);
@@ -52,12 +52,12 @@ export function HumanEconomicSection({
   const formatPeople = (v: number) => `${(v / 1000).toFixed(0)}K`;
 
   return (
-    <div ref={sectionRef} className="relative py-32">
+    <div ref={sectionRef} className="relative py-16">
 
       {/* =========================
-          STORY HEADER (IMPROVED CLARITY)
+          STORY HEADER
       ========================== */}
-      <div className="sticky top-24 z-20 text-center mb-16">
+      <div className="sticky top-24 z-20 text-center mb-12">
         <div className="text-xs uppercase tracking-widest text-slate-400">
           Human & Economic Impact Pathway
         </div>
@@ -70,16 +70,15 @@ export function HumanEconomicSection({
           From financial stress → to household exposure → to structural economic change
         </p>
 
-        {/* NEW: narrative stage hint */}
         <div className="mt-3 text-[11px] text-slate-400">
           Scroll to reveal system progression
         </div>
       </div>
 
       {/* =========================
-          PARALLAX STACK
+          PARALLAX STACK (REDUCED HEIGHT)
       ========================== */}
-      <div className="relative h-[1400px]">
+      <div className="relative h-[1000px]">
 
         {/* =========================
             1. ECONOMIC
@@ -87,7 +86,7 @@ export function HumanEconomicSection({
         {hasEconomicData && (
           <motion.div
             style={{ opacity: economicOpacity, y: economicY }}
-            className="sticky top-40 mb-40"
+            className="sticky top-32 mb-20"
           >
             <div className="text-center">
               <div className="text-sm font-medium text-slate-700 mb-1">
@@ -119,7 +118,7 @@ export function HumanEconomicSection({
         {hasHumanData && (
           <motion.div
             style={{ opacity: humanOpacity, y: humanY }}
-            className="sticky top-40 mb-40"
+            className="sticky top-32 mb-20"
           >
             <div className="text-center">
               <div className="text-sm font-medium text-slate-700 mb-1">
@@ -149,7 +148,7 @@ export function HumanEconomicSection({
         {hasSocioeconomicData && (
           <motion.div
             style={{ opacity: systemOpacity, y: systemY }}
-            className="sticky top-40"
+            className="sticky top-32"
           >
             <div className="text-center">
               <div className="text-sm font-medium text-slate-700 mb-1">
@@ -173,9 +172,9 @@ export function HumanEconomicSection({
       </div>
 
       {/* =========================
-          FOOTER INSIGHT (IMPROVED)
+          FOOTER INSIGHT
       ========================== */}
-      <div className="text-center text-xs text-slate-400 mt-20 max-w-xl mx-auto">
+      <div className="text-center text-xs text-slate-400 mt-12 max-w-xl mx-auto">
         This sequence demonstrates a causal chain: climate stress → economic loss → human vulnerability → structural transformation.
       </div>
     </div>
