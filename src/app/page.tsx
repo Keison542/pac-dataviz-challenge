@@ -76,8 +76,6 @@ export default function Home() {
           The Pacific is not just changing — it is entering a system of cascading climate pressure.
         </div>
 
-        <StoryTransition text="We begin by observing the physical signals of climate change across the Pacific region." />
-
         {/* =========================
             1. CLIMATE SIGNAL
         ========================== */}
@@ -92,8 +90,6 @@ export default function Home() {
             <h2 className="text-2xl font-semibold mb-2 text-center">
               1. A clear climate signal is emerging
             </h2>
-
-   
 
             <p className="text-slate-600 mb-8 max-w-2xl mx-auto text-center">
               Temperature and sea level trends show consistent long-term change across Pacific nations.
@@ -114,7 +110,10 @@ export default function Home() {
           </motion.section>
         )}
 
-        <StoryTransition text="But climate signals alone do not explain why some nations are more affected than others." />
+        {/* ─── STORY TRANSITION 1 ─── */}
+        <div className="py-8">
+          <StoryTransition text="But climate signals alone do not explain why some nations are more affected than others." />
+        </div>
 
         {/* =========================
             2. HUMAN IMPACT
@@ -125,7 +124,7 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            className="py-20 border-t border-slate-100"
+            className="py-16 border-t border-slate-100"
           >
             <h2 className="text-2xl font-semibold mb-2 text-center">
               2. Climate change is already affecting livelihoods
@@ -147,7 +146,10 @@ export default function Home() {
           </motion.section>
         )}
 
-        <StoryTransition text="These pressures do not act independently — they reinforce each other across the system." />
+        {/* ─── STORY TRANSITION 2 ─── */}
+        <div className="py-8">
+          <StoryTransition text="These pressures do not act independently — they reinforce each other across the system." />
+        </div>
 
         {/* =========================
             3. SYSTEM VIEW
@@ -158,9 +160,9 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            className="py-20 bg-slate-50 rounded-2xl px-6"
+            className="py-16 bg-slate-50 rounded-2xl px-6"
           >
-            <h2 className="text-2xl font-semibold mb-2 text-center" >
+            <h2 className="text-2xl font-semibold mb-2 text-center">
               3. These impacts are interconnected
             </h2>
 
@@ -177,7 +179,10 @@ export default function Home() {
           </motion.section>
         )}
 
-        <StoryTransition text="As the system intensifies, inequality becomes the defining factor in climate vulnerability." />
+        {/* ─── STORY TRANSITION 3 ─── */}
+        <div className="py-8">
+          <StoryTransition text="As the system intensifies, inequality becomes the defining factor in climate vulnerability." />
+        </div>
 
         {/* =========================
             4. INEQUALITY MOMENT
@@ -188,7 +193,7 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            className="py-20"
+            className="py-16"
           >
             <h2 className="text-2xl font-semibold mb-2 text-center">
               4. Impact is not evenly distributed
@@ -207,7 +212,10 @@ export default function Home() {
           </motion.section>
         )}
 
-        <StoryTransition text="The Pacific reveals a global truth: climate risk is shaped by unequal resilience." />
+        {/* ─── STORY TRANSITION 4 ─── */}
+        <div className="py-8">
+          <StoryTransition text="The Pacific reveals a global truth: climate risk is shaped by unequal resilience." />
+        </div>
 
         {/* =========================
             5. CONCLUSION
@@ -224,7 +232,7 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            className="py-24 text-center border-t"
+            className="py-16 text-center border-t"
           >
             <Conclusion
               selectedCountry={selectedCountry}
