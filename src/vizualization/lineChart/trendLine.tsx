@@ -1,183 +1,120 @@
 "use client";
 
 import { scaleLinear } from "d3-scale";
-import { line, area, curveMonotoneX } from "d3-shape";
-import { useState, useMemo, useEffect } from "react";
-import { LineItem } from "./LineItem";
+import { useMemo, useState, useRef } from "react";
+import { line, curveCardinal } from "d3-shape";
+import { LineItem } from "@/vizualization/lineChart/LineItem";
 
-const MARGIN = { top: 50, right: 40, bottom: 70, left: 75 };
+const MARGIN = { top: 60, right: 60, bottom: 100, left: 110 };
 
-export type ClimateDriverType =
-  | "surfaceTempAnomaly"
-  | "seaSurfaceTempAnomaly"
-  | "precipitationAnomaly"
-  | "seaLevelAnomaly";
-
-type ClimateDataPoint = {
-  year: number;
-  value: number;
-};
-
-type LineChartProps = {
-  width: number;
-  height: number;
-  data: ClimateDataPoint[];
-  dataType: ClimateDriverType;
-  selectedCountry?: string;
-  xAxisLabel?: string;
-  yAxisLabel?: string;
-  title?: string;
-};
-
-export const LineChart = ({
+export const TrendLine = ({
   width,
   height,
   data,
-  dataType,
-  selectedCountry = "Selected Country",
-  xAxisLabel = "Year",
-  yAxisLabel = "Value",
-}: LineChartProps) => {
-  const [tooltip, setTooltip] = useState<any>(null);
-  const [animate, setAnimate] = useState(false);
+  selectedCountry,
+  setSelectedCountry,
+  highlightMode = "economic",
+}) => {
+  const [hovered, setHovered] = useState<any>(null);
 
-  const boundsWidth = Math.max(0, width - MARGIN.left - MARGIN.right);
-  const boundsHeight = Math.max(0, height - MARGIN.top - MARGIN.bottom);
+  const boundsWidth = width - MARGIN.left - MARGIN.right;
+  const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
-  const safeData = useMemo(() => {
-    if (!Array.isArray(data)) return [];
-    return data.filter(d => d && typeof d.year === "number" && typeof d.value === "number");
+  const trendData = useMemo(() => {
+    const map = new Map();
+
+    data.forEach(d => {
+      map.set(d.year, (map.get(d.year) || 0) + d.value);
+    });
+
+    return Array.from(map.entries())
+      .map(([year, value]) => ({ year, value }))
+      .sort((a, b) => a.year - b.year);
   }, [data]);
 
-  const processedData = useMemo(
-    () => [...safeData].sort((a, b) => a.year - b.year),
-    [safeData]
-  );
+  const xScale = scaleLinear()
+    .domain([trendData[0]?.year, trendData.at(-1)?.year])
+    .range([0, boundsWidth]);
 
-  const xScale = useMemo(() => {
-    const years = processedData.map(d => d.year);
-    return scaleLinear()
-      .domain([Math.min(...years), Math.max(...years)])
-      .range([0, boundsWidth]);
-  }, [processedData, boundsWidth]);
+  const yScale = scaleLinear()
+    .domain([0, Math.max(...trendData.map(d => d.value)) * 1.1])
+    .range([boundsHeight, 0]);
 
-  const yScale = useMemo(() => {
-    const values = processedData.map(d => d.value);
-    return scaleLinear()
-      .domain([Math.min(...values), Math.max(...values)])
-      .range([boundsHeight, 0]);
-  }, [processedData, boundsHeight]);
-
-  const lineBuilder = useMemo(
-    () =>
-      line<any>()
+  const linePath = useMemo(() => {
+    return (
+      line()
         .x(d => xScale(d.year))
         .y(d => yScale(d.value))
-        .curve(curveMonotoneX),
-    [xScale, yScale]
+        .curve(curveCardinal.tension(0.7))(trendData) || ""
+    );
+  }, [trendData]);
+
+  const worst = trendData.reduce((a, b) =>
+    b.value > a.value ? b : a,
+    trendData[0]
   );
-
-  const areaBuilder = useMemo(
-    () =>
-      area<any>()
-        .x(d => xScale(d.year))
-        .y0(boundsHeight)
-        .y1(d => yScale(d.value))
-        .curve(curveMonotoneX),
-    [xScale, yScale, boundsHeight]
-  );
-
-  useEffect(() => {
-    setAnimate(false);
-    const t = setTimeout(() => setAnimate(true), 80);
-    return () => clearTimeout(t);
-  }, [data]);
-
-  if (!processedData.length) return null;
-
-  const linePath = lineBuilder(processedData);
-  const areaPath = areaBuilder(processedData);
 
   return (
-    <div className="w-full relative">
+    <div className="w-full">
 
       {/* HEADER */}
-      <div className="text-center mb-6">
-        <h3 className="text-lg font-bold text-slate-800">
-          Climate Signal: {dataType}
-        </h3>
-        <p className="text-xs text-slate-500">
-          Trend visualization for {selectedCountry}
-        </p>
+      <div className="text-center mb-4">
+        <div className="text-sm font-semibold">
+          Livelihood Pressure Curve
+        </div>
       </div>
 
-      {/* SVG */}
       <svg width={width} height={height}>
         <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
 
-          {/* AREA */}
-          {areaPath && (
-            <path d={areaPath} fill="#60a5fa" opacity={0.15} />
-          )}
-
           {/* LINE */}
-          {linePath && (
-            <LineItem
-              path={linePath}
-              color="#2563eb"
-              strokeWidth={3}
-              opacity={animate ? 1 : 0}
-              onHover={() => {}}
+          <LineItem
+            path={linePath}
+            color="#06b6d4"
+            strokeWidth={3}
+          />
+
+          {/* PEAK */}
+          {worst && (
+            <circle
+              cx={xScale(worst.year)}
+              cy={yScale(worst.value)}
+              r={6}
+              fill="red"
             />
           )}
 
-          {/* POINTS WITH TOOLTIP */}
-          {processedData.map((d, i) => (
+          {/* INTERACTION LAYER */}
+          {trendData.map((d, i) => (
             <circle
               key={i}
               cx={xScale(d.year)}
               cy={yScale(d.value)}
-              r={4}
-              fill="#2563eb"
-              onMouseEnter={(e) =>
-                setTooltip({
-                  x: e.clientX,
-                  y: e.clientY,
-                  year: d.year,
-                  value: d.value,
-                })
-              }
-              onMouseLeave={() => setTooltip(null)}
+              r={6}
+              fill="transparent"
+              onMouseEnter={() => setHovered(d)}
+              onMouseLeave={() => setHovered(null)}
             />
           ))}
 
-          {/* AXIS LABELS (NEW) */}
-          <text x={boundsWidth / 2} y={boundsHeight + 55} textAnchor="middle" fontSize={11} fill="#64748b">
-            {xAxisLabel}
-          </text>
-
+          {/* X AXIS LABEL */}
           <text
-            transform="rotate(-90)"
-            x={-boundsHeight / 2}
-            y={-55}
+            x={boundsWidth / 2}
+            y={boundsHeight + 55}
             textAnchor="middle"
             fontSize={11}
             fill="#64748b"
           >
-            {yAxisLabel}
+            Year
           </text>
 
         </g>
       </svg>
 
       {/* TOOLTIP */}
-      {tooltip && (
-        <div
-          className="absolute bg-white border shadow-md rounded px-2 py-1 text-xs"
-          style={{ left: tooltip.x + 10, top: tooltip.y + 10 }}
-        >
-          <div>{tooltip.year}</div>
-          <div className="font-bold">{tooltip.value}</div>
+      {hovered && (
+        <div className="text-xs mt-2 text-center">
+          {hovered.year} → {hovered.value}
         </div>
       )}
     </div>
