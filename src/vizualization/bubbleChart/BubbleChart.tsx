@@ -30,7 +30,7 @@ export function BubbleChart({ width, height, data }: Props) {
   const r = scaleSqrt().domain([0, maxValue]).range([4, 40]);
 
   return (
-    <div className="w-full relative">
+     <div className="w-full flex flex-col items-center">
 
       <div className="mb-3">
         <div className="text-sm font-semibold">
