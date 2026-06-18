@@ -157,7 +157,7 @@ export default function Home() {
       <section className="min-h-[80vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
-            Climate signals alone do not explain the full story.
+            However, climate signals alone do not explain the full story.
           </h2>
 
           <p className="mt-10 text-xl text-slate-500">
@@ -173,12 +173,17 @@ export default function Home() {
 
       <section className="min-h-screen flex items-center justify-center px-6 border-y border-slate-100">
         <div className="text-center">
+
+          <div className="mt-6 text-xl text-slate-500">
+            In {selectedCountry}
+          </div>
+          
           <div className="text-6xl md:text-8xl font-bold">
             {peopleTotal.toLocaleString()}
           </div>
 
           <div className="mt-6 text-xl text-slate-500">
-            people affected by climate-related disasters
+            people affected by climate-related disasters. Now one could imagine the scale of this impact across the Pacific Island Nations.
           </div>
         </div>
       </section>
