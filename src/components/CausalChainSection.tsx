@@ -18,9 +18,9 @@ export function CausalChainSection({
 
       {/* HEADER (story-first) */}
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-semibold text-slate-900">
+        {/* <h2 className="text-2xl font-semibold text-slate-900">
           Climate System Interactions
-        </h2>
+        </h2> */}
 
         <p className="text-sm text-slate-500 max-w-2xl mx-auto mt-2">
           Climate impacts are not linear. Each driver reinforces multiple systems at once —
