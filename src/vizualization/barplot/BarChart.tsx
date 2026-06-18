@@ -271,7 +271,7 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
   }
 
   return (
-    <div className="relative w-full flex justify-center">
+    <div className="relative w-full">
 
       {/* ─── Header ─── */}
       <div className="mb-4">
