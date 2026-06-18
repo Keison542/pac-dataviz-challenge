@@ -180,22 +180,22 @@ export function TimeSeriesDashboard({
       {/* =========================
           LEGEND
       ========================== */}
-      <div className="flex gap-2 flex-wrap mb-4">
-        {METRICS.map((m) => (
-          <button
-            key={m.key}
-            onClick={() => toggleMetric(m.key)}
-            className="px-2 py-1 text-xs rounded-full border"
-            style={{
-              borderColor: visibleMetrics.has(m.key) ? m.color : "#e2e8f0",
-              color: visibleMetrics.has(m.key) ? m.color : "#94a3b8",
-              background: visibleMetrics.has(m.key) ? m.color + "10" : "white",
-            }}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
+      <div className="flex flex-wrap gap-2 mb-4 justify-center">
+      {METRICS.map((m) => (
+        <button
+          key={m.key}
+          onClick={() => toggleMetric(m.key)}
+          className="px-2 py-1 text-xs rounded-full border"
+          style={{
+            borderColor: visibleMetrics.has(m.key) ? m.color : "#e2e8f0",
+            color: visibleMetrics.has(m.key) ? m.color : "#94a3b8",
+            background: visibleMetrics.has(m.key) ? m.color + "10" : "white",
+          }}
+        >
+          {m.label}
+        </button>
+      ))}
+    </div>
 
       {/* =========================
           CHART
