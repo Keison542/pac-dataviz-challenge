@@ -103,10 +103,6 @@ export default function Home() {
 
       <section className="min-h-[70vh] flex items-center justify-center px-6">
         <div className="max-w-4xl text-center">
-          <p className="uppercase tracking-[0.3em] text-slate-400 mb-8">
-            Chapter 1
-          </p>
-
           <h2 className="text-4xl md:text-6xl font-light leading-tight">
             A clear climate signal is emerging across Pacific nations.
           </h2>
