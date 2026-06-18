@@ -53,7 +53,7 @@ export function Hero({
       ========================== */}
       <h1 className="text-[clamp(2.2rem,5vw,3.8rem)] font-bold leading-tight text-slate-900 max-w-4xl mx-auto">
         Climate pressure is rising — but
-        <span className="text-cyan-600"> vulnerability is unequal</span>
+         vulnerability is unequal
       </h1>
 
       {/* =========================
