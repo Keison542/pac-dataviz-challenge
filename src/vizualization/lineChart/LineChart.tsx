@@ -227,19 +227,18 @@ export const LineChart = ({
       <div className="text-center mb-6">
         {stats && (
           <div className="mt-2 text-sm text-slate-600">
-            {selectedCountry}'s climate has shifted towards overall {" "} since {processedData[0]?.year} 
-            <span
-              className={
-                stats.percentChange > 0
-                  ? "text-red-600 font-semibold"
-                  : "text-blue-600 font-semibold"
-              }
-            >
-              {stats.trend}
-            </span>{" "}
-            ({Math.abs(stats.percentChange).toFixed(1)}%)
-
-          </div>
+          {selectedCountry}'s climate has shifted towards overall{" "}
+          <span
+            className={
+              stats.percentChange > 0
+                ? "text-red-600 font-semibold"
+                : "text-blue-600 font-semibold"
+            }
+          >
+            {stats.trend}
+          </span>{" "}
+          since {processedData[0]?.year} ({Math.abs(stats.percentChange).toFixed(1)}%)
+        </div>
         )}
       </div>
 
