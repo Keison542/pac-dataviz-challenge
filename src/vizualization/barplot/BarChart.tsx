@@ -271,15 +271,12 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full flex justify-center">
 
       {/* ─── Header ─── */}
       <div className="mb-4">
-        <h3 className="text-base font-semibold text-slate-800">
-          Regional Vulnerability Index
-        </h3>
         <p className="text-sm text-slate-600">
-          Composite score across 7 key climate impact metrics
+          Regional Vulnerability Index: Composite score across 7 key climate impact metrics
         </p>
       </div>
 
@@ -485,10 +482,8 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
       {topCountry && bottomCountry && (
         <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
           <p>
-            {topCountry.country} has the highest composite vulnerability index
-            <span className="font-semibold text-red-600"> (High Vulnerability)</span>,
-            while {bottomCountry.country} has the lowest
-            <span className="font-semibold text-green-600"> (Low Vulnerability)</span>
+            {topCountry.country} has the highest composite vulnerability index (High Vulnerability),
+            while {bottomCountry.country} has the lowest (Low Vulnerability)
             across all 7 metrics.
           </p>
         </div>
