@@ -238,6 +238,14 @@ export const LineChart = ({
               {stats.trend}
             </span>{" "}
             ({Math.abs(stats.percentChange).toFixed(1)}%)
+
+            <p className="mt-4 text-slate-500 max-w-2xl mx-auto">
+    Since {processedData[0]?.year}, anomalies have shifted by{" "}
+    <span className="font-semibold text-slate-900">
+      {Math.abs(stats?.percentChange ?? 0).toFixed(1)}%
+    </span>
+    .
+  </p>
           </div>
         )}
       </div>
