@@ -71,106 +71,120 @@ export function HumanEconomicSection({
         </p>
       </div>
 
-      {/* =========================
-          PARALLAX STACK (REDUCED HEIGHT)
-      ========================== */}
-      <div className="relative min-h-[1400px]">
+     {/* =========================
+    SCROLL NARRATIVE
+========================= */}
+<div className="relative min-h-[1400px]">
 
-        {/* =========================
-            1. ECONOMIC
-        ========================== */}
-        {hasEconomicData && (
-          <motion.div
-            style={{ opacity: economicOpacity, y: economicY }}
-            className="sticky top-20 mb-16"
-          >
-            <div className="text-center">
-              <div className="text-sm font-medium text-slate-700 mb-1">
-                1. Economic Stress Signal
-              </div>
+  {/* =========================
+      1. ECONOMIC
+  ========================== */}
+  {hasEconomicData && (
+    <motion.div
+      style={{ opacity: economicOpacity, y: economicY }}
+      className="sticky top-20 mb-20"
+    >
+      <div className="text-center">
+        <div className="text-sm font-medium text-slate-700 mb-1">
+          1. Economic Stress Signal
+        </div>
 
-              <div className="text-xs text-slate-400 mb-2">
-                Total losses: <span className="font-semibold text-slate-600">{formatLoss(lossTotal)}</span>
-              </div>
+        <div className="text-xs text-slate-400 mb-2">
+          Total losses:
+          <span className="font-semibold text-slate-600 ml-1">
+            {formatLoss(lossTotal)}
+          </span>
+        </div>
 
-              <div className="text-[11px] text-slate-400 mb-3 max-w-md mx-auto">
-                Climate impacts first appear as economic shocks: infrastructure damage, agriculture loss, and recovery costs.
-              </div>
+        <div className="text-[11px] text-slate-400 mb-4 max-w-md mx-auto">
+          Climate impacts first emerge as financial shocks through damaged
+          infrastructure, agricultural losses, and rising recovery costs.
+        </div>
 
-              <TrendLine
-                width={chartWidth * 1.3}
-                height={240}
-                data={dataMap.loss}
-                dataType="loss"
-                setSelectedCountry={setSelectedCountry}
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {/* =========================
-            2. HUMAN
-        ========================== */}
-        {hasHumanData && (
-          <motion.div
-            style={{ opacity: humanOpacity, y: humanY }}
-            className="sticky top-20 mb-16"
-          >
-            <div className="text-center">
-              <div className="text-sm font-medium text-slate-700 mb-1">
-                2. Human Exposure
-              </div>
-
-              <div className="text-xs text-slate-400 mb-2">
-                People affected: <span className="font-semibold text-slate-600">{formatPeople(peopleTotal)}</span>
-              </div>
-
-              <div className="text-[11px] text-slate-400 mb-3 max-w-md mx-auto">
-                Economic stress translates into household-level vulnerability, displacement risk, and livelihood disruption.
-              </div>
-
-              <BubbleChart
-                width={chartWidth * 1.3}
-                height={260}
-                data={dataMap.people}
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {/* =========================
-            3. SYSTEM SHIFT
-        ========================== */}
-        {hasSocioeconomicData && (
-          <motion.div
-            style={{ opacity: systemOpacity, y: systemY }}
-            className="relative mt-32"
-          >
-            <div className="text-center">
-              <div className="text-sm font-medium text-slate-700 mb-1">
-                3. Structural System Shift
-              </div>
-
-              <div className="text-[11px] text-slate-400 mb-3 max-w-md mx-auto">
-                Long-term socioeconomic indicators show how climate pressure reshapes national economic structures.
-              </div>
-
-              <TimeSeriesDashboard
-                width={chartWidth * 2 + 40}
-                height={400}
-                data={timeSeriesData}
-                selectedCountry={selectedCountry}
-              />
-            </div>
-          </motion.div>
-        )}
-
+        <TrendLine
+          width={chartWidth * 1.3}
+          height={240}
+          data={dataMap.loss}
+          dataType="loss"
+          setSelectedCountry={setSelectedCountry}
+        />
       </div>
+    </motion.div>
+  )}
+
+  {/* =========================
+      2. HUMAN
+  ========================== */}
+  {hasHumanData && (
+    <motion.div
+      style={{ opacity: humanOpacity, y: humanY }}
+      className="sticky top-20 mb-20"
+    >
+      <div className="text-center">
+        <div className="text-sm font-medium text-slate-700 mb-1">
+          2. Human Exposure
+        </div>
+
+        <div className="text-xs text-slate-400 mb-2">
+          People affected:
+          <span className="font-semibold text-slate-600 ml-1">
+            {formatPeople(peopleTotal)}
+          </span>
+        </div>
+
+        <div className="text-[11px] text-slate-400 mb-4 max-w-md mx-auto">
+          Economic stress ultimately becomes a human story—affecting
+          livelihoods, increasing displacement risk, and exposing communities
+          to long-term vulnerability.
+        </div>
+
+        <BubbleChart
+          width={chartWidth * 1.3}
+          height={260}
+          data={dataMap.people}
+        />
+      </div>
+    </motion.div>
+  )}
+
+  {/* =========================
+      3. STRUCTURAL SHIFT
+      NOT STICKY
+  ========================== */}
+  {hasSocioeconomicData && (
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ duration: 0.7 }}
+      className="mt-32"
+    >
+      <div className="text-center">
+        <div className="text-sm font-medium text-slate-700 mb-1">
+          3. Structural System Shift
+        </div>
+
+        <div className="text-[11px] text-slate-400 mb-4 max-w-md mx-auto">
+          Long-term socioeconomic indicators reveal how climate pressure
+          gradually reshapes national economic structures and adaptive
+          capacity.
+        </div>
+
+        <TimeSeriesDashboard
+          width={chartWidth * 2 + 40}
+          height={400}
+          data={timeSeriesData}
+          selectedCountry={selectedCountry}
+        />
+      </div>
+    </motion.div>
+  )}
+</div>
 
       {/* =========================
           FOOTER INSIGHT
       ========================== */}
-      <div className="text-center text-xs text-slate-400 mt-8 max-w-xl mx-auto">
+      <div className="text-center text-xs text-slate-400 mt-12 mb-24 max-w-xl mx-auto">
         This sequence demonstrates a causal chain: climate stress → economic loss → human vulnerability → structural transformation.
       </div>
     </div>
