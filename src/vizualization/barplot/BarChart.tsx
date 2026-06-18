@@ -1,7 +1,7 @@
 "use client";
 
 import { scaleBand, scaleLinear } from "d3-scale";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { animated, useSpring } from "@react-spring/web";
 
 type RecordType = {
@@ -10,8 +10,8 @@ type RecordType = {
 };
 
 type Props = {
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   data: {
     economicLoss: RecordType[];
     cropYield: RecordType[];
@@ -22,6 +22,7 @@ type Props = {
     affectedPersons: RecordType[];
   };
   selectedCountry?: string;
+  className?: string;
 };
 
 const METRIC_CONFIGS = {
@@ -140,7 +141,15 @@ const AnimatedBar = ({ width, height, y, x, fill, isHovered, onMouseEnter, onMou
   );
 };
 
-export function MultiMetricRankedDashboard({ width, height, data }: Props) {
+export function MultiMetricRankedDashboard({ 
+  width: propWidth, 
+  height: propHeight, 
+  data,
+  className = ""
+}: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [isMobile, setIsMobile] = useState(false);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<null | {
     x: number;
@@ -150,6 +159,61 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
     compositeScore: number;
     level: string;
   }>(null);
+
+  // ─── Responsive sizing ───
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const width = propWidth || rect.width || 600;
+        const height = propHeight || Math.min(rect.width * 0.8, 500);
+        setDimensions({ width, height });
+        setIsMobile(width < 768);
+      }
+    };
+
+    updateDimensions();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateDimensions();
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    window.addEventListener("resize", updateDimensions);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateDimensions);
+    };
+  }, [propWidth, propHeight]);
+
+  const { width, height } = dimensions;
+
+  // ─── Responsive margins ───
+  const responsiveMargin = useMemo(() => {
+    if (width < 400) {
+      return { left: 60, right: 10, top: 30, bottom: 50 };
+    }
+    if (width < 600) {
+      return { left: 80, right: 15, top: 35, bottom: 60 };
+    }
+    if (width < 768) {
+      return { left: 95, right: 18, top: 38, bottom: 70 };
+    }
+    return { left: 120, right: 20, top: 40, bottom: 80 };
+  }, [width]);
+
+  // ─── Responsive font size ───
+  const getFontSize = useCallback((base: number) => {
+    if (width < 400) return base * 0.55;
+    if (width < 600) return base * 0.7;
+    if (width < 768) return base * 0.85;
+    if (width < 1024) return base * 0.9;
+    return base;
+  }, [width]);
 
   // ─── 1. Build country-wise data for ALL 7 metrics ───
   const countryData = useMemo(() => {
@@ -208,27 +272,22 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
   const topCountry = ranked[0];
   const bottomCountry = ranked[ranked.length - 1];
 
-  // ─── 5. Get total composite sum ───
-  const totalComposite = ranked.reduce((sum, d) => sum + d.compositeScore, 0);
-
-  // ─── 6. Chart dimensions ───
-  const leftMargin = 120;
-  const topMargin = 40;
-  const chartWidth = width - leftMargin - 20;
-  const chartHeight = height - topMargin - 20;
+  // ─── 5. Chart dimensions ───
+  const chartWidth = width - responsiveMargin.left - responsiveMargin.right;
+  const chartHeight = height - responsiveMargin.top - responsiveMargin.bottom;
 
   const maxComposite = Math.max(...ranked.map((d) => d.compositeScore), 1);
 
   const yScale = scaleBand()
     .domain(ranked.map((d) => d.country))
     .range([0, chartHeight])
-    .padding(0.25);
+    .padding(width < 500 ? 0.15 : width < 768 ? 0.2 : 0.25);
 
   const xScale = scaleLinear()
     .domain([0, maxComposite * 1.15])
     .range([0, chartWidth]);
 
-  // ─── 7. Tooltip handlers ───
+  // ─── 6. Tooltip handlers ───
   const handleMouseEnter = (country: string) => {
     setHoveredCountry(country);
   };
@@ -251,7 +310,7 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
     });
   };
 
-  // ─── 8. Get color based on vulnerability level ───
+  // ─── 7. Get color based on vulnerability level ───
   const getBarColor = (score: number) => {
     const level = getVulnerabilityLevel(score);
     const colorMap = {
@@ -262,74 +321,127 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
     return colorMap[level];
   };
 
-  if (!ranked.length) {
+  const fontSize = getFontSize(11);
+  const titleFontSize = getFontSize(18);
+  const subtitleFontSize = getFontSize(14);
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  if (!ranked.length || !width || !height) {
     return (
-      <div className="flex items-center justify-center" style={{ width, height }}>
-        <p className="text-slate-500">No data available</p>
+      <div ref={containerRef} className={`w-full ${className}`}>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-slate-500">Loading chart...</p>
+        </div>
       </div>
     );
   }
 
-  // ─── 9. Center the chart and update footer with Pacific context ───
   return (
-    <div className="flex flex-col items-center w-full">
-      <div className="w-full max-w-5xl">
+    <div ref={containerRef} className={`flex flex-col items-center w-full ${className}`}>
+      <div className="w-full max-w-5xl px-2 sm:px-4">
         {/* ─── Header ─── */}
-        <div className="mb-4 text-center">
-          <h2 className="text-xl font-bold text-slate-800">
+        <div className="mb-3 sm:mb-4 text-center">
+          <h2 
+            className="font-bold text-slate-800"
+            style={{ fontSize: titleFontSize }}
+          >
             Paying the Heaviest of the Carbon Debt Never Incurred
           </h2>
-          <p className="text-sm text-slate-600 mt-1">
+          <p 
+            className="text-slate-600 mt-1"
+            style={{ fontSize: subtitleFontSize * 0.85 }}
+          >
             Pacific island nations emit less CO₂ than three-quarters of all countries, yet rank among the most vulnerable to climate change.
           </p>
-          <p className="text-xs text-slate-500 mt-1">
+          <p 
+            className="text-slate-500 mt-0.5"
+            style={{ fontSize: subtitleFontSize * 0.7 }}
+          >
             Composite Vulnerability Index across 7 key climate impact metrics
           </p>
         </div>
 
         {/* ─── Summary Cards ─── */}
-        <div className="mb-4 grid grid-cols-3 gap-3 max-w-2xl mx-auto">
-          <div className="rounded-lg bg-cyan-50 p-3 text-center border border-cyan-100">
-            <div className="text-lg font-bold text-cyan-700">
+        <div className="mb-3 sm:mb-4 grid grid-cols-3 gap-1.5 sm:gap-3 max-w-2xl mx-auto">
+          <div className="rounded-lg bg-cyan-50 p-1.5 sm:p-3 text-center border border-cyan-100">
+            <div 
+              className="font-bold text-cyan-700"
+              style={{ fontSize: width < 500 ? 14 : 18 }}
+            >
               {topCountry?.country || "—"}
             </div>
-            <div className="text-xs text-slate-500">Highest Vulnerability</div>
+            <div 
+              className="text-slate-500"
+              style={{ fontSize: width < 500 ? 9 : 12 }}
+            >
+              Highest Vulnerability
+            </div>
           </div>
-          <div className="rounded-lg bg-amber-50 p-3 text-center border border-amber-100">
-            <div className="text-lg font-bold text-amber-700">
+          <div className="rounded-lg bg-amber-50 p-1.5 sm:p-3 text-center border border-amber-100">
+            <div 
+              className="font-bold text-amber-700"
+              style={{ fontSize: width < 500 ? 14 : 18 }}
+            >
               {bottomCountry?.country || "—"}
             </div>
-            <div className="text-xs text-slate-500">Lowest Vulnerability</div>
+            <div 
+              className="text-slate-500"
+              style={{ fontSize: width < 500 ? 9 : 12 }}
+            >
+              Lowest Vulnerability
+            </div>
           </div>
-          <div className="rounded-lg bg-slate-50 p-3 text-center border border-slate-100">
-            <div className="text-lg font-bold text-slate-700">
+          <div className="rounded-lg bg-slate-50 p-1.5 sm:p-3 text-center border border-slate-100">
+            <div 
+              className="font-bold text-slate-700"
+              style={{ fontSize: width < 500 ? 14 : 18 }}
+            >
               {ranked.length}
             </div>
-            <div className="text-xs text-slate-500">Countries Analyzed</div>
+            <div 
+              className="text-slate-500"
+              style={{ fontSize: width < 500 ? 9 : 12 }}
+            >
+              Countries Analyzed
+            </div>
           </div>
         </div>
 
         {/* ─── Chart ─── */}
-        <div className="flex justify-center">
-          <svg width={width} height={height}>
-            <g transform={`translate(${leftMargin},${topMargin})`}>
+        <div className="relative w-full overflow-hidden">
+          <svg 
+            width={width} 
+            height={height} 
+            className="block"
+            viewBox={width && height ? `0 0 ${width} ${height}` : undefined}
+            style={{ maxWidth: '100%', height: 'auto' }}
+          >
+            <g transform={`translate(${responsiveMargin.left},${responsiveMargin.top})`}>
               {/* Country labels */}
               {ranked.map((d) => {
                 const y = yScale(d.country)!;
                 const level = getVulnerabilityLevel(d.compositeScore);
                 const color = VULNERABILITY_LEVELS[level].color;
+                const isHovered = hoveredCountry === d.country;
+                
+                // Truncate long country names on mobile
+                const displayName = width < 500 
+                  ? (d.country.length > 10 ? d.country.slice(0, 8) + "…" : d.country)
+                  : width < 768 
+                    ? (d.country.length > 12 ? d.country.slice(0, 10) + "…" : d.country)
+                    : d.country;
 
                 return (
                   <text
                     key={d.country}
-                    x={-10}
-                    y={y + yScale.bandwidth() / 2 + 4}
+                    x={-6}
+                    y={y + yScale.bandwidth() / 2 + fontSize * 0.35}
                     textAnchor="end"
-                    fontSize={11}
-                    fill={hoveredCountry === d.country ? "#0f172a" : "#475569"}
-                    fontWeight={hoveredCountry === d.country ? "bold" : "normal"}
+                    fontSize={Math.max(8, Math.min(fontSize, 11))}
+                    fill={isHovered ? "#0f172a" : "#475569"}
+                    fontWeight={isHovered ? "bold" : "normal"}
                   >
-                    {d.country}
+                    {displayName}
                   </text>
                 );
               })}
@@ -340,6 +452,7 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
                 const barWidth = xScale(d.compositeScore);
                 const isHovered = hoveredCountry === d.country;
                 const barColor = getBarColor(d.compositeScore);
+                const barHeight = yScale.bandwidth();
 
                 return (
                   <g key={d.country}>
@@ -348,7 +461,7 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
                       x={0}
                       y={y}
                       width={barWidth}
-                      height={yScale.bandwidth()}
+                      height={barHeight}
                       fill={barColor}
                       isHovered={isHovered}
                       onMouseEnter={() => handleMouseEnter(d.country)}
@@ -360,20 +473,20 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
                       x={0}
                       y={y}
                       width={barWidth}
-                      height={yScale.bandwidth()}
+                      height={barHeight}
                       fill="transparent"
                       onMouseMove={(e) => handleMouseMove(e, d.country, d.values, d.compositeScore)}
                       onMouseLeave={handleMouseLeave}
-                      style={{ cursor: "pointer" }}
+                      className={!isTouchDevice ? "cursor-pointer" : ""}
                     />
 
-                    {/* Composite score label */}
-                    {barWidth > 40 && (
+                    {/* Composite score label - only if bar is wide enough */}
+                    {barWidth > (width < 500 ? 20 : 40) && (
                       <text
-                        x={barWidth - 6}
-                        y={y + yScale.bandwidth() / 2 + 4}
+                        x={barWidth - 4}
+                        y={y + barHeight / 2 + fontSize * 0.3}
                         textAnchor="end"
-                        fontSize={10}
+                        fontSize={Math.max(7, Math.min(fontSize * 0.85, 10))}
                         fill="#ffffff"
                         fontWeight="600"
                       >
@@ -387,9 +500,9 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
               {/* X-axis label */}
               <text
                 x={chartWidth / 2}
-                y={chartHeight + 30}
+                y={chartHeight + (width < 500 ? 20 : 30)}
                 textAnchor="middle"
-                fontSize={11}
+                fontSize={fontSize}
                 fill="#64748b"
               >
                 Composite Vulnerability Score →
@@ -398,6 +511,8 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
               {/* Reference lines for vulnerability levels */}
               {[2.5, 4.0].map((score) => {
                 const x = xScale(score);
+                if (x < 5 || x > chartWidth - 5) return null;
+                
                 return (
                   <g key={score}>
                     <line
@@ -406,15 +521,15 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
                       y1={0}
                       y2={chartHeight}
                       stroke="#94a3b8"
-                      strokeWidth="1"
+                      strokeWidth="0.5"
                       strokeDasharray="4 4"
                       opacity="0.4"
                     />
                     <text
                       x={x}
-                      y={-8}
+                      y={-6}
                       textAnchor="middle"
-                      fontSize={8}
+                      fontSize={Math.max(6, fontSize * 0.7)}
                       fill="#94a3b8"
                     >
                       {score.toFixed(1)}
@@ -424,55 +539,75 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
               })}
             </g>
           </svg>
+
+          {/* ─── Tooltip ─── */}
+          {tooltip && !isMobile && (
+            <div
+              className="absolute z-50 max-w-xs rounded-lg bg-slate-900 px-3 sm:px-4 py-2 sm:py-3 text-xs text-white shadow-lg pointer-events-none"
+              style={{
+                left: Math.min(tooltip.x + 10, width - 220),
+                top: Math.min(tooltip.y - 20, height - 200),
+                fontSize: getFontSize(12),
+              }}
+            >
+              <div className="mb-1 font-semibold text-amber-300">{tooltip.country}</div>
+              <div className="mb-1 font-bold text-cyan-300" style={{ fontSize: fontSize * 1.1 }}>
+                Score: {tooltip.compositeScore.toFixed(2)}
+              </div>
+              <div className="mb-1">
+                <span
+                  className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+                  style={{
+                    backgroundColor: VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].bgColor,
+                    color: VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].textColor
+                  }}
+                >
+                  {VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].label}
+                </span>
+              </div>
+              <div className="border-t border-slate-700 pt-1 mt-1">
+                {METRIC_KEYS.slice(0, width < 500 ? 3 : 7).map((key) => {
+                  const config = METRIC_CONFIGS[key];
+                  const val = tooltip.values[key] || 0;
+                  return (
+                    <div key={key} className="flex justify-between gap-2 sm:gap-4">
+                      <span style={{ color: config.color }}>{config.label}:</span>
+                      <span className="font-mono text-amber-300" style={{ fontSize: fontSize * 0.85 }}>
+                        {config.format(val)}
+                      </span>
+                    </div>
+                  );
+                })}
+                {width < 500 && METRIC_KEYS.length > 3 && (
+                  <div className="text-slate-400 text-[10px] mt-0.5">
+                    +{METRIC_KEYS.length - 3} more metrics
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ─── Mobile Tooltip ─── */}
+          {tooltip && isMobile && (
+            <div className="mt-2 text-center bg-white border rounded-lg p-2 mx-2">
+              <div className="font-semibold text-amber-600 text-xs">{tooltip.country}</div>
+              <div className="font-bold text-cyan-600 text-sm">
+                Score: {tooltip.compositeScore.toFixed(2)}
+              </div>
+              <div className="text-xs text-slate-600">
+                {VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].label}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* ─── Tooltip ─── */}
-        {tooltip && (
-          <div
-            className="absolute z-50 max-w-xs rounded-lg bg-slate-900 px-4 py-3 text-xs text-white shadow-lg pointer-events-none"
-            style={{
-              left: tooltip.x + 10,
-              top: tooltip.y - 20,
-              transform: "translate(0,0)"
-            }}
-          >
-            <div className="mb-1 font-semibold text-amber-300">{tooltip.country}</div>
-            <div className="mb-1 text-sm font-bold text-cyan-300">
-              Score: {tooltip.compositeScore.toFixed(2)}
-            </div>
-            <div className="mb-1">
-              <span
-                className="rounded-full px-2 py-0.5 text-[10px] font-medium"
-                style={{
-                  backgroundColor: VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].bgColor,
-                  color: VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].textColor
-                }}
-              >
-                {VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].label}
-              </span>
-            </div>
-            <div className="border-t border-slate-700 pt-1 mt-1">
-              {METRIC_KEYS.map((key) => {
-                const config = METRIC_CONFIGS[key];
-                const val = tooltip.values[key] || 0;
-                return (
-                  <div key={key} className="flex justify-between gap-4">
-                    <span style={{ color: config.color }}>{config.label}:</span>
-                    <span className="font-mono text-amber-300">{config.format(val)}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ─── Footer Insight with Pacific context ─── */}
+        {/* ─── Footer Insight ─── */}
         {topCountry && bottomCountry && (
-          <div className="mt-6 border-t border-slate-200 pt-4 text-xs text-slate-600 max-w-3xl mx-auto text-center">
+          <div className="mt-4 sm:mt-6 border-t border-slate-200 pt-3 sm:pt-4 text-xs text-slate-600 max-w-3xl mx-auto text-center px-2">
             <p className="font-medium text-slate-700">
               Pacific islands have added almost nothing to the carbon ledger, yet they shoulder its heaviest costs.
             </p>
-            <p className="mt-1">
+            <p className="mt-1" style={{ fontSize: fontSize * 0.85 }}>
               {topCountry.country} shows the highest composite vulnerability index (High Vulnerability), 
               while {bottomCountry.country} has the lowest (Low Vulnerability) across all 7 metrics — 
               reflecting the uneven burden of climate change on the region.
