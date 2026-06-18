@@ -88,7 +88,7 @@ export const TrendLine = ({
       : v.toString();
 
   return (
-    <div className="w-full font-sans">
+    <div className="w-full font-sans flex flex-col items-center">
 
       {/* HEADER */}
       <div className="mb-5 text-center max-w-xl mx-auto">
