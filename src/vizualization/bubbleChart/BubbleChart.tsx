@@ -31,6 +31,7 @@ export function BubbleChart({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hovered, setHovered] = useState<DataPoint | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // ─── Responsive sizing ───
   useEffect(() => {
@@ -40,6 +41,7 @@ export function BubbleChart({
         const width = propWidth || rect.width || 600;
         const height = propHeight || Math.min(rect.width * 0.7, 500);
         setDimensions({ width, height });
+        setIsMobile(width < 768);
       }
     };
 
@@ -63,11 +65,26 @@ export function BubbleChart({
 
   const { width, height } = dimensions;
 
+  // ─── Responsive margins ───
+  const responsiveMargin = useMemo(() => {
+    if (width < 400) {
+      return { top: 30, right: 10, bottom: 60, left: 80 };
+    }
+    if (width < 600) {
+      return { top: 35, right: 15, bottom: 70, left: 100 };
+    }
+    if (width < 768) {
+      return { top: 40, right: 18, bottom: 75, left: 115 };
+    }
+    return MARGIN;
+  }, [width]);
+
   // ─── Responsive font size ───
   const getFontSize = useCallback((base: number) => {
-    if (width < 400) return base * 0.6;
-    if (width < 600) return base * 0.8;
-    if (width < 800) return base * 0.9;
+    if (width < 400) return base * 0.55;
+    if (width < 600) return base * 0.7;
+    if (width < 768) return base * 0.85;
+    if (width < 1024) return base * 0.9;
     return base;
   }, [width]);
 
@@ -85,32 +102,50 @@ export function BubbleChart({
   const maxValue = Math.max(...data.map(d => d.value), 1);
 
   // ─── Scales ───
+  const chartWidth = width - responsiveMargin.left - responsiveMargin.right;
+  const chartHeight = height - responsiveMargin.top - responsiveMargin.bottom;
+
   const x = useMemo(() => 
     scaleBand()
       .domain(years)
-      .range([0, width - MARGIN.left - MARGIN.right])
-      .padding(0.3),
-    [years, width]
+      .range([0, chartWidth])
+      .padding(width < 500 ? 0.2 : 0.3),
+    [years, chartWidth, width]
   );
 
   const y = useMemo(() => 
     scaleBand()
       .domain(countries)
-      .range([0, height - MARGIN.top - MARGIN.bottom])
-      .padding(0.3),
-    [countries, height]
+      .range([0, chartHeight])
+      .padding(width < 500 ? 0.2 : 0.3),
+    [countries, chartHeight, width]
   );
 
-  const r = useMemo(() => 
-    scaleSqrt()
+  const r = useMemo(() => {
+    const maxRadius = Math.min(
+      40,
+      width / 15,
+      Math.min(x.bandwidth() / 2, y.bandwidth() / 2) * 0.8
+    );
+    return scaleSqrt()
       .domain([0, maxValue])
-      .range([4, Math.min(40, width / 15)]),
-    [maxValue, width]
-  );
+      .range([width < 500 ? 2 : 4, Math.max(6, maxRadius)]);
+  }, [maxValue, width, x, y]);
 
   const fontSize = getFontSize(11);
   const titleFontSize = getFontSize(14);
   const subtitleFontSize = getFontSize(12);
+
+  // ─── Dynamic ticks ───
+  const visibleYears = useMemo(() => {
+    const step = Math.max(1, Math.floor(years.length / (width < 500 ? 3 : width < 768 ? 4 : 6)));
+    return years.filter((_, i) => i % step === 0 || i === years.length - 1);
+  }, [years, width]);
+
+  const visibleCountries = useMemo(() => {
+    const step = Math.max(1, Math.floor(countries.length / (width < 500 ? 4 : width < 768 ? 6 : 10)));
+    return countries.filter((_, i) => i % step === 0 || i === countries.length - 1);
+  }, [countries, width]);
 
   if (!data.length || !width || !height) {
     return (
@@ -122,13 +157,12 @@ export function BubbleChart({
     );
   }
 
-  const chartWidth = width - MARGIN.left - MARGIN.right;
-  const chartHeight = height - MARGIN.top - MARGIN.bottom;
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   return (
     <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
       {/* ─── HEADER ─── */}
-      <div className="mb-3 text-center px-4">
+      <div className="mb-2 sm:mb-3 text-center px-2 sm:px-4">
         <div 
           className="font-semibold text-slate-900"
           style={{ fontSize: titleFontSize }}
@@ -146,14 +180,15 @@ export function BubbleChart({
       </div>
 
       {/* ─── CHART ─── */}
-      <div className="relative w-full overflow-x-auto">
+      <div className="relative w-full overflow-hidden">
         <svg 
           width={width} 
           height={height} 
           className="block"
           viewBox={width && height ? `0 0 ${width} ${height}` : undefined}
+          style={{ maxWidth: '100%', height: 'auto' }}
         >
-          <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+          <g transform={`translate(${responsiveMargin.left},${responsiveMargin.top})`}>
             {/* BUBBLES */}
             {data.map((d, i) => {
               const cx = x(d.year) ?? 0;
@@ -170,46 +205,52 @@ export function BubbleChart({
                   fill="#ef4444"
                   opacity={isHovered ? 0.95 : 0.7}
                   stroke={isHovered ? "#b91c1c" : "none"}
-                  strokeWidth={isHovered ? 2 : 0}
+                  strokeWidth={isHovered ? Math.max(1.5, 2) : 0}
                   onMouseEnter={() => setHovered(d)}
                   onMouseLeave={() => setHovered(null)}
-                  className="cursor-pointer transition-all duration-200"
+                  className={!isTouchDevice ? "cursor-pointer transition-all duration-200" : ""}
                 />
               );
             })}
 
-            {/* Y-AXIS LABELS (Countries) */}
-            {countries.map((country, i) => {
+            {/* Y-AXIS LABELS (Countries) - Only show visible countries on mobile */}
+            {(width < 768 ? visibleCountries : countries).map((country, i) => {
               const cy = y(country) ?? 0;
-              if (cy < 10 || cy > chartHeight - 10) return null;
+              if (cy < 5 || cy > chartHeight - 5) return null;
+              
+              // Truncate long country names on mobile
+              const displayName = width < 500 
+                ? (country.length > 10 ? country.slice(0, 8) + "…" : country)
+                : width < 768 
+                  ? (country.length > 12 ? country.slice(0, 10) + "…" : country)
+                  : (country.length > 15 ? country.slice(0, 12) + "…" : country);
               
               return (
                 <text
                   key={`country-${i}`}
-                  x={-10}
+                  x={-6}
                   y={cy + y.bandwidth() / 2 + fontSize * 0.35}
                   textAnchor="end"
-                  fontSize={Math.min(fontSize, 11)}
+                  fontSize={Math.max(7, Math.min(fontSize, 11))}
                   fill="#475569"
-                  className="truncate"
                 >
-                  {country.length > 15 ? country.slice(0, 12) + "…" : country}
+                  {displayName}
                 </text>
               );
             })}
 
-            {/* X-AXIS LABELS (Years) */}
-            {years.map((year, i) => {
+            {/* X-AXIS LABELS (Years) - Only show visible years on mobile */}
+            {(width < 768 ? visibleYears : years).map((year, i) => {
               const cx = x(year) ?? 0;
-              if (cx < 10 || cx > chartWidth - 10) return null;
+              if (cx < 5 || cx > chartWidth - 5) return null;
               
               return (
                 <text
                   key={`year-${i}`}
                   x={cx + x.bandwidth() / 2}
-                  y={chartHeight + 25}
+                  y={chartHeight + (width < 500 ? 18 : 25)}
                   textAnchor="middle"
-                  fontSize={Math.min(fontSize, 10)}
+                  fontSize={Math.max(7, Math.min(fontSize * 0.85, 10))}
                   fill="#94a3b8"
                 >
                   {year}
@@ -220,7 +261,7 @@ export function BubbleChart({
             {/* AXIS LABELS */}
             <text
               x={chartWidth / 2}
-              y={chartHeight + 55}
+              y={chartHeight + (width < 500 ? 40 : 55)}
               textAnchor="middle"
               fontSize={fontSize}
               fill="#64748b"
@@ -229,9 +270,9 @@ export function BubbleChart({
             </text>
 
             <text
-              transform={`rotate(-90, -60, ${chartHeight / 2})`}
+              transform={`rotate(-90, ${-(width < 500 ? 40 : 60)}, ${chartHeight / 2})`}
               x={-chartHeight / 2}
-              y={-80}
+              y={-(width < 500 ? 60 : 80)}
               textAnchor="middle"
               fontSize={fontSize}
               fill="#64748b"
@@ -242,16 +283,16 @@ export function BubbleChart({
         </svg>
 
         {/* ─── TOOLTIP ─── */}
-        {hovered && (
+        {hovered && !isMobile && (
           <div 
             className="absolute bg-white border shadow-lg rounded-lg p-2 sm:p-3 pointer-events-none z-10"
             style={{
               left: Math.min(
-                (x(hovered.year) ?? 0) + MARGIN.left + 20,
+                (x(hovered.year) ?? 0) + responsiveMargin.left + 10,
                 width - 180
               ),
               top: Math.min(
-                (y(hovered.country) ?? 0) + MARGIN.top - 20,
+                (y(hovered.country) ?? 0) + responsiveMargin.top - 10,
                 height - 80
               ),
               maxWidth: Math.min(200, width - 40),
@@ -263,6 +304,17 @@ export function BubbleChart({
             </div>
             <div className="text-slate-500 text-xs sm:text-sm">{hovered.year}</div>
             <div className="text-sm sm:text-base font-bold text-red-600 mt-1">
+              {hovered.value.toLocaleString()} impacted
+            </div>
+          </div>
+        )}
+
+        {/* ─── MOBILE TOOLTIP ─── */}
+        {hovered && isMobile && (
+          <div className="mt-2 text-center bg-white border rounded-lg p-2 mx-2">
+            <div className="font-semibold text-xs">{hovered.country}</div>
+            <div className="text-xs text-slate-500">{hovered.year}</div>
+            <div className="text-sm font-bold text-red-600">
               {hovered.value.toLocaleString()} impacted
             </div>
           </div>
