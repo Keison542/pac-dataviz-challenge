@@ -27,7 +27,7 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth, selected
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {hasTempData && (
-          <div className="p-2">
+          <div className="w-full max-w-4xl mx-auto">
             {/* <div className="font-semibold text-base text-slate-800 mb-2">Surface Temperature</div> */}
             <LineChart 
               width={chartWidth} 
@@ -39,7 +39,7 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth, selected
           </div>
         )}
         {hasSeaData && (
-          <div className="p-2">
+            <div className="w-full max-w-4xl mx-auto">
             {/* <div className="font-semibold text-base text-slate-800 mb-2">Sea Level</div> */}
             <LineChart 
               width={chartWidth} 
@@ -51,7 +51,7 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth, selected
           </div>
         )}
         {hasSSTData && (
-          <div className="p-2">
+          <div className="w-full max-w-4xl mx-auto">
             {/* <div className="font-semibold text-base text-slate-800 mb-2">Sea Surface Temperature</div> */}
             <LineChart 
               width={chartWidth} 
@@ -63,7 +63,7 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth, selected
           </div>
         )}
         {hasRainfallData && (
-          <div className="p-2">
+          <div className="w-full max-w-4xl mx-auto">
             {/* <div className="font-semibold text-base text-slate-800 mb-2">Precipitation</div> */}
             <LineChart 
               width={chartWidth} 
