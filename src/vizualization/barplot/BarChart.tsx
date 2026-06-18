@@ -477,9 +477,6 @@ export function MultiMetricRankedDashboard({ width, height, data }: Props) {
               while {bottomCountry.country} has the lowest (Low Vulnerability) across all 7 metrics — 
               reflecting the uneven burden of climate change on the region.
             </p>
-            <p className="mt-1 text-slate-500">
-              Inspired by the 2025 award-winning Pacific DataViz entry by Nur Adhyaksa Hamid.
-            </p>
           </div>
         )}
       </div>
