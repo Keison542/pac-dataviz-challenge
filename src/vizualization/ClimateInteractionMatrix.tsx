@@ -104,16 +104,6 @@ export default function ClimateInteractionMatrix({
   return (
     <div className="w-full">
 
-      {/* HEADER (smaller, tighter) */}
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold text-slate-900">
-          Climate Interaction Map
-        </h3>
-        <p className="text-[11px] text-slate-500 max-w-xl mx-auto">
-          Cross-system climate impacts across key domains.
-        </p>
-      </div>
-
       {/* GRID (REDUCED SIZE) */}
       <div
         className="mx-auto grid gap-1.5"
