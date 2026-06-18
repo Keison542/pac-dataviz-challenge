@@ -227,7 +227,7 @@ export const LineChart = ({
       <div className="text-center mb-6">
         {stats && (
           <div className="mt-2 text-sm text-slate-600">
-            Climate evidence detected:{" "}
+            Climate evidence detected since {processedData[0]?.year}:{" "}
             <span
               className={
                 stats.percentChange > 0
@@ -239,13 +239,6 @@ export const LineChart = ({
             </span>{" "}
             ({Math.abs(stats.percentChange).toFixed(1)}%)
 
-            <p className="mt-4 text-slate-500 max-w-2xl mx-auto">
-    Since {processedData[0]?.year}, anomalies have shifted by{" "}
-    <span className="font-semibold text-slate-900">
-      {Math.abs(stats?.percentChange ?? 0).toFixed(1)}%
-    </span>
-    .
-  </p>
           </div>
         )}
       </div>
