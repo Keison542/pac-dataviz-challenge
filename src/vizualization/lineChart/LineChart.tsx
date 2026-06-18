@@ -227,7 +227,7 @@ export const LineChart = ({
       <div className="text-center mb-6">
         {stats && (
           <div className="mt-2 text-sm text-slate-600">
-            Climate evidence detected since {processedData[0]?.year}:{" "}
+            {selectedCountry}'s climate has shifted towards since {processedData[0]?.year} overall {" "}
             <span
               className={
                 stats.percentChange > 0
