@@ -50,12 +50,12 @@ export function TimeSeriesDashboard({
   height: propHeight,
   data,
   selectedCountry,
-  // title = "Livelihood & Economic Resilience Trends",
   insight,
   className = "",
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [isMobile, setIsMobile] = useState(false);
 
   const [hoveredPoint, setHoveredPoint] = useState<{
     metric: string;
@@ -77,6 +77,7 @@ export function TimeSeriesDashboard({
         const width = propWidth || rect.width || 600;
         const height = propHeight || Math.min(rect.width * 0.6, 500);
         setDimensions({ width, height });
+        setIsMobile(width < 768);
       }
     };
 
@@ -100,8 +101,22 @@ export function TimeSeriesDashboard({
 
   const { width, height } = dimensions;
 
-  const boundsWidth = width - MARGIN.left - MARGIN.right;
-  const boundsHeight = height - MARGIN.top - MARGIN.bottom;
+  // ─── Responsive margins ───
+  const responsiveMargin = useMemo(() => {
+    if (width < 400) {
+      return { top: 50, right: 20, bottom: 70, left: 60 };
+    }
+    if (width < 600) {
+      return { top: 60, right: 30, bottom: 80, left: 75 };
+    }
+    if (width < 768) {
+      return { top: 65, right: 40, bottom: 90, left: 85 };
+    }
+    return MARGIN;
+  }, [width]);
+
+  const boundsWidth = width - responsiveMargin.left - responsiveMargin.right;
+  const boundsHeight = height - responsiveMargin.top - responsiveMargin.bottom;
 
   const toggleMetric = useCallback((key: string) => {
     setVisibleMetrics((prev) => {
@@ -113,9 +128,10 @@ export function TimeSeriesDashboard({
 
   // ─── Responsive font sizes ───
   const getFontSize = useCallback((base: number) => {
-    if (width < 400) return base * 0.6;
-    if (width < 600) return base * 0.8;
-    if (width < 800) return base * 0.9;
+    if (width < 400) return base * 0.55;
+    if (width < 600) return base * 0.7;
+    if (width < 768) return base * 0.85;
+    if (width < 1024) return base * 0.9;
     return base;
   }, [width]);
 
@@ -180,23 +196,28 @@ export function TimeSeriesDashboard({
     return paths;
   }, [data, xScale, yScale, boundsHeight, visibleMetrics]);
 
+  // ─── Dynamic ticks based on available space ───
   const xTicks = useMemo(() => {
     const years = data.map((d) => d.year);
     const min = Math.min(...years);
     const max = Math.max(...years);
-
+    
+    // Reduce ticks on mobile
+    const maxTicks = width < 500 ? 3 : width < 768 ? 4 : 6;
+    const step = Math.max(1, Math.floor((max - min) / maxTicks));
+    
     const ticks: number[] = [];
-    const step = Math.max(1, Math.floor((max - min) / 6));
     for (let y = min; y <= max; y += step) ticks.push(y);
     if (ticks[ticks.length - 1] !== max) ticks.push(max);
 
     return ticks;
-  }, [data]);
+  }, [data, width]);
 
   const yTicks = useMemo(() => {
     const max = yScale.domain()[1];
-    return Array.from({ length: 5 }, (_, i) => (max / 4) * i);
-  }, [yScale]);
+    const count = width < 500 ? 3 : 5;
+    return Array.from({ length: count }, (_, i) => (max / (count - 1)) * i);
+  }, [yScale, width]);
 
   const format = (v: number) =>
     v >= 1_000_000
@@ -216,22 +237,16 @@ export function TimeSeriesDashboard({
   }
 
   const fontSize = getFontSize(12);
-  const titleFontSize = getFontSize(14);
   const legendFontSize = getFontSize(11);
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   return (
     <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
       {/* ─── HEADER ─── */}
-      <div className="mb-4 text-center w-full px-4">
-        {/* <h2 
-          className="font-semibold text-slate-700"
-          style={{ fontSize: titleFontSize }}
-        >
-          {title}
-        </h2> */}
+      <div className="mb-3 text-center w-full px-2 sm:px-4">
         {insight && (
           <p 
-            className="text-slate-500 mt-1"
+            className="text-slate-500"
             style={{ fontSize: fontSize * 0.85 }}
           >
             {insight}
@@ -240,14 +255,13 @@ export function TimeSeriesDashboard({
       </div>
 
       {/* ─── LEGEND ─── */}
-      <div className="flex flex-wrap gap-1 sm:gap-2 mb-4 justify-center px-2">
+      <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 justify-center px-1 sm:px-2">
         {METRICS.map((m) => (
           <button
             key={m.key}
             onClick={() => toggleMetric(m.key)}
-            className="px-2 sm:px-3 py-1 rounded-full border transition-all"
+            className="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full border transition-all text-[10px] sm:text-xs"
             style={{
-              fontSize: legendFontSize,
               borderColor: visibleMetrics.has(m.key) ? m.color : "#e2e8f0",
               color: visibleMetrics.has(m.key) ? m.color : "#94a3b8",
               background: visibleMetrics.has(m.key) ? m.color + "10" : "white",
@@ -259,14 +273,15 @@ export function TimeSeriesDashboard({
       </div>
 
       {/* ─── CHART ─── */}
-      <div className="relative w-full overflow-x-auto">
+      <div className="relative w-full overflow-hidden">
         <svg 
           width={width} 
           height={height} 
           className="block"
           viewBox={width && height ? `0 0 ${width} ${height}` : undefined}
+          style={{ maxWidth: '100%', height: 'auto' }}
         >
-          <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+          <g transform={`translate(${responsiveMargin.left},${responsiveMargin.top})`}>
             {/* GRID */}
             {yTicks.map((v, i) => (
               <line
@@ -281,18 +296,24 @@ export function TimeSeriesDashboard({
               />
             ))}
 
-            {xTicks.map((x, i) => (
-              <line
-                key={`grid-x-${i}`}
-                x1={xScale(x)}
-                x2={xScale(x)}
-                y1={0}
-                y2={boundsHeight}
-                stroke="#e2e8f0"
-                strokeDasharray="4 4"
-                strokeWidth={0.5}
-              />
-            ))}
+            {xTicks.map((x, i) => {
+              const xPos = xScale(x);
+              // Skip if too close to edge
+              if (xPos < 5 || xPos > boundsWidth - 5) return null;
+              
+              return (
+                <line
+                  key={`grid-x-${i}`}
+                  x1={xPos}
+                  x2={xPos}
+                  y1={0}
+                  y2={boundsHeight}
+                  stroke="#e2e8f0"
+                  strokeDasharray="4 4"
+                  strokeWidth={0.5}
+                />
+              );
+            })}
 
             {/* LINES */}
             {METRICS.map((m) =>
@@ -308,15 +329,15 @@ export function TimeSeriesDashboard({
               ) : null
             )}
 
-            {/* POINTS */}
-            {data.map((d) =>
+            {/* POINTS - hide on mobile for cleaner look */}
+            {!isMobile && data.map((d) =>
               METRICS.map((m) => {
                 if (!visibleMetrics.has(m.key)) return null;
 
                 const v = d[m.key as keyof DataPoint] as number;
                 const x = xScale(d.year);
                 const y = yScale(v);
-                const pointRadius = Math.max(2.5, Math.min(5, width / 150));
+                const pointRadius = Math.max(2, Math.min(4, width / 180));
 
                 return (
                   <circle
@@ -327,7 +348,7 @@ export function TimeSeriesDashboard({
                     fill={m.color}
                     stroke="#fff"
                     strokeWidth={Math.max(1, Math.min(2, width / 400))}
-                    opacity={0.8}
+                    opacity={0.7}
                     onMouseEnter={() =>
                       setHoveredPoint({
                         metric: m.label,
@@ -338,7 +359,7 @@ export function TimeSeriesDashboard({
                       })
                     }
                     onMouseLeave={() => setHoveredPoint(null)}
-                    className="cursor-pointer"
+                    className={!isTouchDevice ? "cursor-pointer" : ""}
                   />
                 );
               })
@@ -347,7 +368,7 @@ export function TimeSeriesDashboard({
             {/* AXIS LABELS */}
             <text
               x={boundsWidth / 2}
-              y={boundsHeight + 40}
+              y={boundsHeight + (width < 500 ? 30 : 40)}
               textAnchor="middle"
               fontSize={fontSize}
               fill="#64748b"
@@ -358,7 +379,7 @@ export function TimeSeriesDashboard({
             <text
               transform="rotate(-90)"
               x={-boundsHeight / 2}
-              y={-50}
+              y={-(width < 500 ? 35 : 50)}
               textAnchor="middle"
               fontSize={fontSize}
               fill="#64748b"
@@ -370,15 +391,15 @@ export function TimeSeriesDashboard({
             {xTicks.map((x, i) => {
               const xPos = xScale(x);
               // Skip if too close to edge
-              if (xPos < 10 || xPos > boundsWidth - 10) return null;
+              if (xPos < 5 || xPos > boundsWidth - 5) return null;
               
               return (
                 <text
                   key={`x-label-${i}`}
                   x={xPos}
-                  y={boundsHeight + 20}
+                  y={boundsHeight + (width < 500 ? 18 : 20)}
                   textAnchor="middle"
-                  fontSize={fontSize * 0.8}
+                  fontSize={Math.max(8, fontSize * 0.7)}
                   fill="#94a3b8"
                 >
                   {x}
@@ -389,15 +410,15 @@ export function TimeSeriesDashboard({
             {/* Y-AXIS TICK LABELS */}
             {yTicks.map((v, i) => {
               const yPos = yScale(v);
-              if (yPos < 10 || yPos > boundsHeight - 10) return null;
+              if (yPos < 5 || yPos > boundsHeight - 5) return null;
               
               return (
                 <text
                   key={`y-label-${i}`}
-                  x={-8}
-                  y={yPos + 4}
+                  x={-6}
+                  y={yPos + 3}
                   textAnchor="end"
-                  fontSize={fontSize * 0.8}
+                  fontSize={Math.max(8, fontSize * 0.7)}
                   fill="#94a3b8"
                 >
                   {format(v)}
@@ -408,19 +429,19 @@ export function TimeSeriesDashboard({
         </svg>
 
         {/* ─── TOOLTIP ─── */}
-        {hoveredPoint && (
+        {hoveredPoint && !isMobile && (
           <div
             className="absolute bg-white border shadow-lg rounded-lg p-2 sm:p-3 text-xs sm:text-sm pointer-events-none z-10"
             style={{
               left: Math.min(
-                hoveredPoint.x + MARGIN.left + 20,
+                hoveredPoint.x + responsiveMargin.left + 10,
                 width - 150
               ),
               top: Math.min(
-                hoveredPoint.y + MARGIN.top + 20,
+                hoveredPoint.y + responsiveMargin.top + 10,
                 height - 80
               ),
-              maxWidth: Math.min(200, width - 40),
+              maxWidth: Math.min(180, width - 40),
             }}
           >
             <div className="font-semibold" style={{ color: "#0f172a" }}>
@@ -428,6 +449,17 @@ export function TimeSeriesDashboard({
             </div>
             <div className="text-slate-500">{hoveredPoint.year}</div>
             <div className="text-sm sm:text-base font-bold text-slate-800">
+              {format(hoveredPoint.value)}
+            </div>
+          </div>
+        )}
+
+        {/* ─── MOBILE TOOLTIP (bottom of chart) ─── */}
+        {hoveredPoint && isMobile && (
+          <div className="mt-2 text-center bg-white border rounded-lg p-2 mx-2">
+            <div className="font-semibold text-xs">{hoveredPoint.metric}</div>
+            <div className="text-xs text-slate-500">{hoveredPoint.year}</div>
+            <div className="text-sm font-bold text-slate-800">
               {format(hoveredPoint.value)}
             </div>
           </div>
