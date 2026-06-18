@@ -208,17 +208,17 @@ export function BubbleChart({
                   strokeWidth={isHovered ? Math.max(1.5, 2) : 0}
                   onMouseEnter={() => setHovered(d)}
                   onMouseLeave={() => setHovered(null)}
+                  onClick={() => isTouchDevice && setHovered(d)}
                   className={!isTouchDevice ? "cursor-pointer transition-all duration-200" : ""}
                 />
               );
             })}
 
-            {/* Y-AXIS LABELS (Countries) - Only show visible countries on mobile */}
+            {/* Y-AXIS LABELS (Countries) */}
             {(width < 768 ? visibleCountries : countries).map((country, i) => {
               const cy = y(country) ?? 0;
               if (cy < 5 || cy > chartHeight - 5) return null;
               
-              // Truncate long country names on mobile
               const displayName = width < 500 
                 ? (country.length > 10 ? country.slice(0, 8) + "…" : country)
                 : width < 768 
@@ -239,7 +239,7 @@ export function BubbleChart({
               );
             })}
 
-            {/* X-AXIS LABELS (Years) - Only show visible years on mobile */}
+            {/* X-AXIS LABELS (Years) */}
             {(width < 768 ? visibleYears : years).map((year, i) => {
               const cx = x(year) ?? 0;
               if (cx < 5 || cx > chartWidth - 5) return null;
@@ -283,7 +283,7 @@ export function BubbleChart({
         </svg>
 
         {/* ─── TOOLTIP ─── */}
-        {hovered && !isMobile && (
+        {hovered && (
           <div 
             className="absolute bg-white border shadow-lg rounded-lg p-2 sm:p-3 pointer-events-none z-10"
             style={{
@@ -304,17 +304,6 @@ export function BubbleChart({
             </div>
             <div className="text-slate-500 text-xs sm:text-sm">{hovered.year}</div>
             <div className="text-sm sm:text-base font-bold text-red-600 mt-1">
-              {hovered.value.toLocaleString()} impacted
-            </div>
-          </div>
-        )}
-
-        {/* ─── MOBILE TOOLTIP ─── */}
-        {hovered && isMobile && (
-          <div className="mt-2 text-center bg-white border rounded-lg p-2 mx-2">
-            <div className="font-semibold text-xs">{hovered.country}</div>
-            <div className="text-xs text-slate-500">{hovered.year}</div>
-            <div className="text-sm font-bold text-red-600">
               {hovered.value.toLocaleString()} impacted
             </div>
           </div>
