@@ -183,7 +183,7 @@ export default function Home() {
           </div>
 
           <div className="mt-6 text-xl text-slate-500">
-            people affected by climate-related disasters. Now one could imagine the scale of this impact across the Pacific Island Nations.
+            people affected by climate-related disasters. Now one could imagine the scale of this impact across the Pacific Island Nations from financial stress → to household exposure → to structural economic change.
           </div>
         </div>
       </section>
