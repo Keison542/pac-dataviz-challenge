@@ -11,16 +11,16 @@ import { RegionalComparisonSection } from "@/components/RegionalComparisonSectio
 import { CausalChainSection } from "@/components/CausalChainSection";
 import { Conclusion } from "@/components/Conclusion";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
-import { useClimateData } from "@/hooks/useClimateData";
 import { StoryTransition } from "@/components/StoryTransition";
+import { useClimateData } from "@/hooks/useClimateData";
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 40 },
   show: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.6,
+      duration: 0.8,
     },
   },
 };
@@ -59,201 +59,305 @@ export default function Home() {
   if (!isClient) return <LoadingSkeleton />;
 
   return (
-    <main className="relative min-h-screen bg-white font-sans text-slate-900">
+    <main className="bg-white text-slate-900 overflow-x-hidden">
 
-      <div className="relative z-10 max-w-[1200px] mx-auto px-6 py-8">
+      {/* ========================================================= */}
+      {/* HERO */}
+      {/* ========================================================= */}
 
-        {/* =========================
-            HERO
-        ========================== */}
-        <Hero
-          countries={countries}
-          selectedCountry={selectedCountry}
-          onSelectCountry={setSelectedCountry}
-        />
+      <section className="min-h-screen flex flex-col justify-center">
+        <div className="max-w-[1200px] mx-auto px-6 w-full">
+          <Hero
+            countries={countries}
+            selectedCountry={selectedCountry}
+            onSelectCountry={setSelectedCountry}
+          />
 
-        <div className="mt-6 mb-10 text-center max-w-3xl mx-auto text-slate-600">
-          The Pacific is not just changing — it is entering a system of cascading climate pressure.
-        </div>
+          <div className="max-w-4xl mx-auto text-center mt-10">
+            <h1 className="text-5xl md:text-7xl font-light leading-tight">
+              Climate change is reshaping the Pacific.
+            </h1>
 
-        {/* =========================
-            1. CLIMATE SIGNAL
-        ========================== */}
-        {hasClimateData && (
-          <motion.section
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.3 }}
-            className="py-16"
-          >
-            <h2 className="text-2xl font-semibold mb-2 text-center">
-              1. A clear climate signal is emerging
-            </h2>
-
-            <p className="text-slate-600 mb-8 max-w-2xl mx-auto text-center">
-              Temperature and sea level trends show consistent long-term change across Pacific nations.
+            <p className="mt-8 text-xl text-slate-600">
+              The region contributed least to global emissions,
+              yet faces some of the fastest-growing climate risks.
             </p>
 
-            <DoughnutClimateDashboard
-              kpis={kpis}
-              deltas={deltas}
-              selectedCountry={selectedCountry}
-            />
-
-            <ClimateDriversSection
-              dataMap={dataMap}
-              tempTrend={tempTrend}
-              chartWidth={chartWidth}
-              selectedCountry={selectedCountry}
-            />
-          </motion.section>
-        )}
-
-        {/* ─── STORY TRANSITION 1 ─── */}
-        <div className="py-16">
-          <StoryTransition 
-            text="But climate signals alone do not explain why some nations are more affected than others." 
-          />
+            <motion.div
+              className="mt-20 text-slate-400 text-sm tracking-widest uppercase"
+              animate={{ y: [0, 10, 0] }}
+              transition={{
+                repeat: Infinity,
+                duration: 2,
+              }}
+            >
+              Scroll to explore ↓
+            </motion.div>
+          </div>
         </div>
+      </section>
 
-        {/* =========================
-            2. HUMAN IMPACT
-        ========================== */}
-        {(hasEconomicData || hasHumanData || hasSocioeconomicData) && (
-          <motion.section
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.3 }}
-            className="py-8"
-          >
-            <HumanEconomicSection
-              selectedCountry={selectedCountry}
-              lossTotal={lossTotal}
-              peopleTotal={peopleTotal}
-              dataMap={dataMap}
-              timeSeriesData={timeSeriesData}
-              chartWidth={chartWidth}
-              setSelectedCountry={setSelectedCountry}
-            />
-          </motion.section>
-        )}
+      {/* ========================================================= */}
+      {/* CLIMATE SIGNAL INTRO */}
+      {/* ========================================================= */}
 
-        {/* ─── STORY TRANSITION 2 ─── */}
-        <div className="py-24 border-t border-slate-100">
-          <StoryTransition 
-            text="These pressures do not act independently — they reinforce each other across the system." 
-          />
-        </div>
-
-        {/* =========================
-            3. SYSTEM VIEW
-        ========================== */}
-        {hasCausalData && (
-          <motion.section
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.3 }}
-            className="py-16 rounded-2xl px-6"
-          >
-            <h2 className="text-2xl font-semibold mb-2 text-center">
-              3. These impacts are interconnected
-            </h2>
-
-            <p className="text-slate-600 mb-8 max-w-2xl mx-auto text-center">
-              Climate drivers cascade into environmental and socio-economic consequences.
-            </p>
-
-            <CausalChainSection
-              climateFlowData={climateFlowData}
-              beeswarmData={beeswarmData}
-              selectedCountry={selectedCountry}
-              chartWidth={chartWidth}
-            />
-          </motion.section>
-        )}
-
-        {/* ─── STORY TRANSITION 3 ─── */}
-        <div className="py-24 border-t border-slate-100">
-          <StoryTransition 
-            text="As the system intensifies, inequality becomes the defining factor in climate vulnerability." 
-          />
-        </div>
-
-        {/* =========================
-            4. INEQUALITY MOMENT
-        ========================== */}
-        {hasRegionalData && (
-          <motion.section
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.3 }}
-            className="py-16"
-          >
-            <h2 className="text-2xl font-semibold mb-2 text-center">
-              4. Impact is not evenly distributed
-            </h2>
-
-            <p className="text-slate-600 mb-8 max-w-2xl mx-auto text-center">
-              Some Pacific nations face significantly higher vulnerability than others.
-            </p>
-
-            <RegionalComparisonSection
-              selectedCountry={selectedCountry}
-              countriesCount={countries.length}
-              rankedData={rankedData}
-              chartWidth={chartWidth}
-            />
-          </motion.section>
-        )}
-
-        {/* ─── STORY TRANSITION 4 ─── */}
-        <div className="py-24 border-t border-slate-100">
-          <StoryTransition 
-            text="The Pacific reveals a global truth: climate risk is shaped by unequal resilience." 
-          />
-        </div>
-
-        {/* =========================
-            5. CONCLUSION
-        ========================== */}
-        {(hasClimateData ||
-          hasEconomicData ||
-          hasHumanData ||
-          hasSocioeconomicData ||
-          hasRegionalData ||
-          hasCausalData ||
-          hasTimelineData) && (
-          <motion.section
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.3 }}
-            className="py-16 text-center border-t"
-          >
-            <Conclusion
-              selectedCountry={selectedCountry}
-              seaTrend={seaTrend}
-              countriesCount={countries.length}
-            />
-
-            <div className="mt-10 max-w-2xl mx-auto text-slate-500">
-              The Pacific contributed least to global emissions — yet faces some of the most severe consequences.
-            </div>
-          </motion.section>
-        )}
-
-        {/* FOOTER */}
-        <footer className="text-center pt-10 mt-10 border-t border-slate-200 text-xs text-slate-400">
-          <p>
-            Pacific Dataviz Challenge 2026 · {countries.length} Pacific Island countries analyzed
+      <section className="min-h-[70vh] flex items-center justify-center px-6">
+        <div className="max-w-4xl text-center">
+          <p className="uppercase tracking-[0.3em] text-slate-400 mb-8">
+            Chapter 1
           </p>
-        </footer>
 
-      </div>
+          <h2 className="text-4xl md:text-6xl font-light leading-tight">
+            A clear climate signal is emerging across Pacific nations.
+          </h2>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* CLIMATE DASHBOARD */}
+      {/* ========================================================= */}
+
+      {hasClimateData && (
+        <motion.section
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
+          className="max-w-[1200px] mx-auto px-6 py-24"
+        >
+          <DoughnutClimateDashboard
+            kpis={kpis}
+            deltas={deltas}
+            selectedCountry={selectedCountry}
+          />
+        </motion.section>
+      )}
+
+      {/* ========================================================= */}
+      {/* TEMPERATURE + SEA LEVEL */}
+      {/* ========================================================= */}
+
+      {hasClimateData && (
+        <motion.section
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
+          className="max-w-[1200px] mx-auto px-6 py-24"
+        >
+          <ClimateDriversSection
+            dataMap={dataMap}
+            tempTrend={tempTrend}
+            chartWidth={chartWidth}
+            selectedCountry={selectedCountry}
+          />
+        </motion.section>
+      )}
+
+      {/* ========================================================= */}
+      {/* HUMAN IMPACT INTRO */}
+      {/* ========================================================= */}
+
+      <section className="min-h-[80vh] flex items-center justify-center px-6">
+        <div className="max-w-5xl text-center">
+          <h2 className="text-5xl md:text-7xl font-light leading-tight">
+            Climate signals alone do not explain the full story.
+          </h2>
+
+          <p className="mt-10 text-xl text-slate-500">
+            The consequences appear when environmental change reaches people,
+            livelihoods and economies.
+          </p>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* BIG NUMBER */}
+      {/* ========================================================= */}
+
+      <section className="min-h-screen flex items-center justify-center px-6 border-y border-slate-100">
+        <div className="text-center">
+          <div className="text-6xl md:text-8xl font-bold">
+            {peopleTotal.toLocaleString()}
+          </div>
+
+          <div className="mt-6 text-xl text-slate-500">
+            people affected by climate-related disasters
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* HUMAN + ECONOMIC */}
+      {/* ========================================================= */}
+
+      {(hasEconomicData || hasHumanData || hasSocioeconomicData) && (
+        <motion.section
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
+          className="max-w-[1200px] mx-auto px-6 py-24"
+        >
+          <HumanEconomicSection
+            selectedCountry={selectedCountry}
+            lossTotal={lossTotal}
+            peopleTotal={peopleTotal}
+            dataMap={dataMap}
+            timeSeriesData={timeSeriesData}
+            chartWidth={chartWidth}
+            setSelectedCountry={setSelectedCountry}
+          />
+        </motion.section>
+      )}
+
+      {/* ========================================================= */}
+      {/* SYSTEM INTRO */}
+      {/* ========================================================= */}
+
+      <section className="min-h-[80vh] flex items-center justify-center px-6">
+        <div className="max-w-5xl text-center">
+          <h2 className="text-5xl md:text-7xl font-light leading-tight">
+            These impacts do not occur in isolation.
+          </h2>
+
+          <p className="mt-10 text-xl text-slate-500">
+            Climate drivers reinforce each other and cascade through the system.
+          </p>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* CAUSAL CHAIN */}
+      {/* ========================================================= */}
+
+      {hasCausalData && (
+        <motion.section
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
+          className="max-w-[1200px] mx-auto px-6 py-32"
+        >
+          <CausalChainSection
+            climateFlowData={climateFlowData}
+            beeswarmData={beeswarmData}
+            selectedCountry={selectedCountry}
+            chartWidth={chartWidth}
+          />
+        </motion.section>
+      )}
+
+      {/* ========================================================= */}
+      {/* INEQUALITY INTRO */}
+      {/* ========================================================= */}
+
+      <section className="min-h-[80vh] flex items-center justify-center px-6 border-t border-slate-100">
+        <div className="max-w-5xl text-center">
+          <h2 className="text-5xl md:text-7xl font-light leading-tight">
+            Climate vulnerability is shaped by inequality.
+          </h2>
+
+          <p className="mt-10 text-xl text-slate-500">
+            Some Pacific nations face significantly higher exposure and lower
+            resilience than others.
+          </p>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* REGIONAL COMPARISON */}
+      {/* ========================================================= */}
+
+      {hasRegionalData && (
+        <motion.section
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
+          className="max-w-[1200px] mx-auto px-6 py-24"
+        >
+          <RegionalComparisonSection
+            selectedCountry={selectedCountry}
+            countriesCount={countries.length}
+            rankedData={rankedData}
+            chartWidth={chartWidth}
+          />
+        </motion.section>
+      )}
+
+      {/* ========================================================= */}
+      {/* BIG LOSS NUMBER */}
+      {/* ========================================================= */}
+
+      <section className="min-h-screen flex items-center justify-center px-6 border-y border-slate-100">
+        <div className="text-center">
+          <div className="text-6xl md:text-8xl font-bold">
+            ${Math.round(lossTotal / 1_000_000_000)}B
+          </div>
+
+          <div className="mt-6 text-xl text-slate-500">
+            estimated economic losses recorded
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* FINAL REFLECTION */}
+      {/* ========================================================= */}
+
+      <section className="min-h-screen flex items-center justify-center px-6">
+        <div className="max-w-5xl text-center">
+          <p className="uppercase tracking-[0.3em] text-slate-400 mb-8">
+            Final Reflection
+          </p>
+
+          <h2 className="text-5xl md:text-7xl font-light leading-tight">
+            The Pacific reveals a global truth.
+          </h2>
+
+          <p className="mt-10 text-2xl text-slate-600 leading-relaxed">
+            Climate risk is not defined solely by geography.
+            It is shaped by resilience, capacity and inequality.
+          </p>
+
+          <p className="mt-8 text-lg text-slate-500">
+            Nations that contributed least to climate change are often among
+            those facing its most severe consequences.
+          </p>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* CONCLUSION */}
+      {/* ========================================================= */}
+
+      {(hasClimateData ||
+        hasEconomicData ||
+        hasHumanData ||
+        hasSocioeconomicData ||
+        hasRegionalData ||
+        hasCausalData ||
+        hasTimelineData) && (
+        <section className="max-w-[1200px] mx-auto px-6 py-24 border-t">
+          <Conclusion
+            selectedCountry={selectedCountry}
+            seaTrend={seaTrend}
+            countriesCount={countries.length}
+          />
+        </section>
+      )}
+
+      {/* ========================================================= */}
+      {/* FOOTER */}
+      {/* ========================================================= */}
+
+      <footer className="text-center py-16 border-t border-slate-200 text-xs text-slate-400">
+        <p>
+          Pacific Dataviz Challenge 2026 · {countries.length} Pacific Island
+          countries analyzed
+        </p>
+      </footer>
     </main>
   );
 }
