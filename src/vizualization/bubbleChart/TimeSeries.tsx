@@ -167,7 +167,7 @@ export function TimeSeriesDashboard({
   if (!data.length) return null;
 
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col items-center">
 
       {/* =========================
           HEADER
