@@ -30,10 +30,10 @@ const stats = {
 };
 
 const metricMeta = {
-  temp: { label: "Air Temperature", icon: "🌡️", color: "#f97316" },
-  sea_surface_temperature: { label: "Sea Surface Temp", icon: "🌊", color: "#0ea5e9" },
-  rainfall: { label: "Rainfall Anomaly", icon: "🌧️", color: "#06b6d4" },
-  sea: { label: "Sea Level Rise", icon: "🌊", color: "#2563eb" },
+  temp: { label: "Air Temperature", color: "#f97316" },
+  sea_surface_temperature: { label: "Sea Surface Temp", color: "#0ea5e9" },
+  rainfall: { label: "Rainfall Anomaly", color: "#06b6d4" },
+  sea: { label: "Sea Level Rise", color: "#2563eb" },
 };
 
 export function DoughnutClimateDashboard({
