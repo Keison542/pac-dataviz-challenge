@@ -220,8 +220,8 @@ export const TrendLine = ({
               onHover={() => {}}
             />
 
-            {/* POINTS - hide on very small screens */}
-            {!isMobile && trendData.map((d, i) => {
+            {/* POINTS - Always show, but smaller on mobile */}
+            {trendData.map((d, i) => {
               const isActive = hovered?.year === d.year;
               const pointRadius = isActive 
                 ? Math.max(5, Math.min(8, width / 80)) 
@@ -237,6 +237,7 @@ export const TrendLine = ({
                   opacity={isActive ? 1 : 0.6}
                   onMouseEnter={() => setHovered(d)}
                   onMouseLeave={() => setHovered(null)}
+                  onClick={() => isTouchDevice && setHovered(d)}
                   className={!isTouchDevice ? "cursor-pointer transition-all duration-200" : ""}
                 />
               );
@@ -320,7 +321,7 @@ export const TrendLine = ({
         </svg>
 
         {/* ─── TOOLTIP ─── */}
-        {hovered && !isMobile && (
+        {hovered && (
           <div 
             className="absolute bg-white border border-slate-200 shadow-lg rounded-lg p-2 sm:p-3 pointer-events-none z-10"
             style={{
@@ -348,17 +349,6 @@ export const TrendLine = ({
             >
               recorded impact trend
             </div>
-          </div>
-        )}
-
-        {/* ─── MOBILE TOOLTIP ─── */}
-        {hovered && isMobile && (
-          <div className="mt-2 text-center bg-white border rounded-lg p-2 mx-2">
-            <div className="font-semibold text-xs">{hovered.year}</div>
-            <div className="text-sm font-bold text-blue-600">
-              {format(hovered.value)}
-            </div>
-            <div className="text-xs text-slate-500">recorded impact trend</div>
           </div>
         )}
       </div>
