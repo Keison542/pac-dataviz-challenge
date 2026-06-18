@@ -156,7 +156,7 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            className="py-16 bg-slate-50 rounded-2xl px-6"
+            className="py-16 rounded-2xl px-6"
           >
             <h2 className="text-2xl font-semibold mb-2 text-center">
               3. These impacts are interconnected
