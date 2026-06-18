@@ -141,7 +141,7 @@ export default function Home() {
         )}
 
         {/* ─── STORY TRANSITION 2 ─── */}
-        <div className="py-16 border-t border-slate-100">
+        <div className="py-24 border-t border-slate-100">
           <StoryTransition 
             text="These pressures do not act independently — they reinforce each other across the system." 
           />
