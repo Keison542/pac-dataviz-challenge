@@ -82,9 +82,9 @@ export function HumanEconomicSection({
   {hasEconomicData && (
     <motion.div
       style={{ opacity: economicOpacity, y: economicY }}
-      className="sticky top-20 mb-20"
+      className="sticky top-20 mb-20 flex justify-center"
     >
-      <div className="text-center">
+      <div className="text-center w-full max-w-5xl px-4">
         <div className="text-sm font-medium text-slate-700 mb-1">
           1. Economic Stress Signal
         </div>
@@ -101,13 +101,16 @@ export function HumanEconomicSection({
           infrastructure, agricultural losses, and rising recovery costs.
         </div>
 
-        <TrendLine
-          width={chartWidth * 1.3}
-          height={240}
-          data={dataMap.loss}
-          dataType="loss"
-          setSelectedCountry={setSelectedCountry}
-        />
+        <div className="flex justify-center">
+          <TrendLine
+            width={Math.min(chartWidth * 1.3, 900)}
+            height={240}
+            data={dataMap.loss}
+            dataType="loss"
+            setSelectedCountry={setSelectedCountry}
+            className="w-full max-w-4xl"
+          />
+        </div>
       </div>
     </motion.div>
   )}
@@ -118,9 +121,9 @@ export function HumanEconomicSection({
   {hasHumanData && (
     <motion.div
       style={{ opacity: humanOpacity, y: humanY }}
-      className="sticky top-20 mb-20"
+      className="sticky top-20 mb-20 flex justify-center"
     >
-      <div className="text-center">
+      <div className="text-center w-full max-w-5xl px-4">
         <div className="text-sm font-medium text-slate-700 mb-1">
           2. Human Exposure
         </div>
@@ -138,11 +141,14 @@ export function HumanEconomicSection({
           to long-term vulnerability.
         </div>
 
-        <BubbleChart
-          width={chartWidth * 1.3}
-          height={260}
-          data={dataMap.people}
-        />
+        <div className="flex justify-center">
+          <BubbleChart
+            width={Math.min(chartWidth * 1.3, 900)}
+            height={260}
+            data={dataMap.people}
+            className="w-full max-w-4xl"
+          />
+        </div>
       </div>
     </motion.div>
   )}
@@ -157,9 +163,9 @@ export function HumanEconomicSection({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.25 }}
       transition={{ duration: 0.7 }}
-      className="mt-32"
+      className="mt-32 flex justify-center"
     >
-      <div className="text-center">
+      <div className="text-center w-full max-w-6xl px-4">
         <div className="text-sm font-medium text-slate-700 mb-1">
           3. Structural System Shift
         </div>
@@ -170,12 +176,15 @@ export function HumanEconomicSection({
           capacity.
         </div>
 
-        <TimeSeriesDashboard
-          width={chartWidth * 2 + 40}
-          height={400}
-          data={timeSeriesData}
-          selectedCountry={selectedCountry}
-        />
+        <div className="flex justify-center">
+          <TimeSeriesDashboard
+            width={Math.min(chartWidth * 2 + 40, 1200)}
+            height={400}
+            data={timeSeriesData}
+            selectedCountry={selectedCountry}
+            className="w-full max-w-5xl"
+          />
+        </div>
       </div>
     </motion.div>
   )}
