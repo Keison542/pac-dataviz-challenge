@@ -28,7 +28,7 @@ const METRICS = [
     key: "cropYield",
     label: "Food Production",
     unit: "t/ha",
-    color: "#10b981",
+    color: "#4f6dc0",
   },
   {
     key: "livestockYield",
