@@ -74,7 +74,7 @@ export function HumanEconomicSection({
       {/* =========================
           PARALLAX STACK (REDUCED HEIGHT)
       ========================== */}
-      <div className="relative h-[800px]">
+      <div className="relative min-h-[1400px]">
 
         {/* =========================
             1. ECONOMIC
@@ -144,7 +144,7 @@ export function HumanEconomicSection({
         {hasSocioeconomicData && (
           <motion.div
             style={{ opacity: systemOpacity, y: systemY }}
-            className="sticky top-20"
+            className="relative mt-32"
           >
             <div className="text-center">
               <div className="text-sm font-medium text-slate-700 mb-1">
