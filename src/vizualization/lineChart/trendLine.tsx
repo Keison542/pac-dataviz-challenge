@@ -1,9 +1,7 @@
 "use client";
 
-import { scaleLinear } from "d3-scale";
-import { useMemo, useState, useRef } from "react";
-import { line, curveCardinal } from "d3-shape";
-import { LineItem } from "@/vizualization/lineChart/LineItem";
+import { scaleLinear, scaleSqrt } from "d3-scale";
+import { useMemo, useState } from "react";
 
 const MARGIN = { top: 60, right: 60, bottom: 110, left: 110 };
 
@@ -28,197 +26,135 @@ export const TrendLine = ({
   data,
   selectedCountry,
   setSelectedCountry,
-  highlightMode = "economic",
 }: Props) => {
-  const [hoveredPoint, setHoveredPoint] = useState<UnifiedDatum | null>(null);
+  const [hovered, setHovered] = useState<UnifiedDatum | null>(null);
 
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
-  const trendData = useMemo(() => {
-    const map = new Map<number, number>();
+  const countries = useMemo(
+    () => Array.from(new Set(data.map((d) => d.country))),
+    [data]
+  );
 
-    data.forEach((d) => {
-      map.set(d.year, (map.get(d.year) || 0) + (d.value || 0));
-    });
+  const years = useMemo(
+    () => Array.from(new Set(data.map((d) => d.year))).sort(),
+    [data]
+  );
 
-    return Array.from(map.entries())
-      .map(([year, value]) => ({ year, value }))
-      .sort((a, b) => a.year - b.year);
-  }, [data]);
+  const maxValue = Math.max(...data.map((d) => d.value), 1);
 
-  const maxValue = Math.max(...trendData.map((d) => d.value), 1);
-
+  // X = Year
   const xScale = useMemo(
     () =>
       scaleLinear()
-        .domain([
-          trendData[0]?.year ?? 0,
-          trendData.at(-1)?.year ?? 1,
-        ])
+        .domain([years[0] ?? 0, years.at(-1) ?? 1])
         .range([0, boundsWidth]),
-    [trendData, boundsWidth]
+    [years, boundsWidth]
   );
 
+  // Y = Country
   const yScale = useMemo(
     () =>
       scaleLinear()
-        .domain([0, maxValue * 1.1])
+        .domain([0, Math.max(countries.length - 1, 1)])
         .range([boundsHeight, 0]),
-    [maxValue, boundsHeight]
+    [countries, boundsHeight]
   );
 
-  const linePath = useMemo(() => {
-    return (
-      line<{ year: number; value: number }>()
-        .x((d) => xScale(d.year))
-        .y((d) => yScale(d.value))
-        .curve(curveCardinal.tension(0.7))(trendData) || ""
-    );
-  }, [trendData, xScale, yScale]);
+  const rScale = useMemo(
+    () => scaleSqrt().domain([0, maxValue]).range([3, 28]),
+    [maxValue]
+  );
 
-  const worstPoint = useMemo(() => {
-    return trendData.reduce((max, d) =>
-      d.value > max.value ? d : max,
-      trendData[0]
-    );
-  }, [trendData]);
+  const countryIndex = new Map(countries.map((c, i) => [c, i]));
 
-  const first = trendData[0];
-  const last = trendData.at(-1);
-
-  const growth =
-    first && last && first.value !== 0
-      ? ((last.value - first.value) / first.value) * 100
-      : 0;
-
-  const narrative =
-    highlightMode === "economic"
-      ? "Economic losses signal the first structural stress in livelihoods."
-      : highlightMode === "human"
-      ? "Rising impacts translate directly into human exposure."
-      : "Long-term livelihood systems begin reorganizing under climate pressure.";
-
-  const format = (v: number) =>
-    v >= 1e6
-      ? `${(v / 1e6).toFixed(1)}M`
-      : v >= 1e3
-      ? `${(v / 1e3).toFixed(0)}K`
-      : v.toString();
-
-  if (!trendData.length) return null;
+  if (!data.length) return null;
 
   return (
     <div className="w-full font-sans">
 
       {/* HEADER */}
       <div className="mb-4 text-center max-w-xl mx-auto">
-        <div className="text-sm font-semibold text-slate-700">
-          Livelihood Pressure Curve
+        <div className="text-sm font-semibold text-slate-900">
+          Livelihood Impact Bubble Map
         </div>
 
-        <p className="text-xs text-slate-500 mt-1">{narrative}</p>
-
-        <div className="text-[11px] text-slate-400 mt-2">
-          Growth: {growth.toFixed(1)}% · Peak year: {worstPoint?.year}
-        </div>
+        <p className="text-xs text-slate-700 mt-1">
+          Bubble size represents impact severity across countries and years.
+        </p>
       </div>
 
       {/* CHART */}
-      <div className="relative">
-        <svg width={width} height={height}>
-          <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+      <svg width={width} height={height}>
+        <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
 
-            {/* GRID BASE */}
-            <line
-              x1={0}
-              x2={boundsWidth}
-              y1={yScale(0)}
-              y2={yScale(0)}
-              stroke="#e2e8f0"
-            />
+          {data.map((d, i) => {
+            const x = xScale(d.year);
+            const y = yScale(countryIndex.get(d.country) ?? 0);
+            const r = rScale(d.value);
 
-            {/* LINE */}
-            <LineItem
-              path={linePath}
-              color="#06b6d4"
-              strokeWidth={3}
-              opacity={0.9}
-              onHover={() => {}}
-            />
+            return (
+              <circle
+                key={i}
+                cx={x}
+                cy={y}
+                r={r}
+                fill="#06b6d4"
+                opacity={0.75}
+                onMouseEnter={() => setHovered(d)}
+                onMouseLeave={() => setHovered(null)}
+                onClick={() => setSelectedCountry(d.country)}
+                style={{ cursor: "pointer" }}
+              />
+            );
+          })}
 
-            {/* POINTS WITH TOOLTIP */}
-            {trendData.map((d, i) => {
-              const x = xScale(d.year);
-              const y = yScale(d.value);
+          {/* X Axis Label */}
+          <text
+            x={boundsWidth / 2}
+            y={boundsHeight + 55}
+            textAnchor="middle"
+            fontSize={11}
+            fill="#374151"
+          >
+            Year
+          </text>
 
-              return (
-                <circle
-                  key={i}
-                  cx={x}
-                  cy={y}
-                  r={hoveredPoint?.year === d.year ? 6 : 3}
-                  fill="#06b6d4"
-                  opacity={0.7}
-                  onMouseEnter={() => setHoveredPoint(d)}
-                  onMouseLeave={() => setHoveredPoint(null)}
-                />
-              );
-            })}
+          {/* Y Axis Label */}
+          <text
+            x={-60}
+            y={boundsHeight / 2}
+            textAnchor="middle"
+            fontSize={11}
+            fill="#374151"
+            transform={`rotate(-90, -60, ${boundsHeight / 2})`}
+          >
+            Countries
+          </text>
 
-            {/* AXIS LABELS */}
+          {/* Country labels */}
+          {countries.map((c, i) => (
             <text
-              x={boundsWidth / 2}
-              y={boundsHeight + 55}
-              textAnchor="middle"
-              fontSize={11}
-              fill="#64748b"
+              key={c}
+              x={-10}
+              y={yScale(i)}
+              textAnchor="end"
+              fontSize={10}
+              fill="#4b5563"
             >
-              Year
+              {c}
             </text>
+          ))}
+        </g>
+      </svg>
 
-            <text
-              x={-60}
-              y={boundsHeight / 2}
-              textAnchor="middle"
-              fontSize={11}
-              fill="#64748b"
-              transform={`rotate(-90, -60, ${boundsHeight / 2})`}
-            >
-              Livelihood Impact
-            </text>
-
-            {/* X ticks */}
-            {trendData
-              .filter((_, i) => i % Math.ceil(trendData.length / 5) === 0)
-              .map((d, i) => (
-                <text
-                  key={i}
-                  x={xScale(d.year)}
-                  y={boundsHeight + 25}
-                  textAnchor="middle"
-                  fontSize={10}
-                  fill="#94a3b8"
-                >
-                  {d.year}
-                </text>
-              ))}
-          </g>
-        </svg>
-
-        {/* TOOLTIP */}
-        {hoveredPoint && (
-          <div className="absolute top-2 right-2 bg-white border rounded-lg p-3 shadow-sm">
-            <div className="text-xs font-semibold">{hoveredPoint.year}</div>
-            <div className="text-sm font-bold">
-              {format(hoveredPoint.value)}
-            </div>
-            <div className="text-[10px] text-slate-500">
-              livelihood impact recorded
-            </div>
-          </div>
-        )}
-      </div>
+      {/* TOOLTIP */}
+      {hovered && (
+        <div className="mt-2 text-xs text-slate-700 text-center">
+          {hovered.country} ({hovered.year}) → {hovered.value}
+        </div>
+      )}
     </div>
   );
 };
