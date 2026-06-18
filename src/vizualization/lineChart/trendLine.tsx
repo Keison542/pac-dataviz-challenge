@@ -1,9 +1,11 @@
 "use client";
 
-import { scaleLinear, scaleSqrt } from "d3-scale";
+import { scaleLinear } from "d3-scale";
 import { useMemo, useState } from "react";
+import { line, curveMonotoneX } from "d3-shape";
+import { LineItem } from "@/vizualization/lineChart/LineItem";
 
-const MARGIN = { top: 60, right: 60, bottom: 110, left: 110 };
+const MARGIN = { top: 50, right: 40, bottom: 90, left: 100 };
 
 export type UnifiedDatum = {
   country: string;
@@ -24,137 +26,180 @@ export const TrendLine = ({
   width,
   height,
   data,
-  selectedCountry,
-  setSelectedCountry,
 }: Props) => {
   const [hovered, setHovered] = useState<UnifiedDatum | null>(null);
 
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
-  const countries = useMemo(
-    () => Array.from(new Set(data.map((d) => d.country))),
-    [data]
+  // Aggregate by year
+  const trendData = useMemo(() => {
+    const map = new Map<number, number>();
+
+    data.forEach((d) => {
+      map.set(d.year, (map.get(d.year) || 0) + d.value);
+    });
+
+    return Array.from(map.entries())
+      .map(([year, value]) => ({ year, value }))
+      .sort((a, b) => a.year - b.year);
+  }, [data]);
+
+  const maxValue = useMemo(
+    () => Math.max(...trendData.map((d) => d.value), 1),
+    [trendData]
   );
 
-  const years = useMemo(
-    () => Array.from(new Set(data.map((d) => d.year))).sort(),
-    [data]
-  );
-
-  const maxValue = Math.max(...data.map((d) => d.value), 1);
-
-  // X = Year
   const xScale = useMemo(
     () =>
       scaleLinear()
-        .domain([years[0] ?? 0, years.at(-1) ?? 1])
+        .domain([
+          trendData[0]?.year ?? 0,
+          trendData.at(-1)?.year ?? 1,
+        ])
         .range([0, boundsWidth]),
-    [years, boundsWidth]
+    [trendData, boundsWidth]
   );
 
-  // Y = Country
   const yScale = useMemo(
     () =>
       scaleLinear()
-        .domain([0, Math.max(countries.length - 1, 1)])
+        .domain([0, maxValue * 1.1])
         .range([boundsHeight, 0]),
-    [countries, boundsHeight]
+    [maxValue, boundsHeight]
   );
 
-  const rScale = useMemo(
-    () => scaleSqrt().domain([0, maxValue]).range([3, 28]),
-    [maxValue]
-  );
+  const linePath = useMemo(() => {
+    return (
+      line<{ year: number; value: number }>()
+        .x((d) => xScale(d.year))
+        .y((d) => yScale(d.value))
+        .curve(curveMonotoneX)(trendData) || ""
+    );
+  }, [trendData, xScale, yScale]);
 
-  const countryIndex = new Map(countries.map((c, i) => [c, i]));
+  if (!trendData.length) return null;
 
-  if (!data.length) return null;
+  const format = (v: number) =>
+    v >= 1e6
+      ? `${(v / 1e6).toFixed(1)}M`
+      : v >= 1e3
+      ? `${(v / 1e3).toFixed(0)}K`
+      : v.toString();
 
   return (
     <div className="w-full font-sans">
 
       {/* HEADER */}
-      <div className="mb-4 text-center max-w-xl mx-auto">
+      <div className="mb-5 text-center max-w-xl mx-auto">
         <div className="text-sm font-semibold text-slate-900">
-          Livelihood Impact Bubble Map
+          Livelihood Pressure Curve
         </div>
 
-        <p className="text-xs text-slate-700 mt-1">
-          Bubble size represents impact severity across countries and years.
+        <p className="text-xs text-slate-600 mt-1">
+          Aggregated impact trend across years
         </p>
       </div>
 
       {/* CHART */}
-      <svg width={width} height={height}>
-        <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+      <div className="relative">
+        <svg width={width} height={height}>
+          <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
 
-          {data.map((d, i) => {
-            const x = xScale(d.year);
-            const y = yScale(countryIndex.get(d.country) ?? 0);
-            const r = rScale(d.value);
+            {/* subtle baseline */}
+            <line
+              x1={0}
+              x2={boundsWidth}
+              y1={yScale(0)}
+              y2={yScale(0)}
+              stroke="#e5e7eb"
+            />
 
-            return (
-              <circle
-                key={i}
-                cx={x}
-                cy={y}
-                r={r}
-                fill="#06b6d4"
-                opacity={0.75}
-                onMouseEnter={() => setHovered(d)}
-                onMouseLeave={() => setHovered(null)}
-                onClick={() => setSelectedCountry(d.country)}
-                style={{ cursor: "pointer" }}
-              />
-            );
-          })}
+            {/* LINE */}
+            <LineItem
+              path={linePath}
+              color="#0ea5e9"
+              strokeWidth={3}
+              opacity={0.95}
+              onHover={() => {}}
+            />
 
-          {/* X Axis Label */}
-          <text
-            x={boundsWidth / 2}
-            y={boundsHeight + 55}
-            textAnchor="middle"
-            fontSize={11}
-            fill="#374151"
-          >
-            Year
-          </text>
+            {/* POINTS */}
+            {trendData.map((d, i) => {
+              const isActive = hovered?.year === d.year;
 
-          {/* Y Axis Label */}
-          <text
-            x={-60}
-            y={boundsHeight / 2}
-            textAnchor="middle"
-            fontSize={11}
-            fill="#374151"
-            transform={`rotate(-90, -60, ${boundsHeight / 2})`}
-          >
-            Countries
-          </text>
+              return (
+                <circle
+                  key={i}
+                  cx={xScale(d.year)}
+                  cy={yScale(d.value)}
+                  r={isActive ? 6 : 3}
+                  fill={isActive ? "#0284c7" : "#38bdf8"}
+                  opacity={isActive ? 1 : 0.6}
+                  onMouseEnter={() => setHovered(d)}
+                  onMouseLeave={() => setHovered(null)}
+                  style={{ cursor: "pointer" }}
+                />
+              );
+            })}
 
-          {/* Country labels */}
-          {countries.map((c, i) => (
+            {/* AXIS LABELS */}
             <text
-              key={c}
-              x={-10}
-              y={yScale(i)}
-              textAnchor="end"
-              fontSize={10}
-              fill="#4b5563"
+              x={boundsWidth / 2}
+              y={boundsHeight + 55}
+              textAnchor="middle"
+              fontSize={11}
+              fill="#374151"
             >
-              {c}
+              Year
             </text>
-          ))}
-        </g>
-      </svg>
 
-      {/* TOOLTIP */}
-      {hovered && (
-        <div className="mt-2 text-xs text-slate-700 text-center">
-          {hovered.country} ({hovered.year}) → {hovered.value}
-        </div>
-      )}
+            <text
+              x={-60}
+              y={boundsHeight / 2}
+              textAnchor="middle"
+              fontSize={11}
+              fill="#374151"
+              transform={`rotate(-90, -60, ${boundsHeight / 2})`}
+            >
+              Impact Level
+            </text>
+
+            {/* X ticks */}
+            {trendData
+              .filter((_, i) =>
+                i % Math.ceil(trendData.length / 5) === 0
+              )
+              .map((d, i) => (
+                <text
+                  key={i}
+                  x={xScale(d.year)}
+                  y={boundsHeight + 25}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fill="#6b7280"
+                >
+                  {d.year}
+                </text>
+              ))}
+          </g>
+        </svg>
+
+        {/* TOOLTIP */}
+        {hovered && (
+          <div className="absolute top-3 right-3 bg-white border border-slate-200 rounded-lg p-3 shadow-md">
+            <div className="text-xs font-semibold text-slate-900">
+              {hovered.year}
+            </div>
+            <div className="text-sm font-bold text-slate-800">
+              {format(hovered.value)}
+            </div>
+            <div className="text-[10px] text-slate-500">
+              recorded impact trend
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
