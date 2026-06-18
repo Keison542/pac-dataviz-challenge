@@ -236,8 +236,8 @@ export const LineChart = ({
             }
           >
             {stats.trend}
-          </span>{" "}
-          since {processedData[0]?.year} ({Math.abs(stats.percentChange).toFixed(1)}%)
+          </span>{" "} ({Math.abs(stats.percentChange).toFixed(1)}%) 
+            since {processedData[0]?.year}
         </div>
         )}
       </div>
