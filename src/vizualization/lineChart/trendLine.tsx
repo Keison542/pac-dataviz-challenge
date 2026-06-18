@@ -39,6 +39,7 @@ export const TrendLine = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hovered, setHovered] = useState<UnifiedDatum | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // ─── Responsive sizing ───
   useEffect(() => {
@@ -48,6 +49,7 @@ export const TrendLine = ({
         const width = propWidth || rect.width || 600;
         const height = propHeight || Math.min(rect.width * 0.6, 400);
         setDimensions({ width, height });
+        setIsMobile(width < 768);
       }
     };
 
@@ -71,16 +73,31 @@ export const TrendLine = ({
 
   const { width, height } = dimensions;
 
+  // ─── Responsive margins ───
+  const responsiveMargin = useMemo(() => {
+    if (width < 400) {
+      return { top: 35, right: 15, bottom: 60, left: 55 };
+    }
+    if (width < 600) {
+      return { top: 40, right: 20, bottom: 70, left: 70 };
+    }
+    if (width < 768) {
+      return { top: 45, right: 25, bottom: 80, left: 80 };
+    }
+    return MARGIN;
+  }, [width]);
+
   // ─── Responsive font size ───
   const getFontSize = useCallback((base: number) => {
-    if (width < 400) return base * 0.6;
-    if (width < 600) return base * 0.8;
-    if (width < 800) return base * 0.9;
+    if (width < 400) return base * 0.55;
+    if (width < 600) return base * 0.7;
+    if (width < 768) return base * 0.85;
+    if (width < 1024) return base * 0.9;
     return base;
   }, [width]);
 
-  const boundsWidth = width - MARGIN.left - MARGIN.right;
-  const boundsHeight = height - MARGIN.top - MARGIN.bottom;
+  const boundsWidth = width - responsiveMargin.left - responsiveMargin.right;
+  const boundsHeight = height - responsiveMargin.top - responsiveMargin.bottom;
 
   // ─── Aggregate by year ───
   const trendData = useMemo(() => {
@@ -150,12 +167,14 @@ export const TrendLine = ({
       : v.toString();
 
   // ─── Dynamic tick count ───
-  const tickCount = Math.max(3, Math.min(8, Math.floor(width / 100)));
+  const tickCount = Math.max(3, Math.min(width < 500 ? 4 : width < 768 ? 5 : 8, Math.floor(width / 100)));
+
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   return (
     <div ref={containerRef} className={`w-full font-sans flex flex-col items-center ${className}`}>
       {/* ─── HEADER ─── */}
-      <div className="mb-4 text-center max-w-xl mx-auto px-4">
+      <div className="mb-3 sm:mb-4 text-center max-w-xl mx-auto px-2 sm:px-4">
         <div 
           className="font-semibold text-slate-900"
           style={{ fontSize: titleFontSize }}
@@ -164,7 +183,7 @@ export const TrendLine = ({
         </div>
         {subtitle && (
           <p 
-            className="text-slate-600 mt-1"
+            className="text-slate-600 mt-0.5 sm:mt-1"
             style={{ fontSize: subtitleFontSize }}
           >
             {subtitle}
@@ -173,14 +192,15 @@ export const TrendLine = ({
       </div>
 
       {/* ─── CHART ─── */}
-      <div className="relative w-full overflow-x-auto">
+      <div className="relative w-full overflow-hidden">
         <svg 
           width={width} 
           height={height} 
           className="block"
           viewBox={width && height ? `0 0 ${width} ${height}` : undefined}
+          style={{ maxWidth: '100%', height: 'auto' }}
         >
-          <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+          <g transform={`translate(${responsiveMargin.left},${responsiveMargin.top})`}>
             {/* Subtle baseline */}
             <line
               x1={0}
@@ -200,21 +220,24 @@ export const TrendLine = ({
               onHover={() => {}}
             />
 
-            {/* POINTS */}
-            {trendData.map((d, i) => {
+            {/* POINTS - hide on very small screens */}
+            {!isMobile && trendData.map((d, i) => {
               const isActive = hovered?.year === d.year;
+              const pointRadius = isActive 
+                ? Math.max(5, Math.min(8, width / 80)) 
+                : Math.max(2.5, Math.min(4, width / 150));
 
               return (
                 <circle
                   key={`point-${i}`}
                   cx={xScale(d.year)}
                   cy={yScale(d.value)}
-                  r={isActive ? Math.max(6, width / 80) : Math.max(3, width / 150)}
+                  r={pointRadius}
                   fill={isActive ? "#0284c7" : "#38bdf8"}
                   opacity={isActive ? 1 : 0.6}
                   onMouseEnter={() => setHovered(d)}
                   onMouseLeave={() => setHovered(null)}
-                  className="cursor-pointer transition-all duration-200"
+                  className={!isTouchDevice ? "cursor-pointer transition-all duration-200" : ""}
                 />
               );
             })}
@@ -227,15 +250,15 @@ export const TrendLine = ({
               })
               .map((d, i) => {
                 const xPos = xScale(d.year);
-                if (xPos < 10 || xPos > boundsWidth - 10) return null;
+                if (xPos < 5 || xPos > boundsWidth - 5) return null;
                 
                 return (
                   <text
                     key={`x-tick-${i}`}
                     x={xPos}
-                    y={boundsHeight + 25}
+                    y={boundsHeight + (width < 500 ? 18 : 25)}
                     textAnchor="middle"
-                    fontSize={fontSize * 0.85}
+                    fontSize={Math.max(7, fontSize * 0.75)}
                     fill="#6b7280"
                   >
                     {d.year}
@@ -244,7 +267,7 @@ export const TrendLine = ({
               })}
 
             {/* Y-AXIS TICKS */}
-            {Array.from({ length: 5 }, (_, i) => (maxValue / 4) * i).map((v, i) => {
+            {Array.from({ length: width < 500 ? 3 : 5 }, (_, i) => (maxValue / (width < 500 ? 2 : 4)) * i).map((v, i) => {
               const yPos = yScale(v);
               if (yPos < 5 || yPos > boundsHeight - 5) return null;
               
@@ -260,10 +283,10 @@ export const TrendLine = ({
                     strokeWidth={0.5}
                   />
                   <text
-                    x={-8}
+                    x={-6}
                     y={yPos + fontSize * 0.35}
                     textAnchor="end"
-                    fontSize={fontSize * 0.8}
+                    fontSize={Math.max(7, fontSize * 0.7)}
                     fill="#94a3b8"
                   >
                     {format(v)}
@@ -275,7 +298,7 @@ export const TrendLine = ({
             {/* AXIS LABELS */}
             <text
               x={boundsWidth / 2}
-              y={boundsHeight + 55}
+              y={boundsHeight + (width < 500 ? 40 : 55)}
               textAnchor="middle"
               fontSize={fontSize}
               fill="#374151"
@@ -284,12 +307,12 @@ export const TrendLine = ({
             </text>
 
             <text
-              x={-60}
+              x={-(width < 500 ? 45 : 60)}
               y={boundsHeight / 2}
               textAnchor="middle"
               fontSize={fontSize}
               fill="#374151"
-              transform={`rotate(-90, -60, ${boundsHeight / 2})`}
+              transform={`rotate(-90, ${-(width < 500 ? 45 : 60)}, ${boundsHeight / 2})`}
             >
               Impact Level
             </text>
@@ -297,7 +320,7 @@ export const TrendLine = ({
         </svg>
 
         {/* ─── TOOLTIP ─── */}
-        {hovered && (
+        {hovered && !isMobile && (
           <div 
             className="absolute bg-white border border-slate-200 shadow-lg rounded-lg p-2 sm:p-3 pointer-events-none z-10"
             style={{
@@ -325,6 +348,17 @@ export const TrendLine = ({
             >
               recorded impact trend
             </div>
+          </div>
+        )}
+
+        {/* ─── MOBILE TOOLTIP ─── */}
+        {hovered && isMobile && (
+          <div className="mt-2 text-center bg-white border rounded-lg p-2 mx-2">
+            <div className="font-semibold text-xs">{hovered.year}</div>
+            <div className="text-sm font-bold text-blue-600">
+              {format(hovered.value)}
+            </div>
+            <div className="text-xs text-slate-500">recorded impact trend</div>
           </div>
         )}
       </div>
