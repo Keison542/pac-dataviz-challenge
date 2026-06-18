@@ -176,7 +176,7 @@ export default function Home() {
         )}
 
         {/* ─── STORY TRANSITION 3 ─── */}
-        <div className="py-16 border-t border-slate-100">
+        <div className="py-24 border-t border-slate-100">
           <StoryTransition 
             text="As the system intensifies, inequality becomes the defining factor in climate vulnerability." 
           />
@@ -211,7 +211,7 @@ export default function Home() {
         )}
 
         {/* ─── STORY TRANSITION 4 ─── */}
-        <div className="py-16 border-t border-slate-100">
+        <div className="py-24 border-t border-slate-100">
           <StoryTransition 
             text="The Pacific reveals a global truth: climate risk is shaped by unequal resilience." 
           />
