@@ -29,13 +29,13 @@ export function CausalChainSection({
       </div>
 
       {/* CONTENT FRAME */}
-      <div className="p-3 bg-white rounded-xl border shadow-sm">
+      {/* <div className="p-3 bg-white rounded-xl border shadow-sm"> */}
         <ClimateInteractionMatrix
           data={climateFlowData}
           selectedCountry={selectedCountry}
           width={chartWidth * 2 + 40}
         />
-      </div>
+      {/* </div> */}
     </div>
   );
 }
