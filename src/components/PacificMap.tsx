@@ -8,8 +8,64 @@ import { disasterEconomicLoss } from "@/climatedata/economic_consequence/direct_
 import { seaLevelAnomalies } from "@/climatedata/climate_drivers/sea_level_anomalies";
 import { rainfallAnomalies } from "@/climatedata/climate_drivers/rainfall_anomalies";
 
+// Import metric data for composite score
+import economicLossData from "@/climatedata/economic_consequence/direct_disaster_economic_loss";
+import cropYieldData from "@/climatedata/agriculture/crop_yield";
+import touristArrivalsData from "@/climatedata/tourism/tourist_arrivals";
+import livestockYieldData from "@/climatedata/agriculture/livestock_yield";
+import climateAlteringLandData from "@/climatedata/climate_drivers/climate_altering_land";
+import populationGrowthData from "@/climatedata/demographics/population_growth";
+import affectedPersonsData from "@/climatedata/human_consequence/number_of_persons_affected";
+
 const WIDTH = 1400;
 const HEIGHT = 700;
+
+// Metric configs for formatting
+const METRIC_CONFIGS = {
+  economicLoss: {
+    label: "Economic Loss",
+    unit: "USD",
+    format: (v: number) => {
+      const absV = Math.abs(v);
+      if (absV >= 1_000_000_000) return `$${(absV / 1_000_000_000).toFixed(1)}B`;
+      if (absV >= 1_000_000) return `$${(absV / 1_000_000).toFixed(1)}M`;
+      if (absV >= 1_000) return `$${(absV / 1_000).toFixed(1)}K`;
+      return `$${absV}`;
+    }
+  },
+  cropYield: {
+    label: "Crop Yield",
+    unit: "t/ha",
+    format: (v: number) => `${Math.abs(v).toFixed(1)} t/ha`
+  },
+  touristArrivals: {
+    label: "Tourist Arrivals",
+    unit: "visitors",
+    format: (v: number) => `${Math.abs(v).toLocaleString()} visitors`
+  },
+  livestockYield: {
+    label: "Livestock Yield",
+    unit: "tons",
+    format: (v: number) => `${Math.abs(v).toLocaleString()} tons`
+  },
+  climateAlteringLand: {
+    label: "Climate-Altering Land",
+    unit: "ha",
+    format: (v: number) => `${Math.abs(v).toLocaleString()} ha`
+  },
+  populationGrowth: {
+    label: "Population Growth",
+    unit: "%",
+    format: (v: number) => `${Math.abs(v).toFixed(1)}%`
+  },
+  affectedPersons: {
+    label: "People Affected",
+    unit: "people",
+    format: (v: number) => `${Math.abs(v).toLocaleString()} people`
+  }
+};
+
+const METRIC_KEYS = Object.keys(METRIC_CONFIGS);
 
 const hazardColors = {
   cyclone: "#334155",
@@ -58,6 +114,61 @@ function buildCentroids() {
     lon: coords.reduce((s, c) => s + c[0], 0) / coords.length,
     lat: coords.reduce((s, c) => s + c[1], 0) / coords.length,
   }));
+}
+
+// ─── Build country data for all metrics ───
+function buildCountryData() {
+  const map = new Map<string, Record<string, number>>();
+
+  const dataMap = {
+    economicLoss: economicLossData,
+    cropYield: cropYieldData,
+    touristArrivals: touristArrivalsData,
+    livestockYield: livestockYieldData,
+    climateAlteringLand: climateAlteringLandData,
+    populationGrowth: populationGrowthData,
+    affectedPersons: affectedPersonsData,
+  };
+
+  METRIC_KEYS.forEach((key) => {
+    const records = dataMap[key as keyof typeof dataMap] || [];
+    records.forEach((d: any) => {
+      if (!map.has(d.country)) {
+        map.set(d.country, {});
+      }
+      const entry = map.get(d.country)!;
+      entry[key] = (entry[key] || 0) + d.value;
+    });
+  });
+
+  return map;
+}
+
+// ─── Compute composite score ───
+function computeCompositeScores(countryData: Map<string, Record<string, number>>) {
+  // Find max values for normalization
+  const maxValues: Record<string, number> = {};
+  METRIC_KEYS.forEach((key) => {
+    let max = 0;
+    for (const [_, values] of countryData) {
+      const val = values[key] || 0;
+      if (val > max) max = val;
+    }
+    maxValues[key] = max || 1;
+  });
+
+  // Normalize and sum
+  const results: Array<{ country: string; values: Record<string, number>; compositeScore: number }> = [];
+  for (const [country, values] of countryData) {
+    let composite = 0;
+    METRIC_KEYS.forEach((key) => {
+      const raw = values[key] || 0;
+      composite += raw / maxValues[key];
+    });
+    results.push({ country, values, compositeScore: composite });
+  }
+
+  return results.sort((a, b) => b.compositeScore - a.compositeScore);
 }
 
 function buildHazardLookup() {
@@ -120,9 +231,27 @@ function getMaxImpact(hazardLookup: Map<string, any>, hazardKey: string): number
 
 export function PacificClimateStoryMap() {
   const [activeHazard, setActiveHazard] = useState<string | null>(null);
+  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
 
   const countries = useMemo(() => buildCentroids(), []);
   const hazardLookup = useMemo(() => buildHazardLookup(), []);
+  const countryData = useMemo(() => buildCountryData(), []);
+  const ranked = useMemo(() => computeCompositeScores(countryData), [countryData]);
+
+  // Find top and bottom countries
+  const topCountry = ranked.length > 0 ? ranked[0] : null;
+  const bottomCountry = ranked.length > 0 ? ranked[ranked.length - 1] : null;
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    if (ranked.length === 0) return null;
+    const scores = ranked.map(d => d.compositeScore);
+    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const max = Math.max(...scores);
+    const min = Math.min(...scores);
+    const gapPercent = ((max - min) / avg) * 100;
+    return { avg, max, min, gapPercent, count: ranked.length };
+  }, [ranked]);
 
   const temperatureLine = Array.from({ length: 175 }, (_, i) => ({
     x: (i / 174) * WIDTH,
@@ -176,12 +305,22 @@ export function PacificClimateStoryMap() {
     return labels[activeHazard] || `${impact}`;
   };
 
+  // Get composite score for a country
+  const getCompositeScore = (countryName: string): number => {
+    const found = ranked.find(d => d.country === countryName);
+    return found?.compositeScore || 0;
+  };
+
+  // Get metric values for a country
+  const getMetricValues = (countryName: string): Record<string, number> => {
+    const found = ranked.find(d => d.country === countryName);
+    return found?.values || {};
+  };
+
   return (
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto" style={{ background: "transparent" }}>
-      {/* Ocean - transparent background */}
       <rect width={WIDTH} height={HEIGHT} fill="transparent" />
 
-      {/* Temperature Trend */}
       <path d={path} fill="none" stroke="#94a3b8" strokeWidth={1.5} />
 
       <text x={30} y={50} fontSize={12} fontWeight="400" fill="#475569" letterSpacing="0.05em">
@@ -196,7 +335,6 @@ export function PacificClimateStoryMap() {
         2025
       </text>
 
-      {/* Ocean Label */}
       <text
         x={WIDTH / 2}
         y={HEIGHT / 2}
@@ -216,9 +354,15 @@ export function PacificClimateStoryMap() {
         const highlighted = isHighlighted(country.name);
         const radius = getCircleRadius(country.name);
         const impactLabel = getImpactLabel(country.name);
+        const isHovered = hoveredCountry === country.name;
+        const compositeScore = getCompositeScore(country.name);
 
         return (
-          <g key={country.name}>
+          <g 
+            key={country.name}
+            onMouseEnter={() => setHoveredCountry(country.name)}
+            onMouseLeave={() => setHoveredCountry(null)}
+          >
             <motion.circle
               cx={x}
               cy={y}
@@ -240,6 +384,24 @@ export function PacificClimateStoryMap() {
               {country.name}
             </motion.text>
 
+            {/* Show composite score on hover */}
+            {isHovered && !activeHazard && (
+              <motion.g
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <text
+                  x={x + radius + 6}
+                  y={y + 16}
+                  fontSize={8}
+                  fill="#94a3b8"
+                >
+                  Score: {compositeScore.toFixed(2)}
+                </text>
+              </motion.g>
+            )}
+
             {highlighted && impactLabel && (
               <motion.text
                 x={x + radius + 6}
@@ -256,6 +418,21 @@ export function PacificClimateStoryMap() {
           </g>
         );
       })}
+
+      {/* Stats Display - Top/Bottom Countries */}
+      {stats && topCountry && bottomCountry && (
+        <g transform={`translate(30, ${HEIGHT - 110})`}>
+          <text x={0} y={0} fontSize={10} fill="#94a3b8" letterSpacing="0.05em">
+            Highest: {topCountry.country} ({topCountry.compositeScore.toFixed(2)})
+          </text>
+          <text x={0} y={16} fontSize={10} fill="#94a3b8" letterSpacing="0.05em">
+            Lowest: {bottomCountry.country} ({bottomCountry.compositeScore.toFixed(2)})
+          </text>
+          <text x={0} y={32} fontSize={10} fill="#94a3b8" letterSpacing="0.05em">
+            Gap: {stats.gapPercent.toFixed(0)}% · {stats.count} countries
+          </text>
+        </g>
+      )}
 
       {/* Legend */}
       <g transform={`translate(30, ${HEIGHT - 70})`}>
