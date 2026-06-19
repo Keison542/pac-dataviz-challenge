@@ -1,4 +1,5 @@
 import { MultiMetricRankedDashboard } from "@/vizualization/barplot/BarChart";
+import { PacificClimateStoryMap } from "@/components/PacificMap";
 
 interface RegionalComparisonSectionProps {
   selectedCountry: string;
