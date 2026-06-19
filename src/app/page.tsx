@@ -256,7 +256,7 @@ export default function Home() {
       <section className="min-h-[80vh] flex items-center justify-center px-6 border-t border-slate-100">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
-            Climate vulnerability is shaped by inequality.
+            A Pacific perspective: Climate vulnerability is shaped by inequality
           </h2>
 
           <p className="mt-10 text-xl text-slate-500">
