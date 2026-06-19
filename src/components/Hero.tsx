@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {PacificMap} from "@/components/PacificMap";
+import {PacificClimateStoryMap} from "@/components/PacificMap";
 
 interface HeroProps {
   countries: string[];
