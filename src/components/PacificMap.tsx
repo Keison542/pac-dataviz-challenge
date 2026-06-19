@@ -8,20 +8,30 @@ import { disasterEconomicLoss } from "@/climatedata/economic_consequence/direct_
 import { seaLevelAnomalies } from "@/climatedata/climate_drivers/sea_level_anomalies";
 import { rainfallAnomalies } from "@/climatedata/climate_drivers/rainfall_anomalies";
 
-// Import metric data for composite score - using only what exists
-// These paths should match your actual data files
-import economicLossData from "@/climatedata/economic_consequence/direct_disaster_economic_loss";
-import cropYieldData from "@/climatedata/agriculture/crop_yield";
-import touristArrivalsData from "@/climatedata/tourism/tourist_arrivals";
-import livestockYieldData from "@/climatedata/agriculture/livestock_yield";
-import climateAlteringLandData from "@/climatedata/climate_drivers/climate_altering_land";
-import populationGrowthData from "@/climatedata/demographics/population_growth";
-// affectedPersonsData is already imported above
-
 const WIDTH = 1400;
 const HEIGHT = 700;
 
-// Metric configs for formatting
+// ─── Types ───
+type RecordType = {
+  country: string;
+  value: number;
+};
+
+type Props = {
+  data: {
+    economicLoss: RecordType[];
+    cropYield: RecordType[];
+    touristArrivals: RecordType[];
+    livestockYield: RecordType[];
+    climateAlteringLand: RecordType[];
+    populationGrowth: RecordType[];
+    affectedPersons: RecordType[];
+  };
+  selectedCountry?: string;
+  className?: string;
+};
+
+// ─── Metric Configs ───
 const METRIC_CONFIGS = {
   economicLoss: {
     label: "Economic Loss",
@@ -68,6 +78,7 @@ const METRIC_CONFIGS = {
 
 const METRIC_KEYS = Object.keys(METRIC_CONFIGS);
 
+// ─── Hazard Colors ───
 const hazardColors = {
   cyclone: "#334155",
   flood: "#334155",
@@ -75,6 +86,7 @@ const hazardColors = {
   seaLevelRise: "#334155",
 };
 
+// ─── Projection Functions ───
 const projectLon = (lon: number) => {
   let x = lon;
   if (x < 120) x += 360;
@@ -117,23 +129,19 @@ function buildCentroids() {
   }));
 }
 
-// ─── Build country data for all metrics ───
-function buildCountryData() {
+// ─── Normalize function ───
+const normalize = (value: number, max: number) => {
+  if (max === 0) return 0;
+  return Math.min(value / max, 1);
+};
+
+// ─── Build country data from props ───
+function buildCountryData(data: Props['data']) {
   const map = new Map<string, Record<string, number>>();
 
-  const dataMap: Record<string, any[]> = {
-    economicLoss: economicLossData || [],
-    cropYield: cropYieldData || [],
-    touristArrivals: touristArrivalsData || [],
-    livestockYield: livestockYieldData || [],
-    climateAlteringLand: climateAlteringLandData || [],
-    populationGrowth: populationGrowthData || [],
-    affectedPersons: affectedPersons || [],
-  };
-
   METRIC_KEYS.forEach((key) => {
-    const records = dataMap[key] || [];
-    records.forEach((d: any) => {
+    const records = data[key as keyof Props['data']] || [];
+    records.forEach((d) => {
       if (!map.has(d.country)) {
         map.set(d.country, {});
       }
@@ -145,7 +153,7 @@ function buildCountryData() {
   return map;
 }
 
-// ─── Compute composite score ───
+// ─── Compute composite scores ───
 function computeCompositeScores(countryData: Map<string, Record<string, number>>) {
   // Find max values for normalization
   const maxValues: Record<string, number> = {};
@@ -164,7 +172,7 @@ function computeCompositeScores(countryData: Map<string, Record<string, number>>
     let composite = 0;
     METRIC_KEYS.forEach((key) => {
       const raw = values[key] || 0;
-      composite += raw / maxValues[key];
+      composite += normalize(raw, maxValues[key]);
     });
     results.push({ country, values, compositeScore: composite });
   }
@@ -172,6 +180,7 @@ function computeCompositeScores(countryData: Map<string, Record<string, number>>
   return results.sort((a, b) => b.compositeScore - a.compositeScore);
 }
 
+// ─── Build hazard lookup from imported data ───
 function buildHazardLookup() {
   const lookup = new Map<
     string,
@@ -230,13 +239,13 @@ function getMaxImpact(hazardLookup: Map<string, any>, hazardKey: string): number
   return max || 1;
 }
 
-export function PacificClimateStoryMap() {
+export function PacificClimateStoryMap({ data, selectedCountry, className = "" }: Props) {
   const [activeHazard, setActiveHazard] = useState<string | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
 
   const countries = useMemo(() => buildCentroids(), []);
   const hazardLookup = useMemo(() => buildHazardLookup(), []);
-  const countryData = useMemo(() => buildCountryData(), []);
+  const countryData = useMemo(() => buildCountryData(data), [data]);
   const ranked = useMemo(() => computeCompositeScores(countryData), [countryData]);
 
   // Find top and bottom countries
