@@ -103,9 +103,9 @@ export function Hero({
       {/* =========================
           MAP - NO WRAPPER, NO CARD STYLING
       ========================== */}
-      <div className="mt-12 w-full">
+      {/* <div className="mt-12 w-full">
         <PacificClimateStoryMap />
-      </div>
+      </div> */}
 
       {/* =========================
           DATA SOURCES (SIMPLIFIED = BETTER FOR JUDGES)
