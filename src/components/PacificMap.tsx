@@ -63,34 +63,60 @@ function buildCentroids() {
 function buildHazardLookup() {
   const lookup = new Map<
     string,
-    { cyclone?: boolean; flood?: boolean; drought?: boolean; seaLevelRise?: boolean }
+    { cyclone?: number; flood?: number; drought?: number; seaLevelRise?: number }
   >();
 
   affectedPersons.forEach((d) => {
     if (d.value > 0) {
-      lookup.set(d.country, { ...(lookup.get(d.country) || {}), cyclone: true });
+      const existing = lookup.get(d.country) || {};
+      lookup.set(d.country, {
+        ...existing,
+        cyclone: (existing.cyclone || 0) + d.value,
+      });
     }
   });
 
   rainfallAnomalies.forEach((d) => {
     if (Math.abs(d.value) > 0) {
-      lookup.set(d.country, { ...(lookup.get(d.country) || {}), flood: true });
+      const existing = lookup.get(d.country) || {};
+      lookup.set(d.country, {
+        ...existing,
+        flood: (existing.flood || 0) + Math.abs(d.value),
+      });
     }
   });
 
   seaLevelAnomalies.forEach((d) => {
     if (d.value > 0) {
-      lookup.set(d.country, { ...(lookup.get(d.country) || {}), seaLevelRise: true });
+      const existing = lookup.get(d.country) || {};
+      lookup.set(d.country, {
+        ...existing,
+        seaLevelRise: (existing.seaLevelRise || 0) + d.value,
+      });
     }
   });
 
   disasterEconomicLoss.forEach((d) => {
     if (d.value > 0) {
-      lookup.set(d.country, { ...(lookup.get(d.country) || {}), drought: true });
+      const existing = lookup.get(d.country) || {};
+      lookup.set(d.country, {
+        ...existing,
+        drought: (existing.drought || 0) + d.value,
+      });
     }
   });
 
   return lookup;
+}
+
+// Get max impact value for a hazard across all countries
+function getMaxImpact(hazardLookup: Map<string, any>, hazardKey: string): number {
+  let max = 0;
+  for (const [_, data] of hazardLookup) {
+    const val = data[hazardKey] || 0;
+    if (val > max) max = val;
+  }
+  return max || 1;
 }
 
 export function PacificClimateStoryMap() {
@@ -114,14 +140,47 @@ export function PacificClimateStoryMap() {
     return hazardData?.[activeHazard as keyof typeof hazardData] ? "#334155" : "#e2e8f0";
   };
 
+  const getImpactValue = (countryName: string, hazardKey: string): number => {
+    const data = hazardLookup.get(countryName);
+    return data?.[hazardKey as keyof typeof data] || 0;
+  };
+
+  const getCircleRadius = (countryName: string): number => {
+    if (!activeHazard) return 5;
+
+    const impact = getImpactValue(countryName, activeHazard);
+    if (impact === 0) return 3;
+
+    const maxImpact = getMaxImpact(hazardLookup, activeHazard);
+    const normalized = Math.min(impact / maxImpact, 1);
+
+    // Scale from 4px (low impact) to 18px (high impact)
+    return 4 + normalized * 14;
+  };
+
   const isHighlighted = (countryName: string) => {
     if (!activeHazard) return false;
-    const hazardData = hazardLookup.get(countryName);
-    return !!hazardData?.[activeHazard as keyof typeof hazardData];
+    return getImpactValue(countryName, activeHazard) > 0;
+  };
+
+  const getImpactLabel = (countryName: string): string => {
+    if (!activeHazard) return "";
+    const impact = getImpactValue(countryName, activeHazard);
+    if (impact === 0) return "";
+
+    // Format based on hazard type
+    const labels: Record<string, string> = {
+      cyclone: `${Math.round(impact).toLocaleString()} affected`,
+      flood: `${impact.toFixed(1)}mm anomaly`,
+      drought: `$${impact.toFixed(0)}M loss`,
+      seaLevelRise: `${impact.toFixed(1)}mm rise`,
+    };
+
+    return labels[activeHazard] || `${impact}`;
   };
 
   return (
-    // <div className="w-full bg-white">
+    <div className="w-full bg-white">
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto">
         {/* Ocean */}
         <rect width={WIDTH} height={HEIGHT} fill="#f1f5f9" />
@@ -159,29 +218,46 @@ export function PacificClimateStoryMap() {
           const x = projectLon(country.lon);
           const y = projectLat(country.lat);
           const highlighted = isHighlighted(country.name);
+          const radius = getCircleRadius(country.name);
+          const impactLabel = getImpactLabel(country.name);
 
           return (
             <g key={country.name}>
               <motion.circle
                 cx={x}
                 cy={y}
-                r={highlighted ? 8 : 5}
+                r={radius}
                 animate={{
                   fill: getCountryColor(country.name),
-                  scale: highlighted ? 1.4 : 1,
+                  scale: highlighted ? 1.2 : 1,
                 }}
                 transition={{ duration: 0.2 }}
               />
 
               <motion.text
-                x={x + 8}
-                y={y - 6}
+                x={x + radius + 6}
+                y={y + 3}
                 fontSize={10}
                 fontWeight={highlighted ? "500" : "400"}
                 fill={getCountryColor(country.name)}
               >
                 {country.name}
               </motion.text>
+
+              {/* Impact label - only show on hover */}
+              {highlighted && impactLabel && (
+                <motion.text
+                  x={x + radius + 6}
+                  y={y + 16}
+                  fontSize={8}
+                  fill="#94a3b8"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {impactLabel}
+                </motion.text>
+              )}
             </g>
           );
         })}
@@ -223,6 +299,7 @@ export function PacificClimateStoryMap() {
           ))}
         </g>
       </svg>
+    </div>
   );
 }
 
