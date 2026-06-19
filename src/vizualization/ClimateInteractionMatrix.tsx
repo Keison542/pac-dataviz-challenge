@@ -136,7 +136,7 @@ export default function ClimateInteractionMatrix({
 
       {/* Strongest Interaction */}
       {strongest && (
-        <div className="mb-4 border-b border-slate-200 pb-3">
+        <div className="mb-4 border-b border-slate-200 pb-3 text-center">
           <div className="text-[10px] uppercase tracking-[0.15em] text-slate-500">
             Strongest Climate Interaction
           </div>
