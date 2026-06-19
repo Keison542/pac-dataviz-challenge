@@ -1,3 +1,4 @@
+```tsx
 "use client";
 
 import { useMemo, useState } from "react";
@@ -33,10 +34,8 @@ function clamp(n: number, min = 0, max = 1) {
 }
 
 function getColor(v: number) {
-  if (v > 0.75) return "#dc2626";
-  if (v > 0.5) return "#f97316";
-  if (v > 0.25) return "#eab308";
-  return "#3b82f6";
+  const opacity = 0.15 + v * 0.75;
+  return `rgba(15,23,42,${opacity})`;
 }
 
 export default function ClimateInteractionMatrix({
@@ -115,66 +114,66 @@ export default function ClimateInteractionMatrix({
 
   if (!latest) {
     return (
-      <div className="rounded-xl border bg-white p-6 text-center text-slate-500">
+      <div className="border border-slate-200 bg-white p-6 text-center text-slate-500">
         No climate interaction data available.
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto bg-white">
 
-      {/* Story Header */}
-      <div className="mb-6 text-center">
-        <h2 className="text-xl font-bold text-slate-900">
-          How Climate Change Cascades Through {selectedCountry}
+      {/* Header */}
+      <div className="mb-5 text-center">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Climate Interaction Pathways in {selectedCountry}
         </h2>
 
-        <p className="mt-2 text-sm text-slate-600 max-w-3xl mx-auto">
-          Climate indicators do not operate independently. Temperature,
-          rainfall, sea-level rise and ocean warming interact to influence
-          environmental systems, economies, human wellbeing and disaster risk.
+        <p className="mt-2 text-xs text-slate-600 max-w-2xl mx-auto">
+          Climate indicators interact through environmental, economic,
+          human and disaster-risk systems. Darker cells indicate
+          stronger interactions.
         </p>
       </div>
 
       {/* Strongest Interaction */}
       {strongest && (
-        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4">
-          <div className="text-xs uppercase font-bold tracking-wide text-red-600">
+        <div className="mb-4 border-b border-slate-200 pb-3">
+          <div className="text-[10px] uppercase tracking-[0.15em] text-slate-500">
             Strongest Climate Interaction
           </div>
 
-          <div className="mt-1 text-lg font-bold text-slate-900">
+          <div className="mt-1 text-sm font-semibold text-slate-900">
             {strongest.row} → {strongest.col}
           </div>
 
-          <p className="mt-1 text-sm text-slate-700">
+          <p className="mt-1 text-xs text-slate-600">
             {strongest.narrative}
           </p>
         </div>
       )}
 
       {/* Legend */}
-      <div className="mb-5 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500">
-        <span>Low Impact</span>
+      <div className="mb-4 flex items-center justify-center gap-3 text-[10px] text-slate-500">
+        <span>Low</span>
 
         <div
-          className="h-3 w-40 rounded-full"
+          className="h-2 w-28"
           style={{
             background:
-              "linear-gradient(to right,#3b82f6,#eab308,#f97316,#dc2626)",
+              "linear-gradient(to right,#e2e8f0,#0f172a)",
           }}
         />
 
-        <span>High Impact</span>
+        <span>High</span>
       </div>
 
       {/* Matrix */}
       <div className="overflow-x-auto">
         <div
-          className="grid gap-2 min-w-[650px]"
+          className="grid gap-1 min-w-[420px]"
           style={{
-            gridTemplateColumns: `110px repeat(${COLS.length}, minmax(60px,1fr))`,
+            gridTemplateColumns: `100px repeat(${COLS.length}, 55px)`,
           }}
         >
           <div />
@@ -182,7 +181,7 @@ export default function ClimateInteractionMatrix({
           {COLS.map((col) => (
             <div
               key={col}
-              className="text-center text-[10px] md:text-xs font-semibold text-slate-500"
+              className="text-center text-[9px] font-medium text-slate-500"
             >
               {col}
             </div>
@@ -190,7 +189,7 @@ export default function ClimateInteractionMatrix({
 
           {ROWS.map((row) => (
             <div key={row} className="contents">
-              <div className="flex items-center text-[11px] font-medium text-slate-700">
+              <div className="flex items-center text-[10px] text-slate-700">
                 {row}
               </div>
 
@@ -201,7 +200,7 @@ export default function ClimateInteractionMatrix({
                   return (
                     <div
                       key={`${row}-${col}`}
-                      className="h-16 rounded-lg border border-slate-100 bg-slate-50"
+                      className="h-8 border border-slate-100 bg-white"
                     />
                   );
                 }
@@ -215,16 +214,14 @@ export default function ClimateInteractionMatrix({
                     key={`${row}-${col}`}
                     onClick={() => setSelectedCell(cell)}
                     onMouseEnter={() => setSelectedCell(cell)}
-                    className={`h-10 md:h-12 rounded-md border transition-all duration-200 ${
-                      isSelected
-                        ? "scale-105 ring-2 ring-slate-800"
-                        : "hover:scale-105"
+                    className={`h-8 border border-slate-200 transition ${
+                      isSelected ? "ring-1 ring-slate-900" : ""
                     }`}
                     style={{
                       backgroundColor: getColor(cell.value),
                     }}
                   >
-                    <div className="text-white font-semibold text-[10px] md:text-xs">
+                    <div className="text-[9px] font-medium text-white">
                       {Math.round(cell.value * 100)}
                     </div>
                   </button>
@@ -235,45 +232,41 @@ export default function ClimateInteractionMatrix({
         </div>
       </div>
 
-      {/* Narrative Card */}
+      {/* Detail Panel */}
       {selectedCell && (
-        <div className="mt-6 rounded-xl border bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold">
-              Climate Driver
-            </span>
+        <div className="mt-5 border-t border-slate-200 pt-4">
 
-            <span className="font-semibold">
-              {selectedCell.row}
-            </span>
-
-            <span>→</span>
-
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold">
-              Impact Area
-            </span>
-
-            <span className="font-semibold">
-              {selectedCell.col}
-            </span>
+          <div className="text-[10px] uppercase tracking-wide text-slate-500">
+            Climate Driver
           </div>
 
-          <p className="mt-3 text-sm text-slate-700 leading-relaxed">
+          <div className="text-sm font-medium text-slate-900">
+            {selectedCell.row}
+          </div>
+
+          <div className="mt-3 text-[10px] uppercase tracking-wide text-slate-500">
+            Impact Area
+          </div>
+
+          <div className="text-sm font-medium text-slate-900">
+            {selectedCell.col}
+          </div>
+
+          <p className="mt-3 text-sm leading-relaxed text-slate-600">
             {selectedCell.narrative}
           </p>
 
           <div className="mt-4">
-            <div className="flex justify-between text-xs text-slate-500">
+            <div className="flex justify-between text-[10px] text-slate-500">
               <span>Interaction Strength</span>
               <span>{Math.round(selectedCell.value * 100)}/100</span>
             </div>
 
-            <div className="mt-1 h-2 rounded-full bg-slate-100">
+            <div className="mt-1 h-1 bg-slate-100">
               <div
-                className="h-2 rounded-full"
+                className="h-1 bg-slate-900"
                 style={{
                   width: `${selectedCell.value * 100}%`,
-                  backgroundColor: getColor(selectedCell.value),
                 }}
               />
             </div>
@@ -283,3 +276,4 @@ export default function ClimateInteractionMatrix({
     </div>
   );
 }
+```
