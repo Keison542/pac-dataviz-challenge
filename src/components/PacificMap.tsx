@@ -366,6 +366,10 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
     return () => clearTimeout(timer);
   }, []);
 
+  // ─── Right side legends position ───
+  const legendX = WIDTH - 200;
+  const legendStartY = 120;
+
   return (
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto" style={{ background: "transparent" }}>
       <rect width={WIDTH} height={HEIGHT} fill="transparent" />
@@ -509,64 +513,65 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         );
       })}
 
-      {/* ─── VULNERABILITY LEGEND ─── */}
-      <g transform={`translate(30, ${HEIGHT - 165})`}>
-        <rect x={0} y={0} width={160} height={85} rx={6} fill="white" stroke="#e2e8f0" strokeWidth={1} />
+      {/* ─── RIGHT SIDE LEGENDS ─── */}
+      <g transform={`translate(${legendX}, ${legendStartY})`}>
+        {/* ─── VULNERABILITY SCORE LEGEND ─── */}
+        <rect x={0} y={0} width={170} height={100} rx={6} fill="white" stroke="#e2e8f0" strokeWidth={1} />
         
-        <text x={10} y={18} fontSize={9} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
+        <text x={12} y={18} fontSize={9} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
           VULNERABILITY SCORE
         </text>
 
-        <circle cx={20} cy={35} r={6} fill={VULNERABILITY_COLORS.high} />
-        <text x={34} y={38} fontSize={9} fill="#64748b">High</text>
+        <circle cx={16} cy={38} r={6} fill={VULNERABILITY_COLORS.high} />
+        <text x={30} y={41} fontSize={9} fill="#64748b">High</text>
 
-        <circle cx={20} cy={52} r={5} fill={VULNERABILITY_COLORS.medium} />
-        <text x={34} y={55} fontSize={9} fill="#64748b">Medium</text>
+        <circle cx={16} cy={56} r={5} fill={VULNERABILITY_COLORS.medium} />
+        <text x={30} y={59} fontSize={9} fill="#64748b">Medium</text>
 
-        <circle cx={20} cy={69} r={4} fill={VULNERABILITY_COLORS.low} />
-        <text x={34} y={72} fontSize={9} fill="#64748b">Low</text>
-      </g>
+        <circle cx={16} cy={74} r={4} fill={VULNERABILITY_COLORS.low} />
+        <text x={30} y={77} fontSize={9} fill="#64748b">Low</text>
 
-      {/* ─── SIZE LEGEND ─── */}
-      <g transform={`translate(200, ${HEIGHT - 165})`}>
-        <rect x={0} y={0} width={130} height={85} rx={6} fill="white" stroke="#e2e8f0" strokeWidth={1} />
+        {/* ─── IMPACT SIZE LEGEND ─── */}
+        <rect x={0} y={110} width={170} height={80} rx={6} fill="white" stroke="#e2e8f0" strokeWidth={1} />
         
-        <text x={10} y={18} fontSize={9} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
+        <text x={12} y={128} fontSize={9} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
           IMPACT SIZE
         </text>
 
-        <circle cx={20} cy={35} r={9} fill="#94a3b8" opacity={0.5} />
-        <text x={38} y={38} fontSize={9} fill="#64748b">Higher</text>
+        <circle cx={16} cy={148} r={9} fill="#94a3b8" opacity={0.5} />
+        <text x={34} y={151} fontSize={9} fill="#64748b">Higher impact</text>
 
-        <circle cx={20} cy={55} r={5} fill="#94a3b8" opacity={0.5} />
-        <text x={38} y={58} fontSize={9} fill="#64748b">Lower</text>
+        <circle cx={16} cy={170} r={5} fill="#94a3b8" opacity={0.5} />
+        <text x={34} y={173} fontSize={9} fill="#64748b">Lower impact</text>
+
+        {/* ─── KEY INSIGHTS ─── */}
+        {stats && topCountry && bottomCountry && (
+          <rect x={0} y={200} width={170} height={100} rx={6} fill="white" stroke="#e2e8f0" strokeWidth={1} />
+        )}
+        
+        {stats && topCountry && bottomCountry && (
+          <>
+            <text x={12} y={218} fontSize={9} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
+              KEY INSIGHTS
+            </text>
+
+            <text x={12} y={238} fontSize={8} fill="#64748b">
+              Highest:
+            </text>
+            <text x={12} y={252} fontSize={9} fontWeight="600" fill="#1a1a2e">
+              {topCountry.country}
+            </text>
+            <text x={12} y={265} fontSize={8} fill="#94a3b8">
+              Score: {topCountry.compositeScore.toFixed(2)}
+            </text>
+
+            <text x={12} y={283} fontSize={8} fill="#64748b">
+              Gap: <tspan fontWeight="600" fill="#1a1a2e">{stats.gapPercent.toFixed(0)}%</tspan>
+              <tspan> · {stats.count} countries</tspan>
+            </text>
+          </>
+        )}
       </g>
-
-      {/* ─── STATS DISPLAY ─── */}
-      {stats && topCountry && bottomCountry && (
-        <g transform={`translate(340, ${HEIGHT - 165})`}>
-          <rect x={0} y={0} width={240} height={85} rx={6} fill="white" stroke="#e2e8f0" strokeWidth={1} />
-          
-          <text x={10} y={18} fontSize={9} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
-            KEY INSIGHTS
-          </text>
-
-          <text x={10} y={38} fontSize={9} fill="#64748b">
-            Highest: <tspan fontWeight="600" fill="#1a1a2e">{topCountry.country}</tspan>
-            <tspan fill="#94a3b8"> ({topCountry.compositeScore.toFixed(2)})</tspan>
-          </text>
-
-          <text x={10} y={54} fontSize={9} fill="#64748b">
-            Lowest: <tspan fontWeight="600" fill="#1a1a2e">{bottomCountry.country}</tspan>
-            <tspan fill="#94a3b8"> ({bottomCountry.compositeScore.toFixed(2)})</tspan>
-          </text>
-
-          <text x={10} y={70} fontSize={9} fill="#94a3b8">
-            Gap: <tspan fontWeight="600" fill="#1a1a2e">{stats.gapPercent.toFixed(0)}%</tspan>
-            <tspan> · {stats.count} countries</tspan>
-          </text>
-        </g>
-      )}
 
       {/* ─── HAZARD LEGEND ─── */}
       <g transform={`translate(30, ${HEIGHT - 70})`}>
