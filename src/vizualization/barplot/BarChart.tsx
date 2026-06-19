@@ -28,7 +28,7 @@ type Props = {
 const METRIC_CONFIGS = {
   economicLoss: {
     label: "Economic Loss",
-    color: "#0891b2",
+    color: "#475569",
     unit: "USD",
     format: (v: number) => {
       const absV = Math.abs(v);
@@ -40,37 +40,37 @@ const METRIC_CONFIGS = {
   },
   cropYield: {
     label: "Crop Yield",
-    color: "#10b981",
+    color: "#475569",
     unit: "t/ha",
     format: (v: number) => `${Math.abs(v).toFixed(1)} t/ha`
   },
   touristArrivals: {
     label: "Tourist Arrivals",
-    color: "#14b8a6",
+    color: "#475569",
     unit: "visitors",
     format: (v: number) => `${Math.abs(v).toLocaleString()} visitors`
   },
   livestockYield: {
     label: "Livestock Yield",
-    color: "#f59e0b",
+    color: "#475569",
     unit: "tons",
     format: (v: number) => `${Math.abs(v).toLocaleString()} tons`
   },
   climateAlteringLand: {
     label: "Climate-Altering Land",
-    color: "#8b5cf6",
+    color: "#475569",
     unit: "ha",
     format: (v: number) => `${Math.abs(v).toLocaleString()} ha`
   },
   populationGrowth: {
     label: "Population Growth",
-    color: "#ec4898",
+    color: "#475569",
     unit: "%",
     format: (v: number) => `${Math.abs(v).toFixed(1)}%`
   },
   affectedPersons: {
     label: "People Affected",
-    color: "#ef4444",
+    color: "#475569",
     unit: "people",
     format: (v: number) => `${Math.abs(v).toLocaleString()} people`
   }
@@ -78,38 +78,6 @@ const METRIC_CONFIGS = {
 
 // Get all metric keys
 const METRIC_KEYS = Object.keys(METRIC_CONFIGS) as Array<keyof typeof METRIC_CONFIGS>;
-
-// Vulnerability score ranges
-const VULNERABILITY_LEVELS = {
-  high: {
-    label: "High Vulnerability",
-    range: "Score ≥ 4.0",
-    color: "#ef4444",
-    bgColor: "#fef2f2",
-    textColor: "#dc2626"
-  },
-  medium: {
-    label: "Medium Vulnerability",
-    range: "Score 2.5 - 3.9",
-    color: "#f59e0b",
-    bgColor: "#fffbeb",
-    textColor: "#d97706"
-  },
-  low: {
-    label: "Low Vulnerability",
-    range: "Score < 2.5",
-    color: "#10b981",
-    bgColor: "#ecfdf5",
-    textColor: "#059669"
-  }
-};
-
-// Determine vulnerability level based on score
-const getVulnerabilityLevel = (score: number) => {
-  if (score >= 4.0) return "high";
-  if (score >= 2.5) return "medium";
-  return "low";
-};
 
 // Normalize function: 0 to 1 scale
 const normalize = (value: number, max: number) => {
@@ -132,7 +100,7 @@ const AnimatedBar = ({ width, height, y, x, fill, isHovered, onMouseEnter, onMou
       width={springProps.width}
       height={height}
       fill={fill}
-      rx={4}
+      rx={2}
       opacity={springProps.opacity}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -157,7 +125,6 @@ export function MultiMetricRankedDashboard({
     country: string;
     values: Record<string, number>;
     compositeScore: number;
-    level: string;
   }>(null);
 
   // ─── Responsive sizing ───
@@ -268,11 +235,7 @@ export function MultiMetricRankedDashboard({
       .sort((a, b) => b.compositeScore - a.compositeScore);
   }, [countryData, maxValues]);
 
-  // ─── 4. Find top and bottom ───
-  const topCountry = ranked[0];
-  const bottomCountry = ranked[ranked.length - 1];
-
-  // ─── 5. Chart dimensions ───
+  // ─── 4. Chart dimensions ───
   const chartWidth = width - responsiveMargin.left - responsiveMargin.right;
   const chartHeight = height - responsiveMargin.top - responsiveMargin.bottom;
 
@@ -287,7 +250,7 @@ export function MultiMetricRankedDashboard({
     .domain([0, maxComposite * 1.15])
     .range([0, chartWidth]);
 
-  // ─── 6. Tooltip handlers ───
+  // ─── 5. Tooltip handlers ───
   const handleMouseEnter = (country: string) => {
     setHoveredCountry(country);
   };
@@ -299,27 +262,17 @@ export function MultiMetricRankedDashboard({
 
   const handleMouseMove = (e: React.MouseEvent, country: string, values: Record<string, number>, composite: number) => {
     const rect = (e.target as SVGRectElement).getBoundingClientRect();
-    const level = getVulnerabilityLevel(composite);
     setTooltip({
       x: rect.left,
       y: rect.top,
       country,
       values,
       compositeScore: composite,
-      level
     });
   };
 
-  // ─── 7. Get color based on vulnerability level ───
-  const getBarColor = (score: number) => {
-    const level = getVulnerabilityLevel(score);
-    const colorMap = {
-      high: "#ef4444",
-      medium: "#f59e0b",
-      low: "#10b981"
-    };
-    return colorMap[level];
-  };
+  // ─── 6. All bars use the same muted color ───
+  const getBarColor = () => "#334155";
 
   const fontSize = getFontSize(11);
   const titleFontSize = getFontSize(18);
@@ -338,73 +291,21 @@ export function MultiMetricRankedDashboard({
 
   return (
     <div ref={containerRef} className={`flex flex-col items-center w-full ${className}`}>
-      <div className="w-full max-w-5xl px-2 sm:px-4">
+      <div className="w-full max-w-4xl px-2 sm:px-4">
         {/* ─── Header ─── */}
-        <div className="mb-3 sm:mb-4 text-center">
+        <div className="mb-5 text-center">
           <h2 
-            className="font-bold text-slate-800"
+            className="font-medium text-slate-800"
             style={{ fontSize: titleFontSize }}
           >
-            Paying the Heaviest of the Carbon Debt Never Incurred
+            Composite Climate Vulnerability Index
           </h2>
           <p 
-            className="text-slate-600 mt-1"
-            style={{ fontSize: subtitleFontSize * 0.85 }}
+            className="text-slate-500 mt-1"
+            style={{ fontSize: subtitleFontSize * 0.8 }}
           >
-            Pacific island nations emit less CO₂ than three-quarters of all countries, yet rank among the most vulnerable to climate change.
+            Ranking Pacific countries across seven climate impact indicators.
           </p>
-          <p 
-            className="text-slate-500 mt-0.5"
-            style={{ fontSize: subtitleFontSize * 0.7 }}
-          >
-            Composite Vulnerability Index across 7 key climate impact metrics
-          </p>
-        </div>
-
-        {/* ─── Summary Cards ─── */}
-        <div className="mb-3 sm:mb-4 grid grid-cols-3 gap-1.5 sm:gap-3 max-w-2xl mx-auto">
-          <div className="rounded-lg bg-cyan-50 p-1.5 sm:p-3 text-center border border-cyan-100">
-            <div 
-              className="font-bold text-cyan-700"
-              style={{ fontSize: width < 500 ? 14 : 18 }}
-            >
-              {topCountry?.country || "—"}
-            </div>
-            <div 
-              className="text-slate-500"
-              style={{ fontSize: width < 500 ? 9 : 12 }}
-            >
-              Highest Vulnerability
-            </div>
-          </div>
-          <div className="rounded-lg bg-amber-50 p-1.5 sm:p-3 text-center border border-amber-100">
-            <div 
-              className="font-bold text-amber-700"
-              style={{ fontSize: width < 500 ? 14 : 18 }}
-            >
-              {bottomCountry?.country || "—"}
-            </div>
-            <div 
-              className="text-slate-500"
-              style={{ fontSize: width < 500 ? 9 : 12 }}
-            >
-              Lowest Vulnerability
-            </div>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-1.5 sm:p-3 text-center border border-slate-100">
-            <div 
-              className="font-bold text-slate-700"
-              style={{ fontSize: width < 500 ? 14 : 18 }}
-            >
-              {ranked.length}
-            </div>
-            <div 
-              className="text-slate-500"
-              style={{ fontSize: width < 500 ? 9 : 12 }}
-            >
-              Countries Analyzed
-            </div>
-          </div>
         </div>
 
         {/* ─── Chart ─── */}
@@ -420,8 +321,6 @@ export function MultiMetricRankedDashboard({
               {/* Country labels */}
               {ranked.map((d) => {
                 const y = yScale(d.country)!;
-                const level = getVulnerabilityLevel(d.compositeScore);
-                const color = VULNERABILITY_LEVELS[level].color;
                 const isHovered = hoveredCountry === d.country;
                 
                 // Truncate long country names on mobile
@@ -438,8 +337,8 @@ export function MultiMetricRankedDashboard({
                     y={y + yScale.bandwidth() / 2 + fontSize * 0.35}
                     textAnchor="end"
                     fontSize={Math.max(8, Math.min(fontSize, 11))}
-                    fill={isHovered ? "#0f172a" : "#475569"}
-                    fontWeight={isHovered ? "bold" : "normal"}
+                    fill="#334155"
+                    fontWeight="400"
                   >
                     {displayName}
                   </text>
@@ -451,7 +350,7 @@ export function MultiMetricRankedDashboard({
                 const y = yScale(d.country)!;
                 const barWidth = xScale(d.compositeScore);
                 const isHovered = hoveredCountry === d.country;
-                const barColor = getBarColor(d.compositeScore);
+                const barColor = getBarColor();
                 const barHeight = yScale.bandwidth();
 
                 return (
@@ -488,7 +387,7 @@ export function MultiMetricRankedDashboard({
                         textAnchor="end"
                         fontSize={Math.max(7, Math.min(fontSize * 0.85, 10))}
                         fill="#ffffff"
-                        fontWeight="600"
+                        fontWeight="400"
                       >
                         {d.compositeScore.toFixed(2)}
                       </text>
@@ -502,118 +401,60 @@ export function MultiMetricRankedDashboard({
                 x={chartWidth / 2}
                 y={chartHeight + (width < 500 ? 20 : 30)}
                 textAnchor="middle"
-                fontSize={fontSize}
-                fill="#64748b"
+                fontSize={fontSize * 0.85}
+                fill="#94a3b8"
               >
-                Composite Vulnerability Score →
+                Higher score indicates greater observed climate vulnerability
               </text>
-
-              {/* Reference lines for vulnerability levels */}
-              {[2.5, 4.0].map((score) => {
-                const x = xScale(score);
-                if (x < 5 || x > chartWidth - 5) return null;
-                
-                return (
-                  <g key={score}>
-                    <line
-                      x1={x}
-                      x2={x}
-                      y1={0}
-                      y2={chartHeight}
-                      stroke="#94a3b8"
-                      strokeWidth="0.5"
-                      strokeDasharray="4 4"
-                      opacity="0.4"
-                    />
-                    <text
-                      x={x}
-                      y={-6}
-                      textAnchor="middle"
-                      fontSize={Math.max(6, fontSize * 0.7)}
-                      fill="#94a3b8"
-                    >
-                      {score.toFixed(1)}
-                    </text>
-                  </g>
-                );
-              })}
             </g>
           </svg>
 
           {/* ─── Tooltip ─── */}
           {tooltip && !isMobile && (
             <div
-              className="absolute z-50 max-w-xs rounded-lg bg-slate-900 px-3 sm:px-4 py-2 sm:py-3 text-xs text-white shadow-lg pointer-events-none"
+              className="absolute z-50 max-w-xs rounded border border-slate-200 bg-white p-3 text-xs shadow-sm pointer-events-none"
               style={{
                 left: Math.min(tooltip.x + 10, width - 220),
-                top: Math.min(tooltip.y - 20, height - 200),
+                top: Math.min(tooltip.y - 20, height - 180),
                 fontSize: getFontSize(12),
               }}
             >
-              <div className="mb-1 font-semibold text-amber-300">{tooltip.country}</div>
-              <div className="mb-1 font-bold text-cyan-300" style={{ fontSize: fontSize * 1.1 }}>
-                Score: {tooltip.compositeScore.toFixed(2)}
+              <div className="font-medium text-slate-900">
+                {tooltip.country}
               </div>
-              <div className="mb-1">
-                <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-medium"
-                  style={{
-                    backgroundColor: VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].bgColor,
-                    color: VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].textColor
-                  }}
-                >
-                  {VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].label}
-                </span>
+
+              <div className="mt-1 text-slate-600">
+                Composite score: {tooltip.compositeScore.toFixed(2)}
               </div>
-              <div className="border-t border-slate-700 pt-1 mt-1">
-                {METRIC_KEYS.slice(0, width < 500 ? 3 : 7).map((key) => {
+
+              <div className="mt-2 border-t border-slate-100 pt-2">
+                {METRIC_KEYS.map((key) => {
                   const config = METRIC_CONFIGS[key];
                   const val = tooltip.values[key] || 0;
                   return (
-                    <div key={key} className="flex justify-between gap-2 sm:gap-4">
-                      <span style={{ color: config.color }}>{config.label}:</span>
-                      <span className="font-mono text-amber-300" style={{ fontSize: fontSize * 0.85 }}>
-                        {config.format(val)}
-                      </span>
+                    <div
+                      key={key}
+                      className="flex justify-between text-slate-600"
+                    >
+                      <span>{config.label}</span>
+                      <span className="font-mono">{config.format(val)}</span>
                     </div>
                   );
                 })}
-                {width < 500 && METRIC_KEYS.length > 3 && (
-                  <div className="text-slate-400 text-[10px] mt-0.5">
-                    +{METRIC_KEYS.length - 3} more metrics
-                  </div>
-                )}
               </div>
             </div>
           )}
 
           {/* ─── Mobile Tooltip ─── */}
           {tooltip && isMobile && (
-            <div className="mt-2 text-center bg-white border rounded-lg p-2 mx-2">
-              <div className="font-semibold text-amber-600 text-xs">{tooltip.country}</div>
-              <div className="font-bold text-cyan-600 text-sm">
+            <div className="mt-2 text-center bg-white border border-slate-200 rounded p-2 mx-2">
+              <div className="font-medium text-slate-900 text-xs">{tooltip.country}</div>
+              <div className="text-slate-600 text-xs">
                 Score: {tooltip.compositeScore.toFixed(2)}
-              </div>
-              <div className="text-xs text-slate-600">
-                {VULNERABILITY_LEVELS[tooltip.level as keyof typeof VULNERABILITY_LEVELS].label}
               </div>
             </div>
           )}
         </div>
-
-        {/* ─── Footer Insight ─── */}
-        {topCountry && bottomCountry && (
-          <div className="mt-4 sm:mt-6 border-t border-slate-200 pt-3 sm:pt-4 text-xs text-slate-600 max-w-3xl mx-auto text-center px-2">
-            <p className="font-medium text-slate-700">
-              Pacific islands have added almost nothing to the carbon ledger, yet they shoulder its heaviest costs.
-            </p>
-            <p className="mt-1" style={{ fontSize: fontSize * 0.85 }}>
-              {topCountry.country} shows the highest composite vulnerability index (High Vulnerability), 
-              while {bottomCountry.country} has the lowest (Low Vulnerability) across all 7 metrics — 
-              reflecting the uneven burden of climate change on the region.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
