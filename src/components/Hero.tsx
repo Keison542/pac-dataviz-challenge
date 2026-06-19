@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import PacificMap from "@/components/PacificMap";
 
 interface HeroProps {
   countries: string[];
@@ -97,6 +98,10 @@ export function Hero({
             />
           ))}
         </div>
+      </div>
+
+      <div className="relative mt-12">
+        <PacificMap />
       </div>
 
       {/* =========================
