@@ -18,7 +18,7 @@ type RecordType = {
 };
 
 type Props = {
-  data: {
+  data?: {
     economicLoss: RecordType[];
     cropYield: RecordType[];
     touristArrivals: RecordType[];
@@ -139,6 +139,9 @@ const normalize = (value: number, max: number) => {
 function buildCountryData(data: Props['data']) {
   const map = new Map<string, Record<string, number>>();
 
+  // If data is undefined or null, return empty map
+  if (!data) return map;
+
   METRIC_KEYS.forEach((key) => {
     const records = data[key as keyof Props['data']] || [];
     records.forEach((d) => {
@@ -155,6 +158,8 @@ function buildCountryData(data: Props['data']) {
 
 // ─── Compute composite scores ───
 function computeCompositeScores(countryData: Map<string, Record<string, number>>) {
+  if (countryData.size === 0) return [];
+
   // Find max values for normalization
   const maxValues: Record<string, number> = {};
   METRIC_KEYS.forEach((key) => {
@@ -187,45 +192,54 @@ function buildHazardLookup() {
     { cyclone?: number; flood?: number; drought?: number; seaLevelRise?: number }
   >();
 
-  affectedPersons.forEach((d) => {
-    if (d.value > 0) {
-      const existing = lookup.get(d.country) || {};
-      lookup.set(d.country, {
-        ...existing,
-        cyclone: (existing.cyclone || 0) + d.value,
-      });
-    }
-  });
+  // Safely check if affectedPersons exists and has data
+  if (affectedPersons && affectedPersons.length > 0) {
+    affectedPersons.forEach((d) => {
+      if (d.value > 0) {
+        const existing = lookup.get(d.country) || {};
+        lookup.set(d.country, {
+          ...existing,
+          cyclone: (existing.cyclone || 0) + d.value,
+        });
+      }
+    });
+  }
 
-  rainfallAnomalies.forEach((d) => {
-    if (Math.abs(d.value) > 0) {
-      const existing = lookup.get(d.country) || {};
-      lookup.set(d.country, {
-        ...existing,
-        flood: (existing.flood || 0) + Math.abs(d.value),
-      });
-    }
-  });
+  if (rainfallAnomalies && rainfallAnomalies.length > 0) {
+    rainfallAnomalies.forEach((d) => {
+      if (Math.abs(d.value) > 0) {
+        const existing = lookup.get(d.country) || {};
+        lookup.set(d.country, {
+          ...existing,
+          flood: (existing.flood || 0) + Math.abs(d.value),
+        });
+      }
+    });
+  }
 
-  seaLevelAnomalies.forEach((d) => {
-    if (d.value > 0) {
-      const existing = lookup.get(d.country) || {};
-      lookup.set(d.country, {
-        ...existing,
-        seaLevelRise: (existing.seaLevelRise || 0) + d.value,
-      });
-    }
-  });
+  if (seaLevelAnomalies && seaLevelAnomalies.length > 0) {
+    seaLevelAnomalies.forEach((d) => {
+      if (d.value > 0) {
+        const existing = lookup.get(d.country) || {};
+        lookup.set(d.country, {
+          ...existing,
+          seaLevelRise: (existing.seaLevelRise || 0) + d.value,
+        });
+      }
+    });
+  }
 
-  disasterEconomicLoss.forEach((d) => {
-    if (d.value > 0) {
-      const existing = lookup.get(d.country) || {};
-      lookup.set(d.country, {
-        ...existing,
-        drought: (existing.drought || 0) + d.value,
-      });
-    }
-  });
+  if (disasterEconomicLoss && disasterEconomicLoss.length > 0) {
+    disasterEconomicLoss.forEach((d) => {
+      if (d.value > 0) {
+        const existing = lookup.get(d.country) || {};
+        lookup.set(d.country, {
+          ...existing,
+          drought: (existing.drought || 0) + d.value,
+        });
+      }
+    });
+  }
 
   return lookup;
 }
@@ -319,12 +333,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
   const getCompositeScore = (countryName: string): number => {
     const found = ranked.find(d => d.country === countryName);
     return found?.compositeScore || 0;
-  };
-
-  // Get metric values for a country
-  const getMetricValues = (countryName: string): Record<string, number> => {
-    const found = ranked.find(d => d.country === countryName);
-    return found?.values || {};
   };
 
   return (
