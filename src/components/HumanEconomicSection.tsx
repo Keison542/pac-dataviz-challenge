@@ -175,11 +175,10 @@ export function HumanEconomicSection({
           gradually reshapes national economic structures and adaptive
           capacity.
         </div>
-
         <div className="flex justify-center">
           <TimeSeriesDashboard
-            width={Math.min(chartWidth * 2 + 40, 1200)}
-            height={400}
+            width={Math.min(chartWidth * 2 + 40, 1400)}
+            height={500}
             data={timeSeriesData}
             selectedCountry={selectedCountry}
             className="w-full max-w-5xl"
