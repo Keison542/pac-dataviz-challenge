@@ -120,9 +120,9 @@ export default function ClimateInteractionMatrix({
   }
 
   return (
-    <>
+    <div className="w-full flex flex-col items-center">
       {/* Header */}
-      <div className="mb-5 text-center">
+      <div className="mb-5 text-center w-full max-w-3xl">
         <h2 className="text-lg font-semibold text-slate-900">
           Climate Interaction Pathways in {selectedCountry}
         </h2>
@@ -136,7 +136,7 @@ export default function ClimateInteractionMatrix({
 
       {/* Strongest Interaction */}
       {strongest && (
-        <div className="mb-4 border-b border-slate-200 pb-3 text-center">
+        <div className="mb-4 border-b border-slate-200 pb-3 text-center w-full max-w-3xl">
           <div className="text-[10px] uppercase tracking-[0.15em] text-slate-500">
             Strongest Climate Interaction
           </div>
@@ -145,7 +145,7 @@ export default function ClimateInteractionMatrix({
             {strongest.row} → {strongest.col}
           </div>
 
-          <p className="mt-1 text-xs text-slate-600">
+          <p className="mt-1 text-xs text-slate-600 max-w-md mx-auto">
             {strongest.narrative}
           </p>
         </div>
@@ -167,11 +167,12 @@ export default function ClimateInteractionMatrix({
       </div>
 
       {/* Matrix */}
-      <div className="overflow-x-auto" text-center>
+      <div className="w-full overflow-x-auto flex justify-center">
         <div
-          className="grid gap-1 min-w-[420px]"
+          className="grid gap-1"
           style={{
             gridTemplateColumns: `100px repeat(${COLS.length}, 55px)`,
+            minWidth: '420px',
           }}
         >
           <div />
@@ -232,7 +233,7 @@ export default function ClimateInteractionMatrix({
 
       {/* Detail Panel */}
       {selectedCell && (
-        <div className="mt-5 border-t border-slate-200 pt-4">
+        <div className="mt-5 border-t border-slate-200 pt-4 w-full max-w-3xl">
           <div className="text-[10px] uppercase tracking-wide text-slate-500">
             Climate Driver
           </div>
@@ -270,6 +271,6 @@ export default function ClimateInteractionMatrix({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
