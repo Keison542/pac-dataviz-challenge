@@ -139,7 +139,6 @@ const normalize = (value: number, max: number) => {
 function buildCountryData(data: Props['data']) {
   const map = new Map<string, Record<string, number>>();
 
-  // If data is undefined or null, return empty map
   if (!data) return map;
 
   METRIC_KEYS.forEach((key) => {
@@ -160,7 +159,6 @@ function buildCountryData(data: Props['data']) {
 function computeCompositeScores(countryData: Map<string, Record<string, number>>) {
   if (countryData.size === 0) return [];
 
-  // Find max values for normalization
   const maxValues: Record<string, number> = {};
   METRIC_KEYS.forEach((key) => {
     let max = 0;
@@ -171,7 +169,6 @@ function computeCompositeScores(countryData: Map<string, Record<string, number>>
     maxValues[key] = max || 1;
   });
 
-  // Normalize and sum
   const results: Array<{ country: string; values: Record<string, number>; compositeScore: number }> = [];
   for (const [country, values] of countryData) {
     let composite = 0;
@@ -192,7 +189,6 @@ function buildHazardLookup() {
     { cyclone?: number; flood?: number; drought?: number; seaLevelRise?: number }
   >();
 
-  // Safely check if affectedPersons exists and has data
   if (affectedPersons && affectedPersons.length > 0) {
     affectedPersons.forEach((d) => {
       if (d.value > 0) {
@@ -298,14 +294,21 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
   };
 
   const getCircleRadius = (countryName: string): number => {
-    if (!activeHazard) return 5;
+    // Show size based on composite score when no hazard is active
+    if (!activeHazard) {
+      const score = getCompositeScore(countryName);
+      if (score === 0) return 4;
+      // Scale from 4px (low score) to 16px (high score)
+      const maxScore = ranked.length > 0 ? ranked[0].compositeScore : 1;
+      const normalized = Math.min(score / maxScore, 1);
+      return 4 + normalized * 12;
+    }
 
     const impact = getImpactValue(countryName, activeHazard);
     if (impact === 0) return 3;
 
     const maxImpact = getMaxImpact(hazardLookup, activeHazard);
     const normalized = Math.min(impact / maxImpact, 1);
-
     return 4 + normalized * 14;
   };
 
@@ -333,6 +336,12 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
   const getCompositeScore = (countryName: string): number => {
     const found = ranked.find(d => d.country === countryName);
     return found?.compositeScore || 0;
+  };
+
+  // Get rank for a country
+  const getRank = (countryName: string): number => {
+    const found = ranked.findIndex(d => d.country === countryName);
+    return found + 1;
   };
 
   return (
@@ -365,7 +374,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         PACIFIC OCEAN
       </text>
 
-      {/* Countries */}
+      {/* Countries with scores always visible */}
       {countries.map((country) => {
         const x = projectLon(country.lon);
         const y = projectLat(country.lat);
@@ -374,6 +383,12 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         const impactLabel = getImpactLabel(country.name);
         const isHovered = hoveredCountry === country.name;
         const compositeScore = getCompositeScore(country.name);
+        const rank = getRank(country.name);
+        const isTopCountry = topCountry?.country === country.name;
+        const isBottomCountry = bottomCountry?.country === country.name;
+
+        // Only show score for countries that have data
+        const showScore = compositeScore > 0;
 
         return (
           <g 
@@ -381,45 +396,44 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
             onMouseEnter={() => setHoveredCountry(country.name)}
             onMouseLeave={() => setHoveredCountry(null)}
           >
+            {/* Circle - size represents score */}
             <motion.circle
               cx={x}
               cy={y}
               r={radius}
               animate={{
                 fill: getCountryColor(country.name),
-                scale: highlighted ? 1.2 : 1,
+                scale: highlighted || isHovered ? 1.3 : 1,
               }}
               transition={{ duration: 0.2 }}
             />
 
+            {/* Country name */}
             <motion.text
               x={x + radius + 6}
               y={y + 3}
               fontSize={10}
-              fontWeight={highlighted ? "500" : "400"}
+              fontWeight={isTopCountry ? "600" : isBottomCountry ? "400" : "400"}
               fill={getCountryColor(country.name)}
             >
               {country.name}
             </motion.text>
 
-            {/* Show composite score on hover */}
-            {isHovered && !activeHazard && (
-              <motion.g
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.2 }}
+            {/* Composite score - always visible for countries with data */}
+            {showScore && !activeHazard && (
+              <motion.text
+                x={x + radius + 6}
+                y={y + 16}
+                fontSize={8}
+                fill={isTopCountry ? "#334155" : "#94a3b8"}
+                fontWeight={isTopCountry ? "600" : "400"}
               >
-                <text
-                  x={x + radius + 6}
-                  y={y + 16}
-                  fontSize={8}
-                  fill="#94a3b8"
-                >
-                  Score: {compositeScore.toFixed(2)}
-                </text>
-              </motion.g>
+                {compositeScore.toFixed(2)}
+                {isTopCountry && " ★"}
+              </motion.text>
             )}
 
+            {/* Impact label when hazard is active */}
             {highlighted && impactLabel && (
               <motion.text
                 x={x + radius + 6}
@@ -431,6 +445,21 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
                 transition={{ duration: 0.2 }}
               >
                 {impactLabel}
+              </motion.text>
+            )}
+
+            {/* Rank indicator on hover */}
+            {isHovered && !activeHazard && showScore && (
+              <motion.text
+                x={x + radius + 6}
+                y={y + 26}
+                fontSize={7}
+                fill="#cbd5e1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                Rank #{rank} of {ranked.length}
               </motion.text>
             )}
           </g>
@@ -455,7 +484,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
       {/* Legend */}
       <g transform={`translate(30, ${HEIGHT - 70})`}>
         <text x={0} y={0} fontSize={10} fill="#94a3b8" letterSpacing="0.05em">
-          Hover to explore
+          {activeHazard ? "Hazard impact" : "Circle size = composite score"}
         </text>
 
         {[
