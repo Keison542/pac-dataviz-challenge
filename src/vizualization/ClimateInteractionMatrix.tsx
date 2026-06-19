@@ -1,4 +1,4 @@
-```tsx
+
 "use client";
 
 import { useMemo, useState } from "react";
@@ -276,4 +276,4 @@ export default function ClimateInteractionMatrix({
     </div>
   );
 }
-```
+
