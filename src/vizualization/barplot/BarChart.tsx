@@ -235,7 +235,34 @@ export function MultiMetricRankedDashboard({
       .sort((a, b) => b.compositeScore - a.compositeScore);
   }, [countryData, maxValues]);
 
-  // ─── 4. Chart dimensions ───
+  // ─── 4. Calculate statistics ───
+  const stats = useMemo(() => {
+    if (ranked.length === 0) return null;
+
+    const scores = ranked.map(d => d.compositeScore);
+    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const max = Math.max(...scores);
+    const min = Math.min(...scores);
+    const range = max - min;
+    const topCountry = ranked[0];
+    const bottomCountry = ranked[ranked.length - 1];
+
+    // Calculate gap percentage
+    const gapPercent = ((max - min) / avg) * 100;
+
+    return {
+      avg,
+      max,
+      min,
+      range,
+      topCountry,
+      bottomCountry,
+      gapPercent,
+      countryCount: ranked.length
+    };
+  }, [ranked]);
+
+  // ─── 5. Chart dimensions ───
   const chartWidth = width - responsiveMargin.left - responsiveMargin.right;
   const chartHeight = height - responsiveMargin.top - responsiveMargin.bottom;
 
@@ -250,7 +277,7 @@ export function MultiMetricRankedDashboard({
     .domain([0, maxComposite * 1.15])
     .range([0, chartWidth]);
 
-  // ─── 5. Tooltip handlers ───
+  // ─── 6. Tooltip handlers ───
   const handleMouseEnter = (country: string) => {
     setHoveredCountry(country);
   };
@@ -271,7 +298,7 @@ export function MultiMetricRankedDashboard({
     });
   };
 
-  // ─── 6. All bars use the same muted color ───
+  // ─── 7. All bars use the same muted color ───
   const getBarColor = () => "#334155";
 
   const fontSize = getFontSize(11);
@@ -298,15 +325,80 @@ export function MultiMetricRankedDashboard({
             className="font-medium text-slate-800"
             style={{ fontSize: titleFontSize }}
           >
-            Composite Climate Vulnerability Index
+            Climate vulnerability is shaped by inequality
           </h2>
           <p 
-            className="text-slate-500 mt-1"
+            className="text-slate-500 mt-1 max-w-2xl mx-auto"
             style={{ fontSize: subtitleFontSize * 0.8 }}
           >
-            Ranking Pacific countries across seven climate impact indicators.
+            Some Pacific nations face significantly higher exposure and lower resilience than others.
           </p>
         </div>
+
+        {/* ─── Statistics Bar ─── */}
+        {stats && (
+          <div className="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 border-b border-slate-100 pb-4">
+            <div className="text-center">
+              <div 
+                className="font-medium text-slate-800"
+                style={{ fontSize: fontSize * 1.2 }}
+              >
+                {stats.topCountry.country}
+              </div>
+              <div 
+                className="text-slate-400"
+                style={{ fontSize: fontSize * 0.7 }}
+              >
+                Highest vulnerability
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div 
+                className="font-medium text-slate-800"
+                style={{ fontSize: fontSize * 1.2 }}
+              >
+                {stats.bottomCountry.country}
+              </div>
+              <div 
+                className="text-slate-400"
+                style={{ fontSize: fontSize * 0.7 }}
+              >
+                Lowest vulnerability
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div 
+                className="font-medium text-slate-800"
+                style={{ fontSize: fontSize * 1.2 }}
+              >
+                {stats.gapPercent.toFixed(0)}%
+              </div>
+              <div 
+                className="text-slate-400"
+                style={{ fontSize: fontSize * 0.7 }}
+              >
+                Vulnerability gap
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div 
+                className="font-medium text-slate-800"
+                style={{ fontSize: fontSize * 1.2 }}
+              >
+                {stats.countryCount}
+              </div>
+              <div 
+                className="text-slate-400"
+                style={{ fontSize: fontSize * 0.7 }}
+              >
+                Countries analyzed
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ─── Chart ─── */}
         <div className="relative w-full overflow-hidden">
@@ -318,12 +410,25 @@ export function MultiMetricRankedDashboard({
             style={{ maxWidth: '100%', height: 'auto' }}
           >
             <g transform={`translate(${responsiveMargin.left},${responsiveMargin.top})`}>
+              {/* Average line */}
+              {stats && (
+                <line
+                  x1={xScale(stats.avg)}
+                  x2={xScale(stats.avg)}
+                  y1={0}
+                  y2={chartHeight}
+                  stroke="#94a3b8"
+                  strokeWidth="1"
+                  strokeDasharray="3 3"
+                  opacity="0.6"
+                />
+              )}
+
               {/* Country labels */}
               {ranked.map((d) => {
                 const y = yScale(d.country)!;
                 const isHovered = hoveredCountry === d.country;
                 
-                // Truncate long country names on mobile
                 const displayName = width < 500 
                   ? (d.country.length > 10 ? d.country.slice(0, 8) + "…" : d.country)
                   : width < 768 
@@ -379,7 +484,7 @@ export function MultiMetricRankedDashboard({
                       className={!isTouchDevice ? "cursor-pointer" : ""}
                     />
 
-                    {/* Composite score label - only if bar is wide enough */}
+                    {/* Composite score label */}
                     {barWidth > (width < 500 ? 20 : 40) && (
                       <text
                         x={barWidth - 4}
@@ -396,15 +501,28 @@ export function MultiMetricRankedDashboard({
                 );
               })}
 
+              {/* Average label */}
+              {stats && (
+                <text
+                  x={xScale(stats.avg)}
+                  y={-6}
+                  textAnchor="middle"
+                  fontSize={Math.max(6, fontSize * 0.65)}
+                  fill="#94a3b8"
+                >
+                  avg {stats.avg.toFixed(2)}
+                </text>
+              )}
+
               {/* X-axis label */}
               <text
                 x={chartWidth / 2}
                 y={chartHeight + (width < 500 ? 20 : 30)}
                 textAnchor="middle"
-                fontSize={fontSize * 0.85}
+                fontSize={fontSize * 0.8}
                 fill="#94a3b8"
               >
-                Higher score indicates greater observed climate vulnerability
+                Vulnerability index →
               </text>
             </g>
           </svg>
@@ -455,6 +573,21 @@ export function MultiMetricRankedDashboard({
             </div>
           )}
         </div>
+
+        {/* ─── Footer Insight ─── */}
+        {stats && (
+          <div className="mt-4 pt-3 border-t border-slate-100">
+            <p 
+              className="text-slate-500 text-center max-w-2xl mx-auto"
+              style={{ fontSize: fontSize * 0.85 }}
+            >
+              {stats.topCountry.country} faces the highest vulnerability, 
+              while {stats.bottomCountry.country} shows the lowest — 
+              a <span className="font-medium text-slate-700">{stats.gapPercent.toFixed(0)}%</span> gap 
+              in composite vulnerability across {stats.countryCount} Pacific nations.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
