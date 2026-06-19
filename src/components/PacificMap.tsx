@@ -121,7 +121,7 @@ export function PacificClimateStoryMap() {
   };
 
   return (
-    <div className="w-full bg-white">
+    // <div className="w-full bg-white">
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto">
         {/* Ocean */}
         <rect width={WIDTH} height={HEIGHT} fill="#f1f5f9" />
@@ -223,7 +223,6 @@ export function PacificClimateStoryMap() {
           ))}
         </g>
       </svg>
-    </div>
   );
 }
 
