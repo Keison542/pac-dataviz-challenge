@@ -167,7 +167,7 @@ export default function ClimateInteractionMatrix({
       </div>
 
       {/* Matrix */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" text-center>
         <div
           className="grid gap-1 min-w-[420px]"
           style={{
