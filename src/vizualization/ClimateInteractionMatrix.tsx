@@ -174,7 +174,7 @@ export default function ClimateInteractionMatrix({
         <div
           className="grid gap-2 min-w-[650px]"
           style={{
-            gridTemplateColumns: `160px repeat(${COLS.length}, minmax(90px,1fr))`,
+            gridTemplateColumns: `110px repeat(${COLS.length}, minmax(60px,1fr))`,
           }}
         >
           <div />
@@ -182,7 +182,7 @@ export default function ClimateInteractionMatrix({
           {COLS.map((col) => (
             <div
               key={col}
-              className="text-center text-xs font-semibold text-slate-500"
+              className="text-center text-[10px] md:text-xs font-semibold text-slate-500"
             >
               {col}
             </div>
@@ -190,7 +190,7 @@ export default function ClimateInteractionMatrix({
 
           {ROWS.map((row) => (
             <div key={row} className="contents">
-              <div className="flex items-center text-sm font-medium text-slate-700">
+              <div className="flex items-center text-[11px] font-medium text-slate-700">
                 {row}
               </div>
 
@@ -215,7 +215,7 @@ export default function ClimateInteractionMatrix({
                     key={`${row}-${col}`}
                     onClick={() => setSelectedCell(cell)}
                     onMouseEnter={() => setSelectedCell(cell)}
-                    className={`h-16 rounded-lg border transition-all duration-200 ${
+                    className={`h-10 md:h-12 rounded-md border transition-all duration-200 ${
                       isSelected
                         ? "scale-105 ring-2 ring-slate-800"
                         : "hover:scale-105"
@@ -224,7 +224,7 @@ export default function ClimateInteractionMatrix({
                       backgroundColor: getColor(cell.value),
                     }}
                   >
-                    <div className="text-white font-bold text-sm">
+                    <div className="text-white font-semibold text-[10px] md:text-xs">
                       {Math.round(cell.value * 100)}
                     </div>
                   </button>
