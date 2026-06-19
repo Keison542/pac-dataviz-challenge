@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState } from "react";
@@ -123,7 +122,7 @@ export default function ClimateInteractionMatrix({
   return (
     <>
       {/* Header */}
-      {/* <div className="mb-5 text-center"> */}
+      <div className="mb-5 text-center">
         <h2 className="text-lg font-semibold text-slate-900">
           Climate Interaction Pathways in {selectedCountry}
         </h2>
@@ -234,7 +233,6 @@ export default function ClimateInteractionMatrix({
       {/* Detail Panel */}
       {selectedCell && (
         <div className="mt-5 border-t border-slate-200 pt-4">
-
           <div className="text-[10px] uppercase tracking-wide text-slate-500">
             Climate Driver
           </div>
@@ -270,9 +268,8 @@ export default function ClimateInteractionMatrix({
               />
             </div>
           </div>
-        {/* </div> */}
+        </div>
       )}
     </>
   );
 }
-
