@@ -2,297 +2,344 @@
 
 export default function PacificMap() {
   return (
-    <svg
-      viewBox="0 0 1400 800"
-      className="w-full h-auto"
-      preserveAspectRatio="xMidYMid meet"
-    >
-      {/* Ocean */}
-      <rect width="1400" height="800" fill="#dbeafe" />
-
-      {/* =========================
-          AUSTRALIA
-      ========================= */}
-      <path
-        d="
-          M120 520
-          L170 470
-          L260 450
-          L330 470
-          L350 520
-          L320 580
-          L250 610
-          L180 600
-          L130 560
-          Z
-        "
-        fill="#d9c97b"
-        stroke="#a68a52"
-        strokeWidth="2"
-      />
-
-      {/* Tasmania */}
-      <ellipse
-        cx="290"
-        cy="650"
-        rx="18"
-        ry="12"
-        fill="#d9c97b"
-        stroke="#a68a52"
-      />
-
-      {/* =========================
-          NEW ZEALAND
-      ========================= */}
-
-      <path
-        d="
-          M460 620
-          L490 650
-          L510 690
-          L495 730
-          L470 700
-          L450 650
-          Z
-        "
-        fill="#d9c97b"
-        stroke="#a68a52"
-      />
-
-      <path
-        d="
-          M530 660
-          L550 690
-          L560 730
-          L540 760
-          L520 720
-          Z
-        "
-        fill="#d9c97b"
-        stroke="#a68a52"
-      />
-
-      {/* =========================
-          PNG / INDONESIA
-      ========================= */}
-
-      <path
-        d="
-          M60 430
-          L130 400
-          L220 400
-          L260 430
-          L230 460
-          L120 470
-          Z
-        "
-        fill="#d9c97b"
-        stroke="#a68a52"
-      />
-
-      {/* =========================
-          ASIA EDGE
-      ========================= */}
-
-      <path
-        d="
-          M0 0
-          L260 0
-          L240 120
-          L220 220
-          L160 270
-          L90 250
-          L30 190
-          L0 130
-          Z
-        "
-        fill="#d9c97b"
-        stroke="#a68a52"
-      />
-
-      {/* Japan */}
-      <path
-        d="
-          M250 170
-          L270 200
-          L285 235
-          L275 270
-          L255 245
-          L245 210
-          Z
-        "
-        fill="#d9c97b"
-        stroke="#a68a52"
-      />
-
-      {/* =========================
-          NORTH AMERICA
-      ========================= */}
-
-      <path
-        d="
-          M1140 0
-          L1400 0
-          L1400 420
-          L1320 390
-          L1250 330
-          L1210 250
-          L1170 140
-          Z
-        "
-        fill="#d9c97b"
-        stroke="#a68a52"
-      />
-
-      {/* Central America */}
-      <path
-        d="
-          M1170 420
-          L1230 460
-          L1260 500
-          L1230 520
-          L1170 470
-          Z
-        "
-        fill="#d9c97b"
-        stroke="#a68a52"
-      />
-
-      {/* =========================
-          SOUTH AMERICA
-      ========================= */}
-
-      <path
-        d="
-          M1270 520
-          L1340 540
-          L1380 620
-          L1360 760
-          L1320 800
-          L1270 760
-          L1240 650
-          L1240 560
-          Z
-        "
-        fill="#d9c97b"
-        stroke="#a68a52"
-      />
-
-      {/* =========================
-          PACIFIC ISLANDS
-      ========================= */}
-
-      {/* Hawaii */}
-      <circle cx="720" cy="270" r="4" fill="#444" />
-      <circle cx="740" cy="280" r="3" fill="#444" />
-      <circle cx="755" cy="290" r="2" fill="#444" />
-
-      {/* Marshall Islands */}
-      <circle cx="470" cy="360" r="2.5" fill="#444" />
-      <circle cx="490" cy="370" r="2" fill="#444" />
-      <circle cx="510" cy="355" r="2" fill="#444" />
-
-      {/* Micronesia */}
-      <circle cx="390" cy="410" r="3" fill="#444" />
-      <circle cx="420" cy="420" r="2" fill="#444" />
-
-      {/* Nauru */}
-      <circle cx="500" cy="470" r="2.5" fill="#444" />
-
-      {/* Kiribati */}
-      <circle cx="580" cy="470" r="2.5" fill="#444" />
-      <circle cx="650" cy="430" r="2" fill="#444" />
-      <circle cx="710" cy="390" r="2" fill="#444" />
-
-      {/* Solomon Islands */}
-      <circle cx="360" cy="520" r="3" fill="#444" />
-      <circle cx="390" cy="535" r="2.5" fill="#444" />
-      <circle cx="420" cy="550" r="2" fill="#444" />
-
-      {/* Vanuatu */}
-      <circle cx="420" cy="590" r="3" fill="#444" />
-      <circle cx="430" cy="620" r="2" fill="#444" />
-
-      {/* Fiji */}
-      <circle cx="520" cy="590" r="3" fill="#444" />
-      <circle cx="540" cy="600" r="2" fill="#444" />
-
-      {/* Tonga */}
-      <circle cx="580" cy="660" r="2.5" fill="#444" />
-
-      {/* Samoa */}
-      <circle cx="620" cy="580" r="3" fill="#444" />
-
-      {/* Cook Islands */}
-      <circle cx="720" cy="600" r="2.5" fill="#444" />
-
-      {/* French Polynesia */}
-      <circle cx="860" cy="620" r="3" fill="#444" />
-      <circle cx="900" cy="610" r="2" fill="#444" />
-      <circle cx="940" cy="630" r="2" fill="#444" />
-
-      {/* =========================
-          OCEAN LABEL
-      ========================= */}
-
-      <text
-        x="700"
-        y="430"
-        textAnchor="middle"
-        fontSize="56"
-        fontWeight="300"
-        fill="#0f172a"
+    <div className="w-full">
+      <svg
+        viewBox="0 0 1200 760"
+        className="w-full h-auto"
+        preserveAspectRatio="xMidYMid meet"
       >
-        PACIFIC OCEAN
-      </text>
+        <defs>
+          <radialGradient id="ocean" cx="50%" cy="50%">
+            <stop offset="0%" stopColor="#eff6ff" />
+            <stop offset="100%" stopColor="#dbeafe" />
+          </radialGradient>
 
-      {/* =========================
-          REGION LABELS
-      ========================= */}
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-      <text x="530" y="590" fontSize="18" fill="#334155">
-        Fiji
-      </text>
+        {/* Ocean */}
+        <rect width="1200" height="760" fill="url(#ocean)" />
 
-      <text x="610" y="575" fontSize="18" fill="#334155">
-        Samoa
-      </text>
+        {/* Ocean Label */}
+        <text
+          x="600"
+          y="340"
+          textAnchor="middle"
+          fontSize="60"
+          fontWeight="300"
+          fill="#0f172a"
+          opacity="0.12"
+        >
+          PACIFIC OCEAN
+        </text>
 
-      <text x="400" y="610" fontSize="18" fill="#334155">
-        Vanuatu
-      </text>
+        {/* =====================================
+            DISASTER PULSES
+        ===================================== */}
 
-      <text x="350" y="540" fontSize="18" fill="#334155">
-        Solomon Islands
-      </text>
+        <g opacity="0.35">
+          <circle cx="470" cy="470" r="18" fill="#ef4444">
+            <animate
+              attributeName="r"
+              values="10;30;10"
+              dur="4s"
+              repeatCount="indefinite"
+            />
+            <animate
+              attributeName="opacity"
+              values="0.8;0;0.8"
+              dur="4s"
+              repeatCount="indefinite"
+            />
+          </circle>
 
-      <text x="460" y="350" fontSize="18" fill="#334155">
-        Marshall Islands
-      </text>
+          <circle cx="740" cy="560" r="18" fill="#ef4444">
+            <animate
+              attributeName="r"
+              values="10;30;10"
+              dur="5s"
+              repeatCount="indefinite"
+            />
+            <animate
+              attributeName="opacity"
+              values="0.8;0;0.8"
+              dur="5s"
+              repeatCount="indefinite"
+            />
+          </circle>
 
-      <text x="700" y="250" fontSize="18" fill="#334155">
-        Hawaiian Islands
-      </text>
+          <circle cx="600" cy="280" r="18" fill="#0ea5e9">
+            <animate
+              attributeName="r"
+              values="10;30;10"
+              dur="4.5s"
+              repeatCount="indefinite"
+            />
+            <animate
+              attributeName="opacity"
+              values="0.8;0;0.8"
+              dur="4.5s"
+              repeatCount="indefinite"
+            />
+          </circle>
+        </g>
 
-      <text x="130" y="690" fontSize="22" fill="#334155">
-        Australia
-      </text>
+        {/* =====================================
+            MELANESIA
+        ===================================== */}
 
-      <text x="450" y="780" fontSize="22" fill="#334155">
-        New Zealand
-      </text>
+        <ellipse
+          cx="180"
+          cy="340"
+          rx="45"
+          ry="18"
+          fill="#1e293b"
+        />
 
-      <text x="1060" y="160" fontSize="26" fill="#334155">
-        North America
-      </text>
+        <text x="115" y="315" fontSize="15" fill="#334155">
+          Papua New Guinea
+        </text>
 
-      <text x="1270" y="650" fontSize="26" fill="#334155">
-        South America
-      </text>
+        <circle cx="260" cy="380" r="5" fill="#1e293b" />
+        <circle cx="275" cy="390" r="4" fill="#1e293b" />
+        <circle cx="290" cy="400" r="3" fill="#1e293b" />
 
-      <text x="80" y="90" fontSize="26" fill="#334155">
-        Asia
-      </text>
-    </svg>
+        <text x="215" y="430" fontSize="14" fill="#334155">
+          Solomon Islands
+        </text>
+
+        <circle cx="330" cy="470" r="5" fill="#1e293b" />
+        <circle cx="338" cy="495" r="4" fill="#1e293b" />
+
+        <text x="300" y="530" fontSize="14" fill="#334155">
+          Vanuatu
+        </text>
+
+        <circle cx="470" cy="470" r="6" fill="#1e293b" />
+
+        <circle cx="490" cy="480" r="4" fill="#1e293b" />
+
+        <text x="445" y="520" fontSize="15" fill="#334155">
+          Fiji
+        </text>
+
+        {/* Cyclone */}
+        <text
+          x="505"
+          y="455"
+          fontSize="26"
+          filter="url(#glow)"
+        >
+          🌪
+        </text>
+
+        {/* =====================================
+            MICRONESIA
+        ===================================== */}
+
+        <circle cx="240" cy="210" r="5" fill="#1e293b" />
+
+        <text x="210" y="190" fontSize="13" fill="#334155">
+          Palau
+        </text>
+
+        <circle cx="350" cy="220" r="5" fill="#1e293b" />
+        <circle cx="390" cy="215" r="4" fill="#1e293b" />
+        <circle cx="430" cy="225" r="4" fill="#1e293b" />
+
+        <text x="305" y="180" fontSize="13" fill="#334155">
+          Micronesia
+        </text>
+
+        <circle cx="520" cy="230" r="4" fill="#1e293b" />
+        <circle cx="540" cy="220" r="3" fill="#1e293b" />
+
+        <text x="470" y="190" fontSize="13" fill="#334155">
+          Marshall Islands
+        </text>
+
+        <circle cx="470" cy="310" r="4" fill="#1e293b" />
+
+        <text x="445" y="290" fontSize="13" fill="#334155">
+          Nauru
+        </text>
+
+        <circle cx="600" cy="280" r="4" fill="#1e293b" />
+        <circle cx="690" cy="260" r="4" fill="#1e293b" />
+        <circle cx="770" cy="240" r="4" fill="#1e293b" />
+
+        <text x="595" y="220" fontSize="13" fill="#334155">
+          Kiribati
+        </text>
+
+        {/* Flood */}
+        <text
+          x="620"
+          y="260"
+          fontSize="26"
+          filter="url(#glow)"
+        >
+          🌊
+        </text>
+
+        {/* =====================================
+            POLYNESIA
+        ===================================== */}
+
+        <circle cx="560" cy="390" r="4" fill="#1e293b" />
+
+        <text x="535" y="370" fontSize="13" fill="#334155">
+          Tuvalu
+        </text>
+
+        <circle cx="700" cy="470" r="5" fill="#1e293b" />
+
+        <text x="670" y="450" fontSize="13" fill="#334155">
+          Samoa
+        </text>
+
+        <circle cx="740" cy="560" r="4" fill="#1e293b" />
+
+        <text x="715" y="600" fontSize="13" fill="#334155">
+          Tonga
+        </text>
+
+        <circle cx="860" cy="470" r="4" fill="#1e293b" />
+
+        <text x="810" y="450" fontSize="13" fill="#334155">
+          Cook Islands
+        </text>
+
+        <circle cx="820" cy="520" r="4" fill="#1e293b" />
+
+        <text x="795" y="550" fontSize="13" fill="#334155">
+          Niue
+        </text>
+
+        <circle cx="760" cy="420" r="3" fill="#1e293b" />
+
+        <text x="730" y="400" fontSize="13" fill="#334155">
+          Tokelau
+        </text>
+
+        {/* Drought */}
+        <text
+          x="690"
+          y="505"
+          fontSize="26"
+          filter="url(#glow)"
+        >
+          ☀️
+        </text>
+
+        {/* Region Labels */}
+
+        <text
+          x="250"
+          y="620"
+          fontSize="22"
+          fontWeight="600"
+          fill="#64748b"
+        >
+          Melanesia
+        </text>
+
+        <text
+          x="350"
+          y="120"
+          fontSize="22"
+          fontWeight="600"
+          fill="#64748b"
+        >
+          Micronesia
+        </text>
+
+        <text
+          x="760"
+          y="650"
+          fontSize="22"
+          fontWeight="600"
+          fill="#64748b"
+        >
+          Polynesia
+        </text>
+
+        {/* =====================================
+            TIMELINE
+        ===================================== */}
+
+        <line
+          x1="120"
+          y1="700"
+          x2="1080"
+          y2="700"
+          stroke="#94a3b8"
+          strokeWidth="2"
+        />
+
+        {[
+          [120, "1980"],
+          [320, "1990"],
+          [520, "2000"],
+          [720, "2010"],
+          [920, "2020"],
+          [1080, "2025"],
+        ].map(([x, label]) => (
+          <g key={label}>
+            <line
+              x1={Number(x)}
+              y1="690"
+              x2={Number(x)}
+              y2="710"
+              stroke="#64748b"
+            />
+            <text
+              x={Number(x)}
+              y="730"
+              textAnchor="middle"
+              fontSize="13"
+              fill="#475569"
+            >
+              {label}
+            </text>
+          </g>
+        ))}
+
+        {/* Timeline Events */}
+
+        <text x="260" y="685" fontSize="22">
+          🌪
+        </text>
+
+        <text x="500" y="685" fontSize="22">
+          🌊
+        </text>
+
+        <text x="720" y="685" fontSize="22">
+          ☀️
+        </text>
+
+        <text x="900" y="685" fontSize="22">
+          🌧
+        </text>
+
+        <text x="1030" y="685" fontSize="22">
+          🌪
+        </text>
+      </svg>
+
+      <div className="mt-4 flex flex-wrap justify-center gap-6 text-sm text-slate-600">
+        <div>🌪 Cyclones</div>
+        <div>🌊 Coastal Flooding</div>
+        <div>☀️ Drought</div>
+        <div>🌧 Extreme Rainfall</div>
+      </div>
+    </div>
   );
 }
