@@ -18,7 +18,7 @@ type Props = {
   data: DataPoint[];
   selectedCountry: string;
   title?: string;
-  insight?: string;
+  subtitle?: string;
   className?: string;
 };
 
@@ -29,19 +29,19 @@ const METRICS = [
     key: "cropYield",
     label: "Food Production",
     unit: "t/ha",
-    color: "#4f6dc0",
+    color: "#475569",
   },
   {
     key: "livestockYield",
     label: "Livelihood Assets",
     unit: "tons",
-    color: "#f59e0b",
+    color: "#94a3b8",
   },
   {
     key: "touristArrivals",
     label: "Income Diversification",
     unit: "",
-    color: "#14b8a6",
+    color: "#cbd5e1",
   },
 ];
 
@@ -50,7 +50,8 @@ export function TimeSeriesDashboard({
   height: propHeight,
   data,
   selectedCountry,
-  insight,
+  title = "Livelihood & Economic Resilience Trends",
+  subtitle,
   className = "",
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -202,7 +203,6 @@ export function TimeSeriesDashboard({
     const min = Math.min(...years);
     const max = Math.max(...years);
     
-    // Reduce ticks on mobile
     const maxTicks = width < 500 ? 3 : width < 768 ? 4 : 6;
     const step = Math.max(1, Math.floor((max - min) / maxTicks));
     
@@ -237,233 +237,243 @@ export function TimeSeriesDashboard({
   }
 
   const fontSize = getFontSize(12);
+  const titleFontSize = getFontSize(16);
   const legendFontSize = getFontSize(11);
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   return (
     <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
-      {/* ─── HEADER ─── */}
-      <div className="mb-3 text-center w-full px-2 sm:px-4">
-        {insight && (
-          <p 
-            className="text-slate-500"
-            style={{ fontSize: fontSize * 0.85 }}
+      <div className="w-full max-w-4xl px-2 sm:px-4">
+        {/* ─── HEADER ─── */}
+        <div className="mb-5 text-center">
+          <h3 
+            className="font-medium text-slate-800"
+            style={{ fontSize: titleFontSize }}
           >
-            {insight}
-          </p>
-        )}
-      </div>
+            {title}
+          </h3>
+          {subtitle && (
+            <p 
+              className="text-slate-500 mt-1"
+              style={{ fontSize: fontSize * 0.85 }}
+            >
+              {subtitle}
+            </p>
+          )}
+        </div>
 
-      {/* ─── LEGEND ─── */}
-      <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 justify-center px-1 sm:px-2">
-        {METRICS.map((m) => (
-          <button
-            key={m.key}
-            onClick={() => toggleMetric(m.key)}
-            className="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full border transition-all text-[10px] sm:text-xs"
-            style={{
-              borderColor: visibleMetrics.has(m.key) ? m.color : "#e2e8f0",
-              color: visibleMetrics.has(m.key) ? m.color : "#94a3b8",
-              background: visibleMetrics.has(m.key) ? m.color + "10" : "white",
-            }}
+        {/* ─── LEGEND ─── */}
+        <div className="flex flex-wrap gap-2 mb-4 justify-center">
+          {METRICS.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => toggleMetric(m.key)}
+              className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border transition-all text-[10px] sm:text-xs"
+              style={{
+                borderColor: visibleMetrics.has(m.key) ? m.color : "#e2e8f0",
+                color: visibleMetrics.has(m.key) ? m.color : "#94a3b8",
+                background: visibleMetrics.has(m.key) ? m.color + "10" : "white",
+              }}
+            >
+              <span className="whitespace-nowrap">{m.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* ─── CHART ─── */}
+        <div className="relative w-full overflow-hidden">
+          <svg 
+            width={width} 
+            height={height} 
+            className="block"
+            viewBox={width && height ? `0 0 ${width} ${height}` : undefined}
+            style={{ maxWidth: '100%', height: 'auto' }}
           >
-            <span className="whitespace-nowrap">{m.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* ─── CHART ─── */}
-      <div className="relative w-full overflow-hidden">
-        <svg 
-          width={width} 
-          height={height} 
-          className="block"
-          viewBox={width && height ? `0 0 ${width} ${height}` : undefined}
-          style={{ maxWidth: '100%', height: 'auto' }}
-        >
-          <g transform={`translate(${responsiveMargin.left},${responsiveMargin.top})`}>
-            {/* GRID */}
-            {yTicks.map((v, i) => (
-              <line
-                key={`grid-y-${i}`}
-                x1={0}
-                x2={boundsWidth}
-                y1={yScale(v)}
-                y2={yScale(v)}
-                stroke="#e2e8f0"
-                strokeDasharray="4 4"
-                strokeWidth={0.5}
-              />
-            ))}
-
-            {xTicks.map((x, i) => {
-              const xPos = xScale(x);
-              // Skip if too close to edge
-              if (xPos < 5 || xPos > boundsWidth - 5) return null;
-              
-              return (
+            <g transform={`translate(${responsiveMargin.left},${responsiveMargin.top})`}>
+              {/* GRID */}
+              {yTicks.map((v, i) => (
                 <line
-                  key={`grid-x-${i}`}
-                  x1={xPos}
-                  x2={xPos}
-                  y1={0}
-                  y2={boundsHeight}
-                  stroke="#e2e8f0"
+                  key={`grid-y-${i}`}
+                  x1={0}
+                  x2={boundsWidth}
+                  y1={yScale(v)}
+                  y2={yScale(v)}
+                  stroke="#f1f5f9"
                   strokeDasharray="4 4"
                   strokeWidth={0.5}
                 />
-              );
-            })}
+              ))}
 
-            {/* LINES */}
-            {METRICS.map((m) =>
-              visibleMetrics.has(m.key) ? (
-                <LineItem
-                  key={m.key}
-                  path={linePaths[m.key]}
-                  color={m.color}
-                  strokeWidth={Math.max(1.5, Math.min(3, width / 200))}
-                  opacity={0.9}
-                  onHover={() => {}}
-                />
-              ) : null
-            )}
-
-            {/* POINTS - hide on mobile for cleaner look */}
-            {!isMobile && data.map((d) =>
-              METRICS.map((m) => {
-                if (!visibleMetrics.has(m.key)) return null;
-
-                const v = d[m.key as keyof DataPoint] as number;
-                const x = xScale(d.year);
-                const y = yScale(v);
-                const pointRadius = Math.max(2, Math.min(4, width / 180));
-
+              {xTicks.map((x, i) => {
+                const xPos = xScale(x);
+                if (xPos < 5 || xPos > boundsWidth - 5) return null;
+                
                 return (
-                  <circle
-                    key={`${m.key}-${d.year}`}
-                    cx={x}
-                    cy={y}
-                    r={pointRadius}
-                    fill={m.color}
-                    stroke="#fff"
-                    strokeWidth={Math.max(1, Math.min(2, width / 400))}
-                    opacity={0.7}
-                    onMouseEnter={() =>
-                      setHoveredPoint({
-                        metric: m.label,
-                        year: d.year,
-                        value: v,
-                        x,
-                        y,
-                      })
-                    }
-                    onMouseLeave={() => setHoveredPoint(null)}
-                    className={!isTouchDevice ? "cursor-pointer" : ""}
+                  <line
+                    key={`grid-x-${i}`}
+                    x1={xPos}
+                    x2={xPos}
+                    y1={0}
+                    y2={boundsHeight}
+                    stroke="#f1f5f9"
+                    strokeDasharray="4 4"
+                    strokeWidth={0.5}
                   />
                 );
-              })
-            )}
+              })}
 
-            {/* AXIS LABELS */}
-            <text
-              x={boundsWidth / 2}
-              y={boundsHeight + (width < 500 ? 30 : 40)}
-              textAnchor="middle"
-              fontSize={fontSize}
-              fill="#64748b"
+              {/* LINES */}
+              {METRICS.map((m) =>
+                visibleMetrics.has(m.key) ? (
+                  <LineItem
+                    key={m.key}
+                    path={linePaths[m.key]}
+                    color={m.color}
+                    strokeWidth={Math.max(1.5, Math.min(2.5, width / 200))}
+                    opacity={0.8}
+                    onHover={() => {}}
+                  />
+                ) : null
+              )}
+
+              {/* POINTS */}
+              {data.map((d) =>
+                METRICS.map((m) => {
+                  if (!visibleMetrics.has(m.key)) return null;
+
+                  const v = d[m.key as keyof DataPoint] as number;
+                  const x = xScale(d.year);
+                  const y = yScale(v);
+                  const isActive = hoveredPoint?.metric === m.label && hoveredPoint?.year === d.year;
+                  const pointRadius = isActive 
+                    ? Math.max(4, Math.min(6, width / 120))
+                    : Math.max(2, Math.min(3.5, width / 180));
+
+                  return (
+                    <circle
+                      key={`${m.key}-${d.year}`}
+                      cx={x}
+                      cy={y}
+                      r={pointRadius}
+                      fill={isActive ? m.color : m.color}
+                      stroke="#fff"
+                      strokeWidth={isActive ? 2 : 1.5}
+                      opacity={isActive ? 1 : 0.5}
+                      onMouseEnter={() =>
+                        setHoveredPoint({
+                          metric: m.label,
+                          year: d.year,
+                          value: v,
+                          x,
+                          y,
+                        })
+                      }
+                      onMouseLeave={() => setHoveredPoint(null)}
+                      className={!isTouchDevice ? "cursor-pointer" : ""}
+                    />
+                  );
+                })
+              )}
+
+              {/* AXIS LABELS */}
+              <text
+                x={boundsWidth / 2}
+                y={boundsHeight + (width < 500 ? 30 : 40)}
+                textAnchor="middle"
+                fontSize={fontSize * 0.85}
+                fill="#94a3b8"
+              >
+                Year
+              </text>
+
+              <text
+                transform="rotate(-90)"
+                x={-boundsHeight / 2}
+                y={-(width < 500 ? 35 : 50)}
+                textAnchor="middle"
+                fontSize={fontSize * 0.85}
+                fill="#94a3b8"
+              >
+                Value
+              </text>
+
+              {/* X-AXIS TICK LABELS */}
+              {xTicks.map((x, i) => {
+                const xPos = xScale(x);
+                if (xPos < 5 || xPos > boundsWidth - 5) return null;
+                
+                return (
+                  <text
+                    key={`x-label-${i}`}
+                    x={xPos}
+                    y={boundsHeight + (width < 500 ? 18 : 20)}
+                    textAnchor="middle"
+                    fontSize={Math.max(7, fontSize * 0.7)}
+                    fill="#94a3b8"
+                  >
+                    {x}
+                  </text>
+                );
+              })}
+
+              {/* Y-AXIS TICK LABELS */}
+              {yTicks.map((v, i) => {
+                const yPos = yScale(v);
+                if (yPos < 5 || yPos > boundsHeight - 5) return null;
+                
+                return (
+                  <text
+                    key={`y-label-${i}`}
+                    x={-6}
+                    y={yPos + 3}
+                    textAnchor="end"
+                    fontSize={Math.max(7, fontSize * 0.7)}
+                    fill="#94a3b8"
+                  >
+                    {format(v)}
+                  </text>
+                );
+              })}
+            </g>
+          </svg>
+
+          {/* ─── TOOLTIP ─── */}
+          {hoveredPoint && !isMobile && (
+            <div
+              className="absolute rounded border border-slate-200 bg-white p-2 sm:p-3 text-xs shadow-sm pointer-events-none z-10"
+              style={{
+                left: Math.min(
+                  hoveredPoint.x + responsiveMargin.left + 10,
+                  width - 160
+                ),
+                top: Math.min(
+                  hoveredPoint.y + responsiveMargin.top + 10,
+                  height - 80
+                ),
+                maxWidth: Math.min(180, width - 40),
+              }}
             >
-              Year
-            </text>
-
-            <text
-              transform="rotate(-90)"
-              x={-boundsHeight / 2}
-              y={-(width < 500 ? 35 : 50)}
-              textAnchor="middle"
-              fontSize={fontSize}
-              fill="#64748b"
-            >
-              Value
-            </text>
-
-            {/* X-AXIS TICK LABELS */}
-            {xTicks.map((x, i) => {
-              const xPos = xScale(x);
-              // Skip if too close to edge
-              if (xPos < 5 || xPos > boundsWidth - 5) return null;
-              
-              return (
-                <text
-                  key={`x-label-${i}`}
-                  x={xPos}
-                  y={boundsHeight + (width < 500 ? 18 : 20)}
-                  textAnchor="middle"
-                  fontSize={Math.max(8, fontSize * 0.7)}
-                  fill="#94a3b8"
-                >
-                  {x}
-                </text>
-              );
-            })}
-
-            {/* Y-AXIS TICK LABELS */}
-            {yTicks.map((v, i) => {
-              const yPos = yScale(v);
-              if (yPos < 5 || yPos > boundsHeight - 5) return null;
-              
-              return (
-                <text
-                  key={`y-label-${i}`}
-                  x={-6}
-                  y={yPos + 3}
-                  textAnchor="end"
-                  fontSize={Math.max(8, fontSize * 0.7)}
-                  fill="#94a3b8"
-                >
-                  {format(v)}
-                </text>
-              );
-            })}
-          </g>
-        </svg>
-
-        {/* ─── TOOLTIP ─── */}
-        {hoveredPoint && !isMobile && (
-          <div
-            className="absolute bg-white border shadow-lg rounded-lg p-2 sm:p-3 text-xs sm:text-sm pointer-events-none z-10"
-            style={{
-              left: Math.min(
-                hoveredPoint.x + responsiveMargin.left + 10,
-                width - 150
-              ),
-              top: Math.min(
-                hoveredPoint.y + responsiveMargin.top + 10,
-                height - 80
-              ),
-              maxWidth: Math.min(180, width - 40),
-            }}
-          >
-            <div className="font-semibold" style={{ color: "#0f172a" }}>
-              {hoveredPoint.metric}
+              <div className="font-medium text-slate-900">
+                {hoveredPoint.metric}
+              </div>
+              <div className="text-slate-500">{hoveredPoint.year}</div>
+              <div className="text-sm font-medium text-slate-800">
+                {format(hoveredPoint.value)}
+              </div>
             </div>
-            <div className="text-slate-500">{hoveredPoint.year}</div>
-            <div className="text-sm sm:text-base font-bold text-slate-800">
-              {format(hoveredPoint.value)}
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* ─── MOBILE TOOLTIP (bottom of chart) ─── */}
-        {hoveredPoint && isMobile && (
-          <div className="mt-2 text-center bg-white border rounded-lg p-2 mx-2">
-            <div className="font-semibold text-xs">{hoveredPoint.metric}</div>
-            <div className="text-xs text-slate-500">{hoveredPoint.year}</div>
-            <div className="text-sm font-bold text-slate-800">
-              {format(hoveredPoint.value)}
+          {/* ─── MOBILE TOOLTIP ─── */}
+          {hoveredPoint && isMobile && (
+            <div className="mt-2 text-center bg-white border border-slate-200 rounded p-2 mx-2">
+              <div className="font-medium text-xs text-slate-900">{hoveredPoint.metric}</div>
+              <div className="text-xs text-slate-500">{hoveredPoint.year}</div>
+              <div className="text-sm font-medium text-slate-800">
+                {format(hoveredPoint.value)}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
