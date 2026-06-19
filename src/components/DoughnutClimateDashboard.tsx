@@ -159,9 +159,9 @@ export function DoughnutClimateDashboard({
       <div className="text-center mb-8">
 
         {/* WINNING ADDITION: CONTEXT */}
-        <div className="text-[10px] uppercase tracking-widest text-slate-400">
+        {/* <div className="text-[10px] uppercase tracking-widest text-slate-400">
           baseline: 1950–1980 climate normal
-        </div>
+        </div> */}
 
         <div className="text-xs font-semibold tracking-widest text-slate-500 mt-2">
           CLIMATE ANOMALY INDEX
