@@ -8,14 +8,15 @@ import { disasterEconomicLoss } from "@/climatedata/economic_consequence/direct_
 import { seaLevelAnomalies } from "@/climatedata/climate_drivers/sea_level_anomalies";
 import { rainfallAnomalies } from "@/climatedata/climate_drivers/rainfall_anomalies";
 
-// Import metric data for composite score
+// Import metric data for composite score - using only what exists
+// These paths should match your actual data files
 import economicLossData from "@/climatedata/economic_consequence/direct_disaster_economic_loss";
 import cropYieldData from "@/climatedata/agriculture/crop_yield";
 import touristArrivalsData from "@/climatedata/tourism/tourist_arrivals";
 import livestockYieldData from "@/climatedata/agriculture/livestock_yield";
 import climateAlteringLandData from "@/climatedata/climate_drivers/climate_altering_land";
 import populationGrowthData from "@/climatedata/demographics/population_growth";
-import affectedPersonsData from "@/climatedata/human_consequence/number_of_persons_affected";
+// affectedPersonsData is already imported above
 
 const WIDTH = 1400;
 const HEIGHT = 700;
@@ -120,18 +121,18 @@ function buildCentroids() {
 function buildCountryData() {
   const map = new Map<string, Record<string, number>>();
 
-  const dataMap = {
-    economicLoss: economicLossData,
-    cropYield: cropYieldData,
-    touristArrivals: touristArrivalsData,
-    livestockYield: livestockYieldData,
-    climateAlteringLand: climateAlteringLandData,
-    populationGrowth: populationGrowthData,
-    affectedPersons: affectedPersonsData,
+  const dataMap: Record<string, any[]> = {
+    economicLoss: economicLossData || [],
+    cropYield: cropYieldData || [],
+    touristArrivals: touristArrivalsData || [],
+    livestockYield: livestockYieldData || [],
+    climateAlteringLand: climateAlteringLandData || [],
+    populationGrowth: populationGrowthData || [],
+    affectedPersons: affectedPersons || [],
   };
 
   METRIC_KEYS.forEach((key) => {
-    const records = dataMap[key as keyof typeof dataMap] || [];
+    const records = dataMap[key] || [];
     records.forEach((d: any) => {
       if (!map.has(d.country)) {
         map.set(d.country, {});
