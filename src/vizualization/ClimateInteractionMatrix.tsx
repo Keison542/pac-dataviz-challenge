@@ -121,8 +121,7 @@ export default function ClimateInteractionMatrix({
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white">
-
+    <>
       {/* Header */}
       <div className="mb-5 text-center">
         <h2 className="text-lg font-semibold text-slate-900">
@@ -273,7 +272,7 @@ export default function ClimateInteractionMatrix({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
