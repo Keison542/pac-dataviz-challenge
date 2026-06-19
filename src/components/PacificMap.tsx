@@ -12,19 +12,15 @@ const WIDTH = 1400;
 const HEIGHT = 700;
 
 const hazardColors = {
-  cyclone: "#ef4444",
-  flood: "#3b82f6",
-  drought: "#f59e0b",
-  seaLevelRise: "#14b8a6",
+  cyclone: "#334155",
+  flood: "#334155",
+  drought: "#334155",
+  seaLevelRise: "#334155",
 };
 
 const projectLon = (lon: number) => {
   let x = lon;
-
-  if (x < 120) {
-    x += 360;
-  }
-
+  if (x < 120) x += 360;
   return ((x - 120) / 120) * WIDTH;
 };
 
@@ -32,18 +28,13 @@ const projectLat = (lat: number) => {
   return HEIGHT - ((lat + 35) / 60) * HEIGHT;
 };
 
-function flattenCoordinates(
-  geometry: any,
-  result: number[][] = []
-): number[][] {
+function flattenCoordinates(geometry: any, result: number[][] = []): number[][] {
   if (!geometry) return result;
-
   if (geometry.type === "Polygon") {
     geometry.coordinates.forEach((ring: number[][]) =>
       ring.forEach((c) => result.push(c))
     );
   }
-
   if (geometry.type === "MultiPolygon") {
     geometry.coordinates.forEach((poly: number[][][]) =>
       poly.forEach((ring: number[][]) =>
@@ -51,85 +42,51 @@ function flattenCoordinates(
       )
     );
   }
-
   return result;
 }
 
 function buildCentroids() {
   const grouped = new Map<string, number[][]>();
-
   geoData.features.forEach((feature: any) => {
     const name = feature.properties?.name;
-
     if (!name) return;
-
     const existing = grouped.get(name) || [];
-
-    grouped.set(
-      name,
-      existing.concat(
-        flattenCoordinates(feature.geometry)
-      )
-    );
+    grouped.set(name, existing.concat(flattenCoordinates(feature.geometry)));
   });
-
-  return Array.from(grouped.entries()).map(
-    ([name, coords]) => ({
-      name,
-      lon:
-        coords.reduce((s, c) => s + c[0], 0) /
-        coords.length,
-      lat:
-        coords.reduce((s, c) => s + c[1], 0) /
-        coords.length,
-    })
-  );
+  return Array.from(grouped.entries()).map(([name, coords]) => ({
+    name,
+    lon: coords.reduce((s, c) => s + c[0], 0) / coords.length,
+    lat: coords.reduce((s, c) => s + c[1], 0) / coords.length,
+  }));
 }
 
 function buildHazardLookup() {
   const lookup = new Map<
     string,
-    {
-      cyclone?: boolean;
-      flood?: boolean;
-      drought?: boolean;
-      seaLevelRise?: boolean;
-    }
+    { cyclone?: boolean; flood?: boolean; drought?: boolean; seaLevelRise?: boolean }
   >();
 
   affectedPersons.forEach((d) => {
     if (d.value > 0) {
-      lookup.set(d.country, {
-        ...(lookup.get(d.country) || {}),
-        cyclone: true,
-      });
+      lookup.set(d.country, { ...(lookup.get(d.country) || {}), cyclone: true });
     }
   });
 
   rainfallAnomalies.forEach((d) => {
     if (Math.abs(d.value) > 0) {
-      lookup.set(d.country, {
-        ...(lookup.get(d.country) || {}),
-        flood: true,
-      });
+      lookup.set(d.country, { ...(lookup.get(d.country) || {}), flood: true });
     }
   });
 
   seaLevelAnomalies.forEach((d) => {
     if (d.value > 0) {
-      lookup.set(d.country, {
-        ...(lookup.get(d.country) || {}),
-        seaLevelRise: true,
-      });
+      lookup.set(d.country, { ...(lookup.get(d.country) || {}), seaLevelRise: true });
     }
   });
 
   disasterEconomicLoss.forEach((d) => {
     if (d.value > 0) {
-      lookup.set(d.country, {
-        ...(lookup.get(d.country) || {}),
-        drought: true,
-      });
+      lookup.set(d.country, { ...(lookup.get(d.country) || {}), drought: true });
     }
   });
 
@@ -139,104 +96,48 @@ function buildHazardLookup() {
 export function PacificClimateStoryMap() {
   const [activeHazard, setActiveHazard] = useState<string | null>(null);
 
-  const countries = useMemo(
-    () => buildCentroids(),
-    []
-  );
+  const countries = useMemo(() => buildCentroids(), []);
+  const hazardLookup = useMemo(() => buildHazardLookup(), []);
 
-  const hazardLookup = useMemo(
-    () => buildHazardLookup(),
-    []
-  );
-
-  const temperatureLine = Array.from(
-    { length: 175 },
-    (_, i) => ({
-      x: (i / 174) * WIDTH,
-      y:
-        120 -
-        i * 0.35 +
-        Math.sin(i / 10) * 12,
-    })
-  );
+  const temperatureLine = Array.from({ length: 175 }, (_, i) => ({
+    x: (i / 174) * WIDTH,
+    y: 120 - i * 0.35 + Math.sin(i / 10) * 12,
+  }));
 
   const path = temperatureLine
-    .map(
-      (p, i) =>
-        `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
-    )
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
     .join(" ");
 
-  const getCountryColor = (
-    countryName: string
-  ) => {
-    if (!activeHazard) {
-      return "#0f172a";
-    }
-
+  const getCountryColor = (countryName: string) => {
+    if (!activeHazard) return "#334155";
     const hazardData = hazardLookup.get(countryName);
-    const isAffected = hazardData?.[activeHazard as keyof typeof hazardData];
-
-    return isAffected
-      ? hazardColors[activeHazard as keyof typeof hazardColors]
-      : "#cbd5e1";
+    return hazardData?.[activeHazard as keyof typeof hazardData] ? "#334155" : "#e2e8f0";
   };
 
-  const isHighlighted = (
-    countryName: string
-  ) => {
+  const isHighlighted = (countryName: string) => {
     if (!activeHazard) return false;
-
     const hazardData = hazardLookup.get(countryName);
     return !!hazardData?.[activeHazard as keyof typeof hazardData];
   };
 
   return (
-    <div className="w-full rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-sm">
-      <svg
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        className="w-full h-auto"
-      >
+    <div className="w-full bg-white">
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto">
         {/* Ocean */}
-        <rect
-          width={WIDTH}
-          height={HEIGHT}
-          fill="#dbeafe"
-        />
+        <rect width={WIDTH} height={HEIGHT} fill="#f1f5f9" />
 
         {/* Temperature Trend */}
-        <path
-          d={path}
-          fill="none"
-          stroke="#ef4444"
-          strokeWidth={5}
-        />
+        <path d={path} fill="none" stroke="#94a3b8" strokeWidth={1.5} />
 
-        <text
-          x={30}
-          y={60}
-          fontSize={24}
-          fontWeight={700}
-          fill="#991b1b"
-        >
-          Rising Pacific Temperature
+        <text x={30} y={50} fontSize={12} fontWeight="400" fill="#475569" letterSpacing="0.05em">
+          Surface temperature anomaly
         </text>
 
-        <text
-          x={30}
-          y={90}
-          fontSize={14}
-          fill="#64748b"
-        >
+        <text x={30} y={70} fontSize={10} fill="#94a3b8">
           1850
         </text>
 
-        <text
-          x={WIDTH - 70}
-          y={90}
-          fontSize={14}
-          fill="#64748b"
-        >
+        <text x={WIDTH - 70} y={70} fontSize={10} fill="#94a3b8">
           2025
         </text>
 
@@ -245,10 +146,10 @@ export function PacificClimateStoryMap() {
           x={WIDTH / 2}
           y={HEIGHT / 2}
           textAnchor="middle"
-          fontSize={72}
-          fontWeight={700}
-          fill="#93c5fd"
-          opacity={0.35}
+          fontSize={64}
+          fontWeight="300"
+          fill="#cbd5e1"
+          letterSpacing="0.15em"
         >
           PACIFIC OCEAN
         </text>
@@ -257,30 +158,27 @@ export function PacificClimateStoryMap() {
         {countries.map((country) => {
           const x = projectLon(country.lon);
           const y = projectLat(country.lat);
+          const highlighted = isHighlighted(country.name);
 
           return (
             <g key={country.name}>
               <motion.circle
                 cx={x}
                 cy={y}
-                r={isHighlighted(country.name) ? 11 : 7}
+                r={highlighted ? 8 : 5}
                 animate={{
                   fill: getCountryColor(country.name),
-                  scale: isHighlighted(country.name) ? 1.8 : 1,
+                  scale: highlighted ? 1.4 : 1,
                 }}
-                transition={{
-                  duration: 0.25,
-                }}
+                transition={{ duration: 0.2 }}
               />
 
               <motion.text
-                x={x + 10}
-                y={y - 10}
-                fontSize={12}
-                fontWeight={600}
-                animate={{
-                  fill: getCountryColor(country.name),
-                }}
+                x={x + 8}
+                y={y - 6}
+                fontSize={10}
+                fontWeight={highlighted ? "500" : "400"}
+                fill={getCountryColor(country.name)}
               >
                 {country.name}
               </motion.text>
@@ -288,100 +186,42 @@ export function PacificClimateStoryMap() {
           );
         })}
 
-        {/* Hazard Icons */}
-        <text
-          x={projectLon(168)}
-          y={projectLat(-16) - 50}
-          fontSize={32}
-        >
-          🌀
-        </text>
+        {/* Legend */}
+        <g transform={`translate(30, ${HEIGHT - 70})`}>
+          <text x={0} y={0} fontSize={10} fill="#94a3b8" letterSpacing="0.05em">
+            Hover to explore
+          </text>
 
-        <text
-          x={projectLon(178)}
-          y={projectLat(-17) - 50}
-          fontSize={32}
-        >
-          🌊
-        </text>
-
-        <text
-          x={projectLon(-172)}
-          y={projectLat(-13) - 50}
-          fontSize={32}
-        >
-          🌧️
-        </text>
-
-        <text
-          x={projectLon(173)}
-          y={projectLat(1) - 50}
-          fontSize={32}
-        >
-          🔥
-        </text>
-
-        {/* Legend Background */}
-        <rect
-          x={20}
-          y={HEIGHT - 90}
-          width={720}
-          height={60}
-          rx={12}
-          fill="white"
-          opacity={0.95}
-        />
-
-        {/* Interactive Legend Items */}
-        {[
-          {
-            key: "cyclone",
-            label: "🌀 Cyclones",
-            color: hazardColors.cyclone,
-          },
-          {
-            key: "flood",
-            label: "🌧 Flooding",
-            color: hazardColors.flood,
-          },
-          {
-            key: "drought",
-            label: "🔥 Drought",
-            color: hazardColors.drought,
-          },
-          {
-            key: "seaLevelRise",
-            label: "🌊 Sea Level Rise",
-            color: hazardColors.seaLevelRise,
-          },
-        ].map((item, i) => (
-          <g
-            key={item.key}
-            onMouseEnter={() => setActiveHazard(item.key)}
-            onMouseLeave={() => setActiveHazard(null)}
-            style={{ cursor: "pointer" }}
-          >
-            <rect
-              x={40 + i * 95}
-              y={HEIGHT - 68}
-              width={18}
-              height={18}
-              rx={4}
-              fill={item.color}
-              opacity={activeHazard === item.key ? 1 : 0.7}
-            />
-
-            <text
-              x={64 + i * 95}
-              y={HEIGHT - 54}
-              fontSize={12}
-              fill={activeHazard === item.key ? item.color : "#334155"}
-              fontWeight={activeHazard === item.key ? "600" : "400"}
+          {[
+            { key: "cyclone", label: "cyclones" },
+            { key: "flood", label: "flooding" },
+            { key: "drought", label: "drought" },
+            { key: "seaLevelRise", label: "sea level rise" },
+          ].map((item, i) => (
+            <g
+              key={item.key}
+              onMouseEnter={() => setActiveHazard(item.key)}
+              onMouseLeave={() => setActiveHazard(null)}
+              style={{ cursor: "pointer" }}
             >
-              {item.label}
-            </text>
-          </g>
-        ))}
+              <circle
+                cx={140 + i * 90}
+                cy={-4}
+                r={4}
+                fill={activeHazard === item.key ? "#334155" : "#cbd5e1"}
+              />
+              <text
+                x={150 + i * 90}
+                y={0}
+                fontSize={10}
+                fill={activeHazard === item.key ? "#334155" : "#94a3b8"}
+                fontWeight={activeHazard === item.key ? "500" : "400"}
+              >
+                {item.label}
+              </text>
+            </g>
+          ))}
+        </g>
       </svg>
     </div>
   );
