@@ -177,9 +177,9 @@ export function PacificClimateStoryMap() {
   };
 
   return (
-    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto">
-      {/* Ocean */}
-      <rect width={WIDTH} height={HEIGHT} fill="#f8fafc" />
+    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto" style={{ background: "transparent" }}>
+      {/* Ocean - transparent background */}
+      <rect width={WIDTH} height={HEIGHT} fill="transparent" />
 
       {/* Temperature Trend */}
       <path d={path} fill="none" stroke="#94a3b8" strokeWidth={1.5} />
