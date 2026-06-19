@@ -104,7 +104,7 @@ export function HumanEconomicSection({
         <div className="flex justify-center">
           <TrendLine
             width={Math.min(chartWidth * 1.3, 1100)}
-            height={440}
+            height={340}
             data={dataMap.loss}
             dataType="loss"
             setSelectedCountry={setSelectedCountry}
@@ -144,7 +144,7 @@ export function HumanEconomicSection({
         <div className="flex justify-center">
           <BubbleChart
             width={Math.min(chartWidth * 1.3, 1100)}
-            height={460}
+            height={360}
             data={dataMap.people}
             className="w-full max-w-4xl"
           />
