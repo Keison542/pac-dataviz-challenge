@@ -78,12 +78,12 @@ const METRIC_CONFIGS = {
 
 const METRIC_KEYS = Object.keys(METRIC_CONFIGS);
 
-// ─── Hazard Colors ───
-const hazardColors = {
-  cyclone: "#334155",
-  flood: "#334155",
-  drought: "#334155",
-  seaLevelRise: "#334155",
+// ─── Color Scale for Vulnerability ───
+const VULNERABILITY_COLORS = {
+  high: "#1a1a2e",
+  medium: "#4a4a6a",
+  low: "#94a3b8",
+  none: "#e2e8f0"
 };
 
 // ─── Projection Functions ───
@@ -249,20 +249,39 @@ function getMaxImpact(hazardLookup: Map<string, any>, hazardKey: string): number
   return max || 1;
 }
 
+// ─── Get vulnerability level ───
+function getVulnerabilityLevel(score: number, maxScore: number): 'high' | 'medium' | 'low' | 'none' {
+  if (score === 0) return 'none';
+  const percentage = score / maxScore;
+  if (percentage >= 0.7) return 'high';
+  if (percentage >= 0.4) return 'medium';
+  return 'low';
+}
+
+function getColorForScore(score: number, maxScore: number): string {
+  const level = getVulnerabilityLevel(score, maxScore);
+  switch (level) {
+    case 'high': return VULNERABILITY_COLORS.high;
+    case 'medium': return VULNERABILITY_COLORS.medium;
+    case 'low': return VULNERABILITY_COLORS.low;
+    default: return VULNERABILITY_COLORS.none;
+  }
+}
+
 export function PacificClimateStoryMap({ data, selectedCountry, className = "" }: Props) {
   const [activeHazard, setActiveHazard] = useState<string | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+  const [showInstructions, setShowInstructions] = useState(true);
 
   const countries = useMemo(() => buildCentroids(), []);
   const hazardLookup = useMemo(() => buildHazardLookup(), []);
   const countryData = useMemo(() => buildCountryData(data), [data]);
   const ranked = useMemo(() => computeCompositeScores(countryData), [countryData]);
 
-  // Find top and bottom countries
   const topCountry = ranked.length > 0 ? ranked[0] : null;
   const bottomCountry = ranked.length > 0 ? ranked[ranked.length - 1] : null;
+  const maxScore = ranked.length > 0 ? ranked[0].compositeScore : 1;
 
-  // Calculate stats
   const stats = useMemo(() => {
     if (ranked.length === 0) return null;
     const scores = ranked.map(d => d.compositeScore);
@@ -283,9 +302,12 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
     .join(" ");
 
   const getCountryColor = (countryName: string) => {
-    if (!activeHazard) return "#334155";
-    const hazardData = hazardLookup.get(countryName);
-    return hazardData?.[activeHazard as keyof typeof hazardData] ? "#334155" : "#e2e8f0";
+    if (activeHazard) {
+      const hazardData = hazardLookup.get(countryName);
+      return hazardData?.[activeHazard as keyof typeof hazardData] ? "#334155" : "#e2e8f0";
+    }
+    const score = getCompositeScore(countryName);
+    return getColorForScore(score, maxScore);
   };
 
   const getImpactValue = (countryName: string, hazardKey: string): number => {
@@ -294,21 +316,17 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
   };
 
   const getCircleRadius = (countryName: string): number => {
-    // Show size based on composite score when no hazard is active
-    if (!activeHazard) {
-      const score = getCompositeScore(countryName);
-      if (score === 0) return 4;
-      // Scale from 4px (low score) to 16px (high score)
-      const maxScore = ranked.length > 0 ? ranked[0].compositeScore : 1;
-      const normalized = Math.min(score / maxScore, 1);
-      return 4 + normalized * 12;
+    if (activeHazard) {
+      const impact = getImpactValue(countryName, activeHazard);
+      if (impact === 0) return 3;
+      const maxImpact = getMaxImpact(hazardLookup, activeHazard);
+      const normalized = Math.min(impact / maxImpact, 1);
+      return 4 + normalized * 14;
     }
 
-    const impact = getImpactValue(countryName, activeHazard);
-    if (impact === 0) return 3;
-
-    const maxImpact = getMaxImpact(hazardLookup, activeHazard);
-    const normalized = Math.min(impact / maxImpact, 1);
+    const score = getCompositeScore(countryName);
+    if (score === 0) return 3;
+    const normalized = Math.min(score / maxScore, 1);
     return 4 + normalized * 14;
   };
 
@@ -332,22 +350,44 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
     return labels[activeHazard] || `${impact}`;
   };
 
-  // Get composite score for a country
   const getCompositeScore = (countryName: string): number => {
     const found = ranked.find(d => d.country === countryName);
     return found?.compositeScore || 0;
   };
 
-  // Get rank for a country
   const getRank = (countryName: string): number => {
     const found = ranked.findIndex(d => d.country === countryName);
     return found + 1;
   };
 
+  // Hide instructions after 5 seconds
+  useState(() => {
+    const timer = setTimeout(() => setShowInstructions(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto" style={{ background: "transparent" }}>
       <rect width={WIDTH} height={HEIGHT} fill="transparent" />
 
+      {/* ─── INSTRUCTIONS PANEL ─── */}
+      <g opacity={showInstructions ? 1 : 0} transition={{ duration: 0.5 }}>
+        <rect x={WIDTH / 2 - 250} y={20} width={500} height={90} rx={8} fill="white" stroke="#e2e8f0" strokeWidth={1} />
+        <text x={WIDTH / 2} y={45} textAnchor="middle" fontSize={13} fontWeight="600" fill="#1a1a2e">
+          🗺️ How to read this map
+        </text>
+        <text x={WIDTH / 2} y={65} textAnchor="middle" fontSize={11} fill="#64748b">
+          • Circle size & shade show vulnerability score
+        </text>
+        <text x={WIDTH / 2} y={82} textAnchor="middle" fontSize={11} fill="#64748b">
+          • Hover a country for details · Hover hazards below to explore impacts
+        </text>
+        <text x={WIDTH / 2} y={99} textAnchor="middle" fontSize={9} fill="#94a3b8">
+          Click anywhere to dismiss
+        </text>
+      </g>
+
+      {/* ─── TEMPERATURE TREND ─── */}
       <path d={path} fill="none" stroke="#94a3b8" strokeWidth={1.5} />
 
       <text x={30} y={50} fontSize={12} fontWeight="400" fill="#475569" letterSpacing="0.05em">
@@ -362,6 +402,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         2025
       </text>
 
+      {/* ─── OCEAN LABEL ─── */}
       <text
         x={WIDTH / 2}
         y={HEIGHT / 2}
@@ -374,7 +415,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         PACIFIC OCEAN
       </text>
 
-      {/* Countries with scores always visible */}
+      {/* ─── COUNTRIES ─── */}
       {countries.map((country) => {
         const x = projectLon(country.lon);
         const y = projectLat(country.lat);
@@ -386,8 +427,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         const rank = getRank(country.name);
         const isTopCountry = topCountry?.country === country.name;
         const isBottomCountry = bottomCountry?.country === country.name;
-
-        // Only show score for countries that have data
+        const color = getCountryColor(country.name);
         const showScore = compositeScore > 0;
 
         return (
@@ -395,15 +435,18 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
             key={country.name}
             onMouseEnter={() => setHoveredCountry(country.name)}
             onMouseLeave={() => setHoveredCountry(null)}
+            onClick={() => setShowInstructions(false)}
           >
-            {/* Circle - size represents score */}
+            {/* Circle */}
             <motion.circle
               cx={x}
               cy={y}
               r={radius}
               animate={{
-                fill: getCountryColor(country.name),
+                fill: color,
                 scale: highlighted || isHovered ? 1.3 : 1,
+                stroke: isTopCountry ? "#1a1a2e" : "none",
+                strokeWidth: isTopCountry ? 2 : 0,
               }}
               transition={{ duration: 0.2 }}
             />
@@ -414,18 +457,18 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
               y={y + 3}
               fontSize={10}
               fontWeight={isTopCountry ? "600" : isBottomCountry ? "400" : "400"}
-              fill={getCountryColor(country.name)}
+              fill={color === VULNERABILITY_COLORS.none ? "#94a3b8" : color}
             >
               {country.name}
             </motion.text>
 
-            {/* Composite score - always visible for countries with data */}
+            {/* Composite score */}
             {showScore && !activeHazard && (
               <motion.text
                 x={x + radius + 6}
                 y={y + 16}
                 fontSize={8}
-                fill={isTopCountry ? "#334155" : "#94a3b8"}
+                fill={isTopCountry ? "#1a1a2e" : "#94a3b8"}
                 fontWeight={isTopCountry ? "600" : "400"}
               >
                 {compositeScore.toFixed(2)}
@@ -439,7 +482,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
                 x={x + radius + 6}
                 y={y + 16}
                 fontSize={8}
-                fill="#94a3b8"
+                fill="#334155"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.2 }}
@@ -448,7 +491,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
               </motion.text>
             )}
 
-            {/* Rank indicator on hover */}
+            {/* Rank on hover */}
             {isHovered && !activeHazard && showScore && (
               <motion.text
                 x={x + radius + 6}
@@ -466,53 +509,102 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         );
       })}
 
-      {/* Stats Display - Top/Bottom Countries */}
+      {/* ─── VULNERABILITY LEGEND ─── */}
+      <g transform={`translate(30, ${HEIGHT - 165})`}>
+        <rect x={0} y={0} width={160} height={85} rx={6} fill="white" stroke="#e2e8f0" strokeWidth={1} />
+        
+        <text x={10} y={18} fontSize={9} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
+          VULNERABILITY SCORE
+        </text>
+
+        <circle cx={20} cy={35} r={6} fill={VULNERABILITY_COLORS.high} />
+        <text x={34} y={38} fontSize={9} fill="#64748b">High</text>
+
+        <circle cx={20} cy={52} r={5} fill={VULNERABILITY_COLORS.medium} />
+        <text x={34} y={55} fontSize={9} fill="#64748b">Medium</text>
+
+        <circle cx={20} cy={69} r={4} fill={VULNERABILITY_COLORS.low} />
+        <text x={34} y={72} fontSize={9} fill="#64748b">Low</text>
+      </g>
+
+      {/* ─── SIZE LEGEND ─── */}
+      <g transform={`translate(200, ${HEIGHT - 165})`}>
+        <rect x={0} y={0} width={130} height={85} rx={6} fill="white" stroke="#e2e8f0" strokeWidth={1} />
+        
+        <text x={10} y={18} fontSize={9} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
+          IMPACT SIZE
+        </text>
+
+        <circle cx={20} cy={35} r={9} fill="#94a3b8" opacity={0.5} />
+        <text x={38} y={38} fontSize={9} fill="#64748b">Higher</text>
+
+        <circle cx={20} cy={55} r={5} fill="#94a3b8" opacity={0.5} />
+        <text x={38} y={58} fontSize={9} fill="#64748b">Lower</text>
+      </g>
+
+      {/* ─── STATS DISPLAY ─── */}
       {stats && topCountry && bottomCountry && (
-        <g transform={`translate(30, ${HEIGHT - 110})`}>
-          <text x={0} y={0} fontSize={10} fill="#94a3b8" letterSpacing="0.05em">
-            Highest: {topCountry.country} ({topCountry.compositeScore.toFixed(2)})
+        <g transform={`translate(340, ${HEIGHT - 165})`}>
+          <rect x={0} y={0} width={240} height={85} rx={6} fill="white" stroke="#e2e8f0" strokeWidth={1} />
+          
+          <text x={10} y={18} fontSize={9} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
+            KEY INSIGHTS
           </text>
-          <text x={0} y={16} fontSize={10} fill="#94a3b8" letterSpacing="0.05em">
-            Lowest: {bottomCountry.country} ({bottomCountry.compositeScore.toFixed(2)})
+
+          <text x={10} y={38} fontSize={9} fill="#64748b">
+            Highest: <tspan fontWeight="600" fill="#1a1a2e">{topCountry.country}</tspan>
+            <tspan fill="#94a3b8"> ({topCountry.compositeScore.toFixed(2)})</tspan>
           </text>
-          <text x={0} y={32} fontSize={10} fill="#94a3b8" letterSpacing="0.05em">
-            Gap: {stats.gapPercent.toFixed(0)}% · {stats.count} countries
+
+          <text x={10} y={54} fontSize={9} fill="#64748b">
+            Lowest: <tspan fontWeight="600" fill="#1a1a2e">{bottomCountry.country}</tspan>
+            <tspan fill="#94a3b8"> ({bottomCountry.compositeScore.toFixed(2)})</tspan>
+          </text>
+
+          <text x={10} y={70} fontSize={9} fill="#94a3b8">
+            Gap: <tspan fontWeight="600" fill="#1a1a2e">{stats.gapPercent.toFixed(0)}%</tspan>
+            <tspan> · {stats.count} countries</tspan>
           </text>
         </g>
       )}
 
-      {/* Legend */}
+      {/* ─── HAZARD LEGEND ─── */}
       <g transform={`translate(30, ${HEIGHT - 70})`}>
-        <text x={0} y={0} fontSize={10} fill="#94a3b8" letterSpacing="0.05em">
-          {activeHazard ? "Hazard impact" : "Circle size = composite score"}
+        <text x={0} y={0} fontSize={9} fill="#94a3b8" letterSpacing="0.05em">
+          {activeHazard ? "▼ Showing hazard impact" : "▼ Hover to explore hazards"}
         </text>
 
         {[
-          { key: "cyclone", label: "cyclones" },
-          { key: "flood", label: "flooding" },
-          { key: "drought", label: "drought" },
-          { key: "seaLevelRise", label: "sea level rise" },
+          { key: "cyclone", label: "cyclones", icon: "🌀" },
+          { key: "flood", label: "flooding", icon: "🌊" },
+          { key: "drought", label: "drought", icon: "☀️" },
+          { key: "seaLevelRise", label: "sea level rise", icon: "📈" },
         ].map((item, i) => (
           <g
             key={item.key}
             onMouseEnter={() => setActiveHazard(item.key)}
             onMouseLeave={() => setActiveHazard(null)}
+            onClick={() => setShowInstructions(false)}
             style={{ cursor: "pointer" }}
           >
-            <circle
-              cx={140 + i * 90}
-              cy={-4}
-              r={4}
-              fill={activeHazard === item.key ? "#334155" : "#cbd5e1"}
+            <rect
+              x={140 + i * 105}
+              y={-10}
+              width={95}
+              height={22}
+              rx={4}
+              fill={activeHazard === item.key ? "#f1f5f9" : "transparent"}
+              stroke={activeHazard === item.key ? "#cbd5e1" : "transparent"}
+              strokeWidth={1}
             />
             <text
-              x={150 + i * 90}
-              y={0}
+              x={148 + i * 105}
+              y={6}
               fontSize={10}
-              fill={activeHazard === item.key ? "#334155" : "#94a3b8"}
+              fill={activeHazard === item.key ? "#1a1a2e" : "#94a3b8"}
               fontWeight={activeHazard === item.key ? "500" : "400"}
             >
-              {item.label}
+              {item.icon} {item.label}
             </text>
           </g>
         ))}
