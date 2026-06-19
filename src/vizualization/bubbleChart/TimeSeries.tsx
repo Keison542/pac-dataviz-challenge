@@ -50,7 +50,7 @@ export function TimeSeriesDashboard({
   height: propHeight,
   data,
   selectedCountry,
-  title = "Livelihood & Economic Resilience Trends",
+  // title = "Livelihood & Economic Resilience Trends",
   subtitle,
   className = "",
 }: Props) {
@@ -246,12 +246,12 @@ export function TimeSeriesDashboard({
       <div className="w-full max-w-4xl px-2 sm:px-4">
         {/* ─── HEADER ─── */}
         <div className="mb-5 text-center">
-          <h3 
+          {/* <h3 
             className="font-medium text-slate-800"
             style={{ fontSize: titleFontSize }}
           >
             {title}
-          </h3>
+          </h3> */}
           {subtitle && (
             <p 
               className="text-slate-500 mt-1"
