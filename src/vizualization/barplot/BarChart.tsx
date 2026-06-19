@@ -319,22 +319,6 @@ export function MultiMetricRankedDashboard({
   return (
     <div ref={containerRef} className={`flex flex-col items-center w-full ${className}`}>
       <div className="w-full max-w-4xl px-2 sm:px-4">
-        {/* ─── Header ─── */}
-        <div className="mb-5 text-center">
-          <h2 
-            className="font-medium text-slate-800"
-            style={{ fontSize: titleFontSize }}
-          >
-            Climate vulnerability is shaped by inequality
-          </h2>
-          <p 
-            className="text-slate-500 mt-1 max-w-2xl mx-auto"
-            style={{ fontSize: subtitleFontSize * 0.8 }}
-          >
-            Some Pacific nations face significantly higher exposure and lower resilience than others.
-          </p>
-        </div>
-
         {/* ─── Statistics Bar ─── */}
         {stats && (
           <div className="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 border-b border-slate-100 pb-4">
