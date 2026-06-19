@@ -75,12 +75,11 @@ export default function Home() {
 
           <div className="max-w-4xl mx-auto text-center mt-10">
             <h1 className="text-5xl md:text-7xl font-light leading-tight">
-              Climate change is reshaping the Pacific.
+              The Pacific helped create little of the climate crisis.
             </h1>
 
             <p className="mt-8 text-xl text-slate-600">
-              The region contributed least to global emissions,
-              yet faces some of the fastest-growing climate risks.
+              Yet its nations stand on the front line of its consequences.
             </p>
 
             <motion.div
@@ -104,7 +103,7 @@ export default function Home() {
       <section className="min-h-[70vh] flex items-center justify-center px-6">
         <div className="max-w-4xl text-center">
           <h2 className="text-4xl md:text-6xl font-light leading-tight">
-            A clear climate signal is emerging across Pacific nations.
+            The ocean and projected El Nino in the Pacific is sending a warning 
           </h2>
         </div>
       </section>
@@ -157,7 +156,7 @@ export default function Home() {
       <section className="min-h-[80vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
-            However, climate signals alone do not explain the full story.
+            However, the numbers become real when they reach the people.
           </h2>
 
           <p className="mt-10 text-xl text-slate-500">
@@ -183,7 +182,7 @@ export default function Home() {
           </div>
 
           <div className="mt-6 text-xl text-slate-500">
-            people affected by climate-related disasters. Now one could imagine the scale of this impact across the Pacific Island Nations from financial stress → to household exposure → to structural economic change.
+            lives disrupted by climate-related disasters. Behind every number are households, livelihoods, and communities adapting to repeated shocks across the Pacific Island Nations from financial stress → to household exposure → to structural economic change.
           </div>
         </div>
       </section>
@@ -219,7 +218,7 @@ export default function Home() {
       <section className="min-h-[80vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
-            These impacts do not occur in isolation.
+            Climate impacts rarely arrive alone.
           </h2>
 
           <p className="mt-10 text-xl text-slate-500">
@@ -256,7 +255,7 @@ export default function Home() {
       <section className="min-h-[80vh] flex items-center justify-center px-6 border-t border-slate-100">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
-            A Pacific Perspective: Climate Vulnerability is Shaped by Inequality
+            The central question is: Why do some nations facing the same ocean experience different risks?
           </h2>
 
           <p className="mt-10 text-xl text-slate-500">
@@ -291,6 +290,24 @@ export default function Home() {
       {/* BIG LOSS NUMBER */}
       {/* ========================================================= */}
 
+      {/* New section  */}
+      <section className="min-h-[60vh] flex items-center justify-center">
+      <div className="max-w-4xl text-center">
+    
+        <div className="text-sm uppercase tracking-[0.3em] text-slate-400">
+          Observation
+        </div>
+    
+        <h2 className="mt-4 text-5xl md:text-7xl font-light leading-tight">
+          Temperatures rise.
+          <br />
+          Sea levels follow.
+        </h2>
+    
+      </div>
+    </section>
+      
+
       <section className="min-h-screen flex items-center justify-center px-6 border-y border-slate-100">
         <div className="text-center">
           <div className="text-6xl md:text-8xl font-bold">
@@ -298,8 +315,14 @@ export default function Home() {
           </div>
 
           <div className="mt-6 text-xl text-slate-500">
-            estimated economic losses recorded
+            in recorded economic losses
           </div>
+          
+          <div className="mt-6 max-w-3xl mx-auto text-slate-500">
+          For many Pacific nations, climate impacts are not a future cost.
+          They are already part of everyday economic reality.
+        </div>
+          
         </div>
       </section>
 
@@ -314,11 +337,24 @@ export default function Home() {
           </p>
 
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
-            The Pacific reveals a global truth.
+            The Pacific is not
+            <br/>
+             a warning about the future.
           </h2>
 
-          <p className="mt-10 text-2xl text-slate-600 leading-relaxed">
-            Climate risk is not defined solely by geography.
+          <h2 className="mt-10 text-6xl md:text-8xl font-light leading-tight">
+          It is a picture
+          <br />
+          of the present.
+        </h2>
+
+          <p className="mt-12 text-2xl text-slate-600 leading-relaxed">
+            The region contributes little to global emissions,
+            yet faces some of the world's highest climate risks.
+          </p>
+          
+          <p className="mt-8 text-xl text-slate-500">
+            Climate vulnerability is not determined only by geography.
             It is shaped by resilience, capacity and inequality.
           </p>
 
