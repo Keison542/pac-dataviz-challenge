@@ -103,7 +103,18 @@ export default function Home() {
       <section className="min-h-[70vh] flex items-center justify-center px-6">
         <div className="max-w-4xl text-center">
           <h2 className="text-4xl md:text-6xl font-light leading-tight">
-            The ocean and projected El Nino in the Pacific is sending a warning 
+            <>
+              The ocean and{" "}
+              <a
+                href="https://www.pacificmet.net/news/el-nino-likely-mid-2026-pacific-islands-climate-outlook-forum-18-warns"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-cyan-600 hover:text-cyan-700 underline underline-offset-2"
+              >
+                projected El Niño
+              </a>{" "}
+              in the Pacific is sending a warning
+            </>
           </h2>
         </div>
       </section>
