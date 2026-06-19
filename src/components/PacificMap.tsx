@@ -1,136 +1,180 @@
 "use client";
 
-import { geoMercator, geoPath } from "d3-geo";
 import { geoData } from "@/climatedata/pacificGeoData";
 
-interface Props {
-  selectedCountry: string;
+type Point = {
+  name: string;
+  lon: number;
+  lat: number;
+};
+
+const WIDTH = 1200;
+const HEIGHT = 650;
+
+/*
+  Pacific-centered projection
+
+  120°E -------------------- 120°W
+*/
+const projectLon = (lon: number) => {
+  let shifted = lon;
+
+  if (shifted < 120) {
+    shifted += 360;
+  }
+
+  return ((shifted - 120) / 120) * WIDTH;
+};
+
+const projectLat = (lat: number) => {
+  return HEIGHT - ((lat + 35) / 60) * HEIGHT;
+};
+
+function extractCoordinates(
+  geometry: any,
+  coords: number[][] = []
+): number[][] {
+  if (!geometry) return coords;
+
+  if (geometry.type === "Polygon") {
+    geometry.coordinates.forEach((ring: number[][]) => {
+      ring.forEach((c) => coords.push(c));
+    });
+  }
+
+  if (geometry.type === "MultiPolygon") {
+    geometry.coordinates.forEach((poly: number[][][]) => {
+      poly.forEach((ring: number[][]) => {
+        ring.forEach((c) => coords.push(c));
+      });
+    });
+  }
+
+  return coords;
 }
 
-export function PacificMap({
-  selectedCountry,
-}: Props) {
-  const width = 1100;
-  const height = 500;
+function buildCentroids(): Point[] {
+  const countryMap = new Map<string, number[][]>();
 
-  const projection = geoMercator()
-    .center([175, -10])
-    .scale(700)
-    .translate([width / 2, height / 2]);
+  geoData.features.forEach((feature: any) => {
+    const name = feature.properties?.name;
 
-  const pathGenerator = geoPath(projection);
+    if (!name) return;
 
-  const renderedCountries = new Set<string>();
+    const existing = countryMap.get(name) || [];
 
+    countryMap.set(
+      name,
+      existing.concat(extractCoordinates(feature.geometry))
+    );
+  });
+
+  return Array.from(countryMap.entries()).map(([name, coords]) => {
+    const lon =
+      coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
+
+    const lat =
+      coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
+
+    return {
+      name,
+      lon,
+      lat,
+    };
+  });
+}
+
+const countries = buildCentroids();
+
+export function PacificMap() {
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      className="w-full h-auto"
-    >
-      {/* Ocean */}
-      <rect
-        width={width}
-        height={height}
-        fill="#e0f2fe"
-      />
+    <div className="w-full overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-b from-sky-50 to-cyan-100">
 
-      {/* Countries */}
-      {geoData.features.map((feature: any, index) => {
-        const name = feature.properties?.name ?? "";
-
-        const selected =
-          name === selectedCountry;
-
-        const path = pathGenerator(feature);
-
-        if (!path) return null;
-
-        const showLabel =
-          !renderedCountries.has(name);
-
-        renderedCountries.add(name);
-
-        const centroid =
-          pathGenerator.centroid(feature);
-
-        return (
-          <g key={feature.id ?? index}>
-            <path
-              d={path}
-              fill={
-                selected
-                  ? "#0891b2"
-                  : "#94a3b8"
-              }
-              stroke="white"
-              strokeWidth={0.5}
-              opacity={0.95}
-            />
-
-            {showLabel &&
-              centroid &&
-              Number.isFinite(centroid[0]) && (
-                <text
-                  x={centroid[0]}
-                  y={centroid[1]}
-                  fontSize="8"
-                  fill="#0f172a"
-                  textAnchor="middle"
-                >
-                  {name}
-                </text>
-              )}
-          </g>
-        );
-      })}
-
-      {/* Disaster icons */}
-
-      <text
-        x={470}
-        y={260}
-        fontSize="32"
+      <svg
+        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        className="w-full h-auto"
       >
-        🌊
-      </text>
+        {/* Ocean */}
+        <rect
+          width={WIDTH}
+          height={HEIGHT}
+          fill="#dbeafe"
+        />
 
-      <text
-        x={540}
-        y={210}
-        fontSize="32"
-      >
-        🌪️
-      </text>
+        {/* Ocean title */}
+        <text
+          x={WIDTH / 2}
+          y={HEIGHT / 2}
+          textAnchor="middle"
+          fontSize="52"
+          fontWeight="700"
+          fill="#93c5fd"
+        >
+          PACIFIC OCEAN
+        </text>
 
-      <text
-        x={620}
-        y={290}
-        fontSize="32"
-      >
-        🔥
-      </text>
+        {/* Country points */}
+        {countries.map((country) => {
+          const x = projectLon(country.lon);
+          const y = projectLat(country.lat);
 
-      <text
-        x={700}
-        y={230}
-        fontSize="32"
-      >
-        🌧️
-      </text>
+          return (
+            <g key={country.name}>
+              <circle
+                cx={x}
+                cy={y}
+                r={6}
+                fill="#0f172a"
+              />
 
-      {/* Pacific label */}
+              <text
+                x={x + 10}
+                y={y - 10}
+                fontSize="12"
+                fill="#334155"
+                fontWeight="600"
+              >
+                {country.name}
+              </text>
+            </g>
+          );
+        })}
 
-      <text
-        x={550}
-        y={180}
-        textAnchor="middle"
-        fontSize="34"
-        fill="#0369a1"
-        opacity={0.18}
-        fontWeight={700}
-      >
-        PACIFIC OCEAN
-      </text>
-    </svg>
+        {/* Example disaster markers */}
+        <text
+          x={projectLon(178)}
+          y={projectLat(-17) - 50}
+          fontSize="28"
+        >
+          🌀
+        </text>
+
+        <text
+          x={projectLon(167)}
+          y={projectLat(-15) - 45}
+          fontSize="28"
+        >
+          🌋
+        </text>
+
+        <text
+          x={projectLon(173)}
+          y={projectLat(1) - 40}
+          fontSize="28"
+        >
+          🌊
+        </text>
+
+        <text
+          x={projectLon(-172)}
+          y={projectLat(-13) - 50}
+          fontSize="28"
+        >
+          🌧️
+        </text>
+      </svg>
+    </div>
   );
 }
+
+export default PacificMap;
