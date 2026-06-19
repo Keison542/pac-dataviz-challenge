@@ -123,7 +123,7 @@ export default function ClimateInteractionMatrix({
   return (
     <>
       {/* Header */}
-      <div className="mb-5 text-center">
+      {/* <div className="mb-5 text-center"> */}
         <h2 className="text-lg font-semibold text-slate-900">
           Climate Interaction Pathways in {selectedCountry}
         </h2>
@@ -270,7 +270,7 @@ export default function ClimateInteractionMatrix({
               />
             </div>
           </div>
-        </div>
+        {/* </div> */}
       )}
     </>
   );
