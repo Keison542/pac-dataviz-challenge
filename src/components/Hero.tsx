@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {PacificClimateStoryMap} from "@/components/PacificMap";
+import { PacificClimateStoryMap } from "@/components/PacificMap";
 
 interface HeroProps {
   countries: string[];
@@ -54,7 +54,7 @@ export function Hero({
       ========================== */}
       <h1 className="text-[clamp(2.2rem,5vw,3.8rem)] font-bold leading-tight text-slate-900 max-w-4xl mx-auto">
         Climate pressure is rising — but
-         vulnerability is unequal
+        vulnerability is unequal
       </h1>
 
       {/* =========================
@@ -100,7 +100,10 @@ export function Hero({
         </div>
       </div>
 
-      <div className="relative mt-12">
+      {/* =========================
+          MAP - NO WRAPPER, NO CARD STYLING
+      ========================== */}
+      <div className="mt-12 w-full">
         <PacificClimateStoryMap />
       </div>
 
