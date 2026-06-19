@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { geoData } from "@/climatedata/pacificGeoData";
 
 const WIDTH = 1400;
@@ -74,7 +75,54 @@ function buildCentroids() {
   );
 }
 
+const hazardCountries = {
+  cyclone: [
+    "Fiji",
+    "Vanuatu",
+    "Tonga",
+    "Samoa",
+    "Solomon Islands",
+    "Papua New Guinea",
+  ],
+
+  flood: [
+    "Papua New Guinea",
+    "Fiji",
+    "Solomon Islands",
+    "Marshall Islands",
+    "Kiribati",
+  ],
+
+  drought: [
+    "Kiribati",
+    "Tuvalu",
+    "Nauru",
+    "Tokelau",
+  ],
+
+  seaLevelRise: [
+    "Kiribati",
+    "Tuvalu",
+    "Marshall Islands",
+    "Tokelau",
+    "Cook Islands",
+    "Maldives",
+  ],
+};
+
+const hazardColors = {
+  cyclone: "#ef4444",
+  flood: "#3b82f6",
+  drought: "#f59e0b",
+  seaLevelRise: "#14b8a6",
+};
+
 export function PacificClimateStoryMap() {
+  const [activeHazard, setActiveHazard] =
+    useState<keyof typeof hazardCountries | null>(
+      null
+    );
+
   const countries = useMemo(
     () => buildCentroids(),
     []
@@ -83,8 +131,7 @@ export function PacificClimateStoryMap() {
   const temperatureLine = Array.from(
     { length: 175 },
     (_, i) => ({
-      x:
-        (i / 174) * WIDTH,
+      x: (i / 174) * WIDTH,
       y:
         120 -
         i * 0.35 +
@@ -93,10 +140,36 @@ export function PacificClimateStoryMap() {
   );
 
   const path = temperatureLine
-    .map((p, i) =>
-      `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+    .map(
+      (p, i) =>
+        `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
     )
     .join(" ");
+
+  const getCountryColor = (
+    countryName: string
+  ) => {
+    if (!activeHazard) {
+      return "#0f172a";
+    }
+
+    const members =
+      hazardCountries[activeHazard];
+
+    return members.includes(countryName)
+      ? hazardColors[activeHazard]
+      : "#cbd5e1";
+  };
+
+  const isHighlighted = (
+    countryName: string
+  ) => {
+    if (!activeHazard) return false;
+
+    return hazardCountries[
+      activeHazard
+    ].includes(countryName);
+  };
 
   return (
     <div className="w-full rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-sm">
@@ -112,7 +185,7 @@ export function PacificClimateStoryMap() {
           fill="#dbeafe"
         />
 
-        {/* Temperature line */}
+        {/* Temperature Trend */}
         <path
           d={path}
           fill="none"
@@ -148,7 +221,7 @@ export function PacificClimateStoryMap() {
           2025
         </text>
 
-        {/* Ocean title */}
+        {/* Ocean Label */}
         <text
           x={WIDTH / 2}
           y={HEIGHT / 2}
@@ -156,7 +229,7 @@ export function PacificClimateStoryMap() {
           fontSize={72}
           fontWeight={700}
           fill="#93c5fd"
-          opacity={0.4}
+          opacity={0.35}
         >
           PACIFIC OCEAN
         </text>
@@ -168,27 +241,43 @@ export function PacificClimateStoryMap() {
 
           return (
             <g key={country.name}>
-              <circle
+              <motion.circle
                 cx={x}
                 cy={y}
                 r={7}
-                fill="#0f172a"
+                animate={{
+                  fill: getCountryColor(
+                    country.name
+                  ),
+                  scale: isHighlighted(
+                    country.name
+                  )
+                    ? 1.8
+                    : 1,
+                }}
+                transition={{
+                  duration: 0.25,
+                }}
               />
 
-              <text
+              <motion.text
                 x={x + 10}
                 y={y - 10}
                 fontSize={12}
                 fontWeight={600}
-                fill="#0f172a"
+                animate={{
+                  fill: getCountryColor(
+                    country.name
+                  ),
+                }}
               >
                 {country.name}
-              </text>
+              </motion.text>
             </g>
           );
         })}
 
-        {/* Climate hazard markers */}
+        {/* Hazard Icons */}
 
         <text
           x={projectLon(168)}
@@ -219,34 +308,91 @@ export function PacificClimateStoryMap() {
           y={projectLat(1) - 50}
           fontSize={32}
         >
-          🌡️
+          🔥
         </text>
 
-        {/* Legend */}
+        {/* Legend Background */}
 
         <rect
           x={20}
           y={HEIGHT - 90}
-          width={420}
+          width={700}
           height={60}
           rx={12}
           fill="white"
-          opacity={0.9}
+          opacity={0.95}
         />
+
+        {/* Cyclones */}
 
         <text
           x={40}
           y={HEIGHT - 52}
-          fontSize={14}
-          fill="#334155"
+          fontSize={15}
+          cursor="pointer"
+          fill="#ef4444"
+          onMouseEnter={() =>
+            setActiveHazard("cyclone")
+          }
+          onMouseLeave={() =>
+            setActiveHazard(null)
+          }
         >
           🌀 Cyclones
-          {"   "}
-          🌧 Flooding
-          {"   "}
-          🌊 Sea-level rise
-          {"   "}
-          🌡 Warming ocean
+        </text>
+
+        {/* Floods */}
+
+        <text
+          x={190}
+          y={HEIGHT - 52}
+          fontSize={15}
+          cursor="pointer"
+          fill="#3b82f6"
+          onMouseEnter={() =>
+            setActiveHazard("flood")
+          }
+          onMouseLeave={() =>
+            setActiveHazard(null)
+          }
+        >
+          🌧 Floods
+        </text>
+
+        {/* Drought */}
+
+        <text
+          x={320}
+          y={HEIGHT - 52}
+          fontSize={15}
+          cursor="pointer"
+          fill="#f59e0b"
+          onMouseEnter={() =>
+            setActiveHazard("drought")
+          }
+          onMouseLeave={() =>
+            setActiveHazard(null)
+          }
+        >
+          🔥 Drought
+        </text>
+
+        {/* Sea Level */}
+
+        <text
+          x={470}
+          y={HEIGHT - 52}
+          fontSize={15}
+          cursor="pointer"
+          fill="#14b8a6"
+          onMouseEnter={() =>
+            setActiveHazard("seaLevelRise")
+          }
+          onMouseLeave={() =>
+            setActiveHazard(null)
+          }
+        >
+          🌊 Sea Level Rise
         </text>
       </svg>
     </div>
