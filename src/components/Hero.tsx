@@ -101,7 +101,7 @@ export function Hero({
       </div>
 
       <div className="relative mt-12">
-        <PacificMap />
+        <PacificClimateStoryMap />
       </div>
 
       {/* =========================
