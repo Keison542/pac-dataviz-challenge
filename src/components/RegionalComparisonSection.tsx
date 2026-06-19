@@ -24,15 +24,7 @@ export function RegionalComparisonSection({ selectedCountry, countriesCount, ran
        <div className="mt-12 w-full">
         <PacificClimateStoryMap
 
-          data={{
-            economicLoss: economicLossData,
-            cropYield: cropYieldData,
-            touristArrivals: touristArrivalsData,
-            livestockYield: livestockYieldData,
-            climateAlteringLand: climateAlteringLandData,
-            populationGrowth: populationGrowthData,
-            affectedPersons: affectedPersonsData
-          }}
+         data={rankedData} 
                   
           />
       </div>
