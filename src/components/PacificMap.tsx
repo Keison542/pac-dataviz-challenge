@@ -109,7 +109,6 @@ function buildHazardLookup() {
   return lookup;
 }
 
-// Get max impact value for a hazard across all countries
 function getMaxImpact(hazardLookup: Map<string, any>, hazardKey: string): number {
   let max = 0;
   for (const [_, data] of hazardLookup) {
@@ -154,7 +153,6 @@ export function PacificClimateStoryMap() {
     const maxImpact = getMaxImpact(hazardLookup, activeHazard);
     const normalized = Math.min(impact / maxImpact, 1);
 
-    // Scale from 4px (low impact) to 18px (high impact)
     return 4 + normalized * 14;
   };
 
@@ -168,7 +166,6 @@ export function PacificClimateStoryMap() {
     const impact = getImpactValue(countryName, activeHazard);
     if (impact === 0) return "";
 
-    // Format based on hazard type
     const labels: Record<string, string> = {
       cyclone: `${Math.round(impact).toLocaleString()} affected`,
       flood: `${impact.toFixed(1)}mm anomaly`,
@@ -180,126 +177,123 @@ export function PacificClimateStoryMap() {
   };
 
   return (
-    <div className="w-full bg-white">
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto">
-        {/* Ocean */}
-        <rect width={WIDTH} height={HEIGHT} fill="#f1f5f9" />
+    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto">
+      {/* Ocean */}
+      <rect width={WIDTH} height={HEIGHT} fill="#f8fafc" />
 
-        {/* Temperature Trend */}
-        <path d={path} fill="none" stroke="#94a3b8" strokeWidth={1.5} />
+      {/* Temperature Trend */}
+      <path d={path} fill="none" stroke="#94a3b8" strokeWidth={1.5} />
 
-        <text x={30} y={50} fontSize={12} fontWeight="400" fill="#475569" letterSpacing="0.05em">
-          Surface temperature anomaly
-        </text>
+      <text x={30} y={50} fontSize={12} fontWeight="400" fill="#475569" letterSpacing="0.05em">
+        Surface temperature anomaly
+      </text>
 
-        <text x={30} y={70} fontSize={10} fill="#94a3b8">
-          1850
-        </text>
+      <text x={30} y={70} fontSize={10} fill="#94a3b8">
+        1850
+      </text>
 
-        <text x={WIDTH - 70} y={70} fontSize={10} fill="#94a3b8">
-          2025
-        </text>
+      <text x={WIDTH - 70} y={70} fontSize={10} fill="#94a3b8">
+        2025
+      </text>
 
-        {/* Ocean Label */}
-        <text
-          x={WIDTH / 2}
-          y={HEIGHT / 2}
-          textAnchor="middle"
-          fontSize={64}
-          fontWeight="300"
-          fill="#cbd5e1"
-          letterSpacing="0.15em"
-        >
-          PACIFIC OCEAN
-        </text>
+      {/* Ocean Label */}
+      <text
+        x={WIDTH / 2}
+        y={HEIGHT / 2}
+        textAnchor="middle"
+        fontSize={64}
+        fontWeight="300"
+        fill="#e2e8f0"
+        letterSpacing="0.15em"
+      >
+        PACIFIC OCEAN
+      </text>
 
-        {/* Countries */}
-        {countries.map((country) => {
-          const x = projectLon(country.lon);
-          const y = projectLat(country.lat);
-          const highlighted = isHighlighted(country.name);
-          const radius = getCircleRadius(country.name);
-          const impactLabel = getImpactLabel(country.name);
+      {/* Countries */}
+      {countries.map((country) => {
+        const x = projectLon(country.lon);
+        const y = projectLat(country.lat);
+        const highlighted = isHighlighted(country.name);
+        const radius = getCircleRadius(country.name);
+        const impactLabel = getImpactLabel(country.name);
 
-          return (
-            <g key={country.name}>
-              <motion.circle
-                cx={x}
-                cy={y}
-                r={radius}
-                animate={{
-                  fill: getCountryColor(country.name),
-                  scale: highlighted ? 1.2 : 1,
-                }}
-                transition={{ duration: 0.2 }}
-              />
+        return (
+          <g key={country.name}>
+            <motion.circle
+              cx={x}
+              cy={y}
+              r={radius}
+              animate={{
+                fill: getCountryColor(country.name),
+                scale: highlighted ? 1.2 : 1,
+              }}
+              transition={{ duration: 0.2 }}
+            />
 
+            <motion.text
+              x={x + radius + 6}
+              y={y + 3}
+              fontSize={10}
+              fontWeight={highlighted ? "500" : "400"}
+              fill={getCountryColor(country.name)}
+            >
+              {country.name}
+            </motion.text>
+
+            {highlighted && impactLabel && (
               <motion.text
                 x={x + radius + 6}
-                y={y + 3}
-                fontSize={10}
-                fontWeight={highlighted ? "500" : "400"}
-                fill={getCountryColor(country.name)}
+                y={y + 16}
+                fontSize={8}
+                fill="#94a3b8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
               >
-                {country.name}
+                {impactLabel}
               </motion.text>
+            )}
+          </g>
+        );
+      })}
 
-              {/* Impact label - only show on hover */}
-              {highlighted && impactLabel && (
-                <motion.text
-                  x={x + radius + 6}
-                  y={y + 16}
-                  fontSize={8}
-                  fill="#94a3b8"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {impactLabel}
-                </motion.text>
-              )}
-            </g>
-          );
-        })}
+      {/* Legend */}
+      <g transform={`translate(30, ${HEIGHT - 70})`}>
+        <text x={0} y={0} fontSize={10} fill="#94a3b8" letterSpacing="0.05em">
+          Hover to explore
+        </text>
 
-        {/* Legend */}
-        <g transform={`translate(30, ${HEIGHT - 70})`}>
-          <text x={0} y={0} fontSize={10} fill="#94a3b8" letterSpacing="0.05em">
-            Hover to explore
-          </text>
-
-          {[
-            { key: "cyclone", label: "cyclones" },
-            { key: "flood", label: "flooding" },
-            { key: "drought", label: "drought" },
-            { key: "seaLevelRise", label: "sea level rise" },
-          ].map((item, i) => (
-            <g
-              key={item.key}
-              onMouseEnter={() => setActiveHazard(item.key)}
-              onMouseLeave={() => setActiveHazard(null)}
-              style={{ cursor: "pointer" }}
+        {[
+          { key: "cyclone", label: "cyclones" },
+          { key: "flood", label: "flooding" },
+          { key: "drought", label: "drought" },
+          { key: "seaLevelRise", label: "sea level rise" },
+        ].map((item, i) => (
+          <g
+            key={item.key}
+            onMouseEnter={() => setActiveHazard(item.key)}
+            onMouseLeave={() => setActiveHazard(null)}
+            style={{ cursor: "pointer" }}
+          >
+            <circle
+              cx={140 + i * 90}
+              cy={-4}
+              r={4}
+              fill={activeHazard === item.key ? "#334155" : "#cbd5e1"}
+            />
+            <text
+              x={150 + i * 90}
+              y={0}
+              fontSize={10}
+              fill={activeHazard === item.key ? "#334155" : "#94a3b8"}
+              fontWeight={activeHazard === item.key ? "500" : "400"}
             >
-              <circle
-                cx={140 + i * 90}
-                cy={-4}
-                r={4}
-                fill={activeHazard === item.key ? "#334155" : "#cbd5e1"}
-              />
-              <text
-                x={150 + i * 90}
-                y={0}
-                fontSize={10}
-                fill={activeHazard === item.key ? "#334155" : "#94a3b8"}
-                fontWeight={activeHazard === item.key ? "500" : "400"}
-              >
-                {item.label}
-              </text>
-            </g>
-          ))}
-        </g>
-      </svg>
-    </div>
+              {item.label}
+            </text>
+          </g>
+        ))}
+      </g>
+    </svg>
   );
 }
 
