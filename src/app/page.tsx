@@ -193,7 +193,7 @@ export default function Home() {
           </div>
 
           <div className="mt-6 text-xl text-slate-500">
-            lives disrupted by climate-related disasters. Behind every number are households, livelihoods, and communities adapting to repeated shocks across the Pacific Island Nations from financial stress → to household exposure → to structural economic change.
+            lives disrupted by climate-related disasters. Behind every number are households, livelihoods, and communities adapting to repeated shocks across the Pacific Island Nations.
           </div>
         </div>
       </section>
