@@ -387,7 +387,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
   return (
     <div className={`w-full ${className}`}>
       {/* ─── NARRATIVE HEADER ─── */}
-      <div className="mb-4 px-1">
+      <div className="mb-4 px-1" text-center>
         <p className="text-sm uppercase tracking-wider text-slate-500 font-medium">
           Regional Vulnerability Map
         </p>
