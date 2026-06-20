@@ -392,39 +392,6 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── HORIZONTAL GRID LINES ─── */}
-              {years.map((year) => {
-                const yPos = yScale(String(year)) ?? 0;
-                return (
-                  <line
-                    key={`grid-${year}`}
-                    x1={0}
-                    x2={boundsWidth}
-                    y1={yPos + yScale.bandwidth()}
-                    y2={yPos + yScale.bandwidth()}
-                    stroke="#e2e8f0"
-                    strokeWidth={0.5}
-                  />
-                );
-              })}
-
-              {/* ─── VERTICAL GRID LINES ─── */}
-              {metricColumns.map((col) => {
-                const xPos = xScale(col) ?? 0;
-                return (
-                  <line
-                    key={`grid-${col}`}
-                    x1={xPos + xScale.bandwidth()}
-                    x2={xPos + xScale.bandwidth()}
-                    y1={0}
-                    y2={boundsHeight}
-                    stroke="#f1f5f9"
-                    strokeDasharray="3 3"
-                    strokeWidth={0.5}
-                  />
-                );
-              })}
-
               {/* ─── CONNECTING LINES ─── */}
               {METRICS.map((metric) => {
                 if (!visibleMetrics.has(metric.key)) return null;
