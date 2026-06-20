@@ -651,25 +651,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
                 stroke="#cbd5e1"
                 strokeWidth={1}
               />
-              {/* <text
-                x={8}
-                y={8}
-                fontSize={9}
-                fill="#1a1a2e"
-                fontWeight="500"
-              >
-                Currently viewing impacts from: {HAZARD_LABELS[activeHazard as keyof typeof HAZARD_LABELS]}
-              </text> */}
-              <text
-                x={140}
-                y={8}
-                fontSize={9}
-                fill="#94a3b8"
-                style={{ cursor: "pointer" }}
-                onClick={() => setActiveHazard(null)}
-              >
-                ✕ Clear
-              </text>
             </g>
           )}
         </g>
