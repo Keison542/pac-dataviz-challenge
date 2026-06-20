@@ -164,7 +164,7 @@ export function DoughnutClimateDashboard({
         </div> */}
 
         <div className="text-xs font-semibold tracking-widest text-slate-500 mt-2">
-          CLIMATE ANOMALY INDEX
+          They say numbers don't lie and this tend to ascertain impending disaster across Paicifc as evident by a measurable climate index of 37 for Fiji, 33 for Kiribati etc calculated from historical climate norms across temperature, rainfall, sea surface temperature, and sea level.
         </div>
 
         <div className="flex items-center justify-center gap-3 mt-2">
@@ -190,9 +190,9 @@ export function DoughnutClimateDashboard({
 
         </div>
 
-        <div className="text-xs text-slate-500 mt-2 max-w-md mx-auto">
+        {/* <div className="text-xs text-slate-500 mt-2 max-w-md mx-auto">
           Composite deviation from historical climate norms across temperature, rainfall, sea surface temperature, and sea level.
-        </div>
+        </div> */}
 
         <div className="w-full max-w-xs mx-auto mt-3 h-2 bg-slate-200 rounded-full overflow-hidden">
           <motion.div
