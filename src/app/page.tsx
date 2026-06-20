@@ -109,7 +109,7 @@ export default function Home() {
                 href="https://www.pacificmet.net/news/el-nino-likely-mid-2026-pacific-islands-climate-outlook-forum-18-warns"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-cyan-600 hover:text-cyan-700 underline underline-offset-2"
+                className="hover:text-cyan-700 underline underline-offset-2"
               >
                 projected El Niño
               </a>{" "}
