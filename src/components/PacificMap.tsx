@@ -96,6 +96,14 @@ const HAZARD_COLORS = {
   seaLevelRise: "#dc2626",
 };
 
+// ─── Hazard Labels ───
+const HAZARD_LABELS = {
+  cyclone: "cyclone",
+  flood: "flooding",
+  drought: "drought",
+  seaLevelRise: "sea-level rise",
+};
+
 // ─── Projection Functions ───
 const projectLon = (lon: number) => {
   let x = lon;
@@ -384,6 +392,10 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
   const annotationX = WIDTH - 220;
   const annotationStartY = 60;
 
+  // ─── Hazard filter positions ───
+  const hazardFilterStartX = 140;
+  const hazardFilterY = HEIGHT - 60;
+
   return (
     <div className={`w-full ${className}`}>
       {/* ─── NARRATIVE HEADER ─── */}
@@ -447,8 +459,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
           const isTopCountry = topCountry?.country === country.name;
           const color = getCountryColor(country.name);
           const showScore = compositeScore > 0;
-          const vulnerabilityLabel = getVulnerabilityLabel(compositeScore);
-          const scorePercentage = maxScore > 0 ? ((compositeScore / maxScore) * 100).toFixed(0) : '0';
 
           return (
             <g 
@@ -571,7 +581,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         )}
 
         {/* ─── HAZARD FILTERS ─── */}
-        <g transform={`translate(30, ${HEIGHT - 60})`}>
+        <g transform={`translate(30, ${hazardFilterY})`}>
           <text x={0} y={0} fontSize={9} fill="#94a3b8" letterSpacing="0.05em">
             {activeHazard ? "▼ Showing hazard impact" : "▼ Filter by hazard"}
           </text>
@@ -582,7 +592,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
             { key: "drought", label: "Drought", color: HAZARD_COLORS.drought },
             { key: "seaLevelRise", label: "Sea-level rise", color: HAZARD_COLORS.seaLevelRise },
           ].map((item, i) => {
-            const xPos = 140 + i * 105;
+            const xPos = hazardFilterStartX + i * 105;
             const isActive = activeHazard === item.key;
 
             return (
@@ -627,6 +637,41 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
               </g>
             );
           })}
+
+          {/* ─── ACTIVE HAZARD INDICATOR ─── */}
+          {activeHazard && (
+            <g transform={`translate(${hazardFilterStartX + 4 * 105 + 20}, -6)`}>
+              <rect
+                x={0}
+                y={-8}
+                width={180}
+                height={24}
+                rx={4}
+                fill="#f1f5f9"
+                stroke="#cbd5e1"
+                strokeWidth={1}
+              />
+              <text
+                x={8}
+                y={8}
+                fontSize={9}
+                fill="#1a1a2e"
+                fontWeight="500"
+              >
+                Showing: {HAZARD_LABELS[activeHazard as keyof typeof HAZARD_LABELS]}
+              </text>
+              <text
+                x={140}
+                y={8}
+                fontSize={9}
+                fill="#94a3b8"
+                style={{ cursor: "pointer" }}
+                onClick={() => setActiveHazard(null)}
+              >
+                ✕ Clear
+              </text>
+            </g>
+          )}
         </g>
       </svg>
 
@@ -682,7 +727,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
               <span className="font-medium text-slate-700">{topCountry.country}</span> shows the highest
               composite vulnerability across the Pacific, with a {stats?.gapPercent.toFixed(0)}% gap
               between the highest and average scores across {stats?.count} countries.
-              {activeHazard && ` Currently viewing impacts from ${activeHazard}.`}
+              {activeHazard && ` Currently viewing impacts from ${HAZARD_LABELS[activeHazard as keyof typeof HAZARD_LABELS]}.`}
             </span>
           )}
         </p>
