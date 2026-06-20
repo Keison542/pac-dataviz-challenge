@@ -2,6 +2,7 @@
 
 import { scaleLinear, scaleBand, scaleSqrt } from "d3-scale";
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { line, curveMonotoneX } from "d3-shape";
 
 type DataPoint = {
   year: number;
@@ -28,21 +29,24 @@ const METRICS = [
     label: "Food Production",
     unit: "t/ha",
     color: "#1a1a2e",
-    darkColor: "#0f0f1a",
+    lightColor: "#4a4a6a",
+    bgColor: "#f0f0f5",
   },
   {
     key: "livestockYield",
     label: "Livelihood Assets",
     unit: "tons",
     color: "#4a4a6a",
-    darkColor: "#2a2a4a",
+    lightColor: "#7a7a9a",
+    bgColor: "#f5f5f8",
   },
   {
     key: "touristArrivals",
     label: "Income Diversification",
     unit: "",
     color: "#94a3b8",
-    darkColor: "#64748b",
+    lightColor: "#c0c8d0",
+    bgColor: "#fafafa",
   },
 ];
 
@@ -149,7 +153,6 @@ export function TimeSeriesDashboard({
       .range([0, boundsWidth]);
   }, [data, boundsWidth]);
 
-  // Y-scale with good padding
   const yScale = useMemo(() => {
     return scaleBand()
       .domain(metricRows)
@@ -200,6 +203,48 @@ export function TimeSeriesDashboard({
       : v >= 1_000
       ? `${(v / 1_000).toFixed(0)}K`
       : v.toFixed(0);
+
+  // ─── Compute trend line data (aggregated across all metrics) ───
+  const trendData = useMemo(() => {
+    const map = new Map<number, number>();
+
+    data.forEach((d) => {
+      METRICS.forEach((m) => {
+        if (visibleMetrics.has(m.key)) {
+          const value = d[m.key as keyof DataPoint] as number;
+          map.set(d.year, (map.get(d.year) || 0) + value);
+        }
+      });
+    });
+
+    return Array.from(map.entries())
+      .map(([year, value]) => ({ year, value }))
+      .sort((a, b) => a.year - b.year);
+  }, [data, visibleMetrics]);
+
+  const maxTrendValue = useMemo(
+    () => Math.max(...trendData.map((d) => d.value), 1),
+    [trendData]
+  );
+
+  // ─── Trend line scale ───
+  const trendYScale = useMemo(
+    () =>
+      scaleLinear()
+        .domain([0, maxTrendValue * 1.1])
+        .range([boundsHeight, 0]),
+    [maxTrendValue, boundsHeight]
+  );
+
+  // ─── Trend line path ───
+  const linePath = useMemo(() => {
+    return (
+      line<{ year: number; value: number }>()
+        .x((d) => xScale(d.year))
+        .y((d) => trendYScale(d.value))
+        .curve(curveMonotoneX)(trendData) || ""
+    );
+  }, [trendData, xScale, trendYScale]);
 
   if (!data.length || !width || !height) {
     return (
@@ -275,7 +320,7 @@ export function TimeSeriesDashboard({
               {/* ─── LIGHT BACKGROUND ROWS ─── */}
               {metricRows.map((row, index) => {
                 const yPos = yScale(row) ?? 0;
-                const isEven = index % 2 === 0;
+                const metric = METRICS.find(m => m.label === row);
                 return (
                   <rect
                     key={`bg-${row}`}
@@ -283,7 +328,7 @@ export function TimeSeriesDashboard({
                     y={yPos}
                     width={boundsWidth}
                     height={yScale.bandwidth()}
-                    fill={isEven ? "#f8fafc" : "transparent"}
+                    fill={metric?.bgColor || (index % 2 === 0 ? "#f8fafc" : "transparent")}
                     rx={2}
                   />
                 );
@@ -305,7 +350,7 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── GRID - Vertical lines (light) ─── */}
+              {/* ─── GRID - Vertical lines ─── */}
               {xTicks.map((x, i) => {
                 const xPos = xScale(x);
                 if (xPos < 5 || xPos > boundsWidth - 5) return null;
@@ -324,7 +369,48 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── CONNECTING LINES (to show trajectory) ─── */}
+              {/* ─── TREND LINE (Integrated from TrendLine component) ─── */}
+              {trendData.length > 1 && (
+                <>
+                  {/* Trend line shadow/glow */}
+                  <path
+                    d={linePath}
+                    fill="none"
+                    stroke="#0ea5e9"
+                    strokeWidth={Math.max(2, Math.min(4, width / 200))}
+                    opacity={0.15}
+                    strokeLinecap="round"
+                    style={{ filter: 'blur(4px)' }}
+                  />
+                  
+                  {/* Main trend line */}
+                  <path
+                    d={linePath}
+                    fill="none"
+                    stroke="#0ea5e9"
+                    strokeWidth={Math.max(1.5, Math.min(3, width / 250))}
+                    opacity={0.7}
+                    strokeLinecap="round"
+                  />
+
+                  {/* Trend line points */}
+                  {trendData.map((d, i) => {
+                    const isLast = i === trendData.length - 1;
+                    return (
+                      <circle
+                        key={`trend-point-${i}`}
+                        cx={xScale(d.year)}
+                        cy={trendYScale(d.value)}
+                        r={isLast ? 4 : 2.5}
+                        fill={isLast ? "#0284c7" : "#38bdf8"}
+                        opacity={isLast ? 1 : 0.5}
+                      />
+                    );
+                  })}
+                </>
+              )}
+
+              {/* ─── CONNECTING LINES (between bubbles) ─── */}
               {METRICS.map((metric) => {
                 if (!visibleMetrics.has(metric.key)) return null;
                 
@@ -353,7 +439,7 @@ export function TimeSeriesDashboard({
                     fill="none"
                     stroke={metric.color}
                     strokeWidth={1.5}
-                    strokeOpacity={0.2}
+                    strokeOpacity={0.15}
                     strokeDasharray="3 3"
                   />
                 );
