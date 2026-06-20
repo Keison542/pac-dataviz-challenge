@@ -20,7 +20,7 @@ type Props = {
   className?: string;
 };
 
-const MARGIN = { top: 60, right: 60, bottom: 80, left: 140 };
+const MARGIN = { top: 50, right: 50, bottom: 70, left: 160 };
 
 const METRICS = [
   {
@@ -28,18 +28,21 @@ const METRICS = [
     label: "Food Production",
     unit: "t/ha",
     color: "#1a1a2e",
+    darkColor: "#0f0f1a",
   },
   {
     key: "livestockYield",
     label: "Livelihood Assets",
     unit: "tons",
     color: "#4a4a6a",
+    darkColor: "#2a2a4a",
   },
   {
     key: "touristArrivals",
     label: "Income Diversification",
     unit: "",
     color: "#94a3b8",
+    darkColor: "#64748b",
   },
 ];
 
@@ -101,13 +104,13 @@ export function TimeSeriesDashboard({
   // ─── Responsive margins ───
   const responsiveMargin = useMemo(() => {
     if (width < 400) {
-      return { top: 40, right: 20, bottom: 60, left: 90 };
+      return { top: 40, right: 15, bottom: 50, left: 100 };
     }
     if (width < 600) {
-      return { top: 50, right: 30, bottom: 70, left: 110 };
+      return { top: 45, right: 20, bottom: 60, left: 120 };
     }
     if (width < 768) {
-      return { top: 55, right: 40, bottom: 75, left: 120 };
+      return { top: 48, right: 30, bottom: 65, left: 135 };
     }
     return MARGIN;
   }, [width]);
@@ -146,12 +149,12 @@ export function TimeSeriesDashboard({
       .range([0, boundsWidth]);
   }, [data, boundsWidth]);
 
-  // Y-scale with more padding between rows
+  // Y-scale with good padding
   const yScale = useMemo(() => {
     return scaleBand()
       .domain(metricRows)
       .range([0, boundsHeight])
-      .padding(0.5); // Increased padding for more breathing room
+      .padding(0.45);
   }, [metricRows, boundsHeight]);
 
   // ─── Bubble radius scale ───
@@ -169,11 +172,10 @@ export function TimeSeriesDashboard({
       });
     });
 
-    // Smaller max radius to prevent crowding
-    const maxRadius = width < 500 ? 14 : width < 768 ? 18 : 22;
+    const maxRadius = width < 500 ? 16 : width < 768 ? 20 : 26;
     return scaleSqrt()
       .domain([0, maxValue || 1])
-      .range([2, maxRadius]);
+      .range([3, maxRadius]);
   }, [data, visibleMetrics, width]);
 
   // ─── Dynamic ticks ───
@@ -182,7 +184,6 @@ export function TimeSeriesDashboard({
     const min = Math.min(...years);
     const max = Math.max(...years);
     
-    // Fewer ticks to reduce crowding
     const maxTicks = width < 500 ? 4 : width < 768 ? 5 : 7;
     const step = Math.max(1, Math.floor((max - min) / maxTicks));
     
@@ -211,7 +212,6 @@ export function TimeSeriesDashboard({
   }
 
   const fontSize = getFontSize(12);
-  const legendFontSize = getFontSize(11);
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   return (
@@ -234,22 +234,23 @@ export function TimeSeriesDashboard({
         </div>
 
         {/* ─── LEGEND ─── */}
-        <div className="flex flex-wrap gap-3 mb-4 justify-center">
+        <div className="flex flex-wrap gap-4 mb-4 justify-center">
           {METRICS.map((m) => {
             const isVisible = visibleMetrics.has(m.key);
             return (
               <button
                 key={m.key}
                 onClick={() => toggleMetric(m.key)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all text-[10px] sm:text-xs"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-[10px] sm:text-xs font-medium"
                 style={{
                   borderColor: isVisible ? m.color : "#e2e8f0",
                   color: isVisible ? m.color : "#94a3b8",
                   background: isVisible ? "white" : "#f8fafc",
+                  boxShadow: isVisible ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
                 }}
               >
                 <span 
-                  className="w-2 h-2 rounded-full"
+                  className="w-2.5 h-2.5 rounded-full"
                   style={{ 
                     background: m.color,
                     opacity: isVisible ? 1 : 0.3
@@ -282,7 +283,7 @@ export function TimeSeriesDashboard({
                     y={yPos}
                     width={boundsWidth}
                     height={yScale.bandwidth()}
-                    fill={isEven ? "#fafafa" : "transparent"}
+                    fill={isEven ? "#f8fafc" : "transparent"}
                     rx={2}
                   />
                 );
@@ -304,7 +305,7 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── GRID - Vertical lines ─── */}
+              {/* ─── GRID - Vertical lines (light) ─── */}
               {xTicks.map((x, i) => {
                 const xPos = xScale(x);
                 if (xPos < 5 || xPos > boundsWidth - 5) return null;
@@ -317,8 +318,43 @@ export function TimeSeriesDashboard({
                     y1={0}
                     y2={boundsHeight}
                     stroke="#f1f5f9"
-                    strokeDasharray="4 4"
+                    strokeDasharray="3 3"
                     strokeWidth={0.5}
+                  />
+                );
+              })}
+
+              {/* ─── CONNECTING LINES (to show trajectory) ─── */}
+              {METRICS.map((metric) => {
+                if (!visibleMetrics.has(metric.key)) return null;
+                
+                const points = data
+                  .map((d) => {
+                    const value = d[metric.key as keyof DataPoint] as number;
+                    if (value === 0) return null;
+                    return {
+                      x: xScale(d.year),
+                      y: (yScale(metric.label) ?? 0) + yScale.bandwidth() / 2,
+                      value,
+                    };
+                  })
+                  .filter((p) => p !== null);
+
+                if (points.length < 2) return null;
+
+                const linePath = points
+                  .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+                  .join(' ');
+
+                return (
+                  <path
+                    key={`line-${metric.key}`}
+                    d={linePath}
+                    fill="none"
+                    stroke={metric.color}
+                    strokeWidth={1.5}
+                    strokeOpacity={0.2}
+                    strokeDasharray="3 3"
                   />
                 );
               })}
@@ -329,7 +365,6 @@ export function TimeSeriesDashboard({
                   if (!visibleMetrics.has(metric.key)) return null;
 
                   const value = d[metric.key as keyof DataPoint] as number;
-                  // Skip zero values to reduce clutter
                   if (value === 0) return null;
 
                   const cx = xScale(d.year);
@@ -340,36 +375,63 @@ export function TimeSeriesDashboard({
                     hoveredPoint?.year === d.year;
 
                   const radius = radiusScale(value);
-                  
-                  // Only render if radius is big enough to see
-                  if (radius < 1.5) return null;
+                  if (radius < 2) return null;
+
+                  // Get the metric color
+                  const metricConfig = METRICS.find(m => m.label === metric.label);
+                  const color = metricConfig?.color || '#94a3b8';
 
                   return (
-                    <circle
-                      key={`${metric.key}-${d.year}`}
-                      cx={cx}
-                      cy={cy}
-                      r={radius}
-                      fill={metric.color}
-                      opacity={isActive ? 1 : 0.5}
-                      stroke={isActive ? "#0f172a" : "white"}
-                      strokeWidth={isActive ? 2 : 0.5}
-                      onMouseEnter={() =>
-                        setHoveredPoint({
-                          metric: metric.label,
-                          year: d.year,
-                          value,
-                          x: cx,
-                          y: cy,
-                        })
-                      }
-                      onMouseLeave={() => setHoveredPoint(null)}
-                      className={!isTouchDevice ? "cursor-pointer" : ""}
-                      style={{
-                        transition: 'all 0.15s ease',
-                        filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' : 'none',
-                      }}
-                    />
+                    <g key={`${metric.key}-${d.year}`}>
+                      {/* Glow effect on active */}
+                      {isActive && (
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={radius + 6}
+                          fill={color}
+                          opacity={0.08}
+                        />
+                      )}
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={radius}
+                        fill={color}
+                        opacity={isActive ? 0.95 : 0.6}
+                        stroke="white"
+                        strokeWidth={isActive ? 2 : 1}
+                        onMouseEnter={() =>
+                          setHoveredPoint({
+                            metric: metric.label,
+                            year: d.year,
+                            value,
+                            x: cx,
+                            y: cy,
+                          })
+                        }
+                        onMouseLeave={() => setHoveredPoint(null)}
+                        className={!isTouchDevice ? "cursor-pointer" : ""}
+                        style={{
+                          transition: 'all 0.2s ease',
+                          filter: isActive ? 'drop-shadow(0 2px 8px rgba(0,0,0,0.12))' : 'none',
+                        }}
+                      />
+                      {/* Value label inside bubble if large enough */}
+                      {radius > 12 && (
+                        <text
+                          x={cx}
+                          y={cy + 3}
+                          textAnchor="middle"
+                          fontSize={Math.min(8, radius * 0.4)}
+                          fill="white"
+                          fontWeight="500"
+                          opacity={0.8}
+                        >
+                          {format(value)}
+                        </text>
+                      )}
+                    </g>
                   );
                 })
               )}
@@ -379,16 +441,15 @@ export function TimeSeriesDashboard({
                 const xPos = xScale(x);
                 if (xPos < 5 || xPos > boundsWidth - 5) return null;
                 
-                // Highlight the most recent year
                 const isLastYear = i === xTicks.length - 1;
                 
                 return (
                   <text
                     key={`x-label-${i}`}
                     x={xPos}
-                    y={boundsHeight + 20}
+                    y={boundsHeight + 18}
                     textAnchor="middle"
-                    fontSize={Math.max(8, fontSize * 0.75)}
+                    fontSize={Math.max(9, fontSize * 0.8)}
                     fill={isLastYear ? "#1a1a2e" : "#94a3b8"}
                     fontWeight={isLastYear ? "600" : "400"}
                   >
@@ -400,11 +461,11 @@ export function TimeSeriesDashboard({
               {/* ─── X-AXIS LABEL ─── */}
               <text
                 x={boundsWidth / 2}
-                y={boundsHeight + 42}
+                y={boundsHeight + 40}
                 textAnchor="middle"
                 fontSize={fontSize * 0.7}
                 fill="#94a3b8"
-                letterSpacing="0.05em"
+                letterSpacing="0.08em"
                 className="uppercase"
               >
                 Year
@@ -418,11 +479,11 @@ export function TimeSeriesDashboard({
                 return (
                   <text
                     key={`y-label-${metric}`}
-                    x={-12}
+                    x={-14}
                     y={yPos + yScale.bandwidth() / 2 + 4}
                     textAnchor="end"
-                    fontSize={Math.max(8, fontSize * 0.8)}
-                    fill="#475569"
+                    fontSize={Math.max(9, fontSize * 0.85)}
+                    fill={isLast ? "#1a1a2e" : "#475569"}
                     fontWeight={isLast ? "600" : "500"}
                   >
                     {metric}
@@ -434,11 +495,11 @@ export function TimeSeriesDashboard({
               <text
                 transform="rotate(-90)"
                 x={-boundsHeight / 2}
-                y={-(responsiveMargin.left - 15)}
+                y={-(responsiveMargin.left - 10)}
                 textAnchor="middle"
                 fontSize={fontSize * 0.7}
                 fill="#94a3b8"
-                letterSpacing="0.05em"
+                letterSpacing="0.08em"
                 className="uppercase"
               >
                 Livelihood Dimension
@@ -449,17 +510,17 @@ export function TimeSeriesDashboard({
           {/* ─── TOOLTIP ─── */}
           {hoveredPoint && !isMobile && (
             <div
-              className="absolute rounded-lg border border-slate-200 bg-white p-2.5 sm:p-3 text-xs shadow-lg pointer-events-none z-10"
+              className="absolute rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-lg pointer-events-none z-10"
               style={{
                 left: Math.min(
-                  hoveredPoint.x + responsiveMargin.left + 12,
-                  width - 160
+                  hoveredPoint.x + responsiveMargin.left + 14,
+                  width - 170
                 ),
                 top: Math.min(
                   hoveredPoint.y + responsiveMargin.top - 10,
-                  height - 80
+                  height - 90
                 ),
-                maxWidth: Math.min(180, width - 40),
+                maxWidth: Math.min(190, width - 40),
               }}
             >
               <div className="font-semibold text-slate-900 text-sm">
@@ -474,7 +535,7 @@ export function TimeSeriesDashboard({
 
           {/* ─── MOBILE TOOLTIP ─── */}
           {hoveredPoint && isMobile && (
-            <div className="mt-3 text-center bg-white border border-slate-200 rounded-lg p-2.5 mx-2 shadow-sm">
+            <div className="mt-3 text-center bg-white border border-slate-200 rounded-lg p-3 mx-2 shadow-sm">
               <div className="font-semibold text-xs text-slate-900">{hoveredPoint.metric}</div>
               <div className="text-xs text-slate-500">{hoveredPoint.year}</div>
               <div className="text-sm font-semibold text-slate-800 mt-0.5">
