@@ -183,8 +183,8 @@ export default function ClimateInteractionMatrix({
         <div
           className="mx-auto grid gap-0.5"
           style={{
-            gridTemplateColumns: `minmax(80px,110px) repeat(${COLS.length}, minmax(40px,1fr))`,
-            minWidth: "320px",
+            gridTemplateColumns: `minmax(70px,100px) repeat(${COLS.length}, minmax(35px,1fr))`,
+            minWidth: "280px",
             maxWidth: "100%",
           }}
         >
@@ -193,7 +193,7 @@ export default function ClimateInteractionMatrix({
           {COLS.map((col) => (
             <div
               key={col}
-              className="text-center text-[8px] sm:text-[9px] md:text-[10px] font-medium text-slate-500 px-0.5"
+              className="text-center text-[7px] sm:text-[8px] md:text-[9px] font-medium text-slate-500 px-0.5 leading-tight"
             >
               {col}
             </div>
@@ -201,7 +201,7 @@ export default function ClimateInteractionMatrix({
 
           {ROWS.map((row) => (
             <div key={row} className="contents">
-              <div className="flex items-center text-[9px] sm:text-[10px] md:text-xs text-slate-700 pr-1">
+              <div className="flex items-center text-[8px] sm:text-[9px] md:text-[10px] text-slate-700 pr-1 leading-tight">
                 {row}
               </div>
 
@@ -212,7 +212,7 @@ export default function ClimateInteractionMatrix({
                   return (
                     <div
                       key={`${row}-${col}`}
-                      className="h-6 border border-slate-100 bg-white"
+                      className="h-5 border border-slate-100 bg-white"
                     />
                   );
                 }
@@ -227,7 +227,7 @@ export default function ClimateInteractionMatrix({
                     onClick={() => setSelectedCell(cell)}
                     onMouseEnter={() => setSelectedCell(cell)}
                     className={`
-                      h-6
+                      h-5
                       border border-slate-200
                       transition-all duration-200
                       hover:scale-105
@@ -238,7 +238,7 @@ export default function ClimateInteractionMatrix({
                       backgroundColor: getColor(cell.value),
                     }}
                   >
-                    <div className="text-[8px] sm:text-[9px] font-semibold text-white">
+                    <div className="text-[7px] sm:text-[8px] font-semibold text-white leading-none">
                       {Math.round(cell.value * 100)}
                     </div>
                   </button>
