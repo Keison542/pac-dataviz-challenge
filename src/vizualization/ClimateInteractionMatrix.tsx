@@ -181,10 +181,10 @@ export default function ClimateInteractionMatrix({
         }}
       >
         <div
-          className="mx-auto grid gap-1"
+          className="mx-auto grid gap-0.5"
           style={{
-            gridTemplateColumns: `minmax(90px,140px) repeat(${COLS.length}, minmax(55px,1fr))`,
-            minWidth: "420px",
+            gridTemplateColumns: `minmax(80px,110px) repeat(${COLS.length}, minmax(40px,1fr))`,
+            minWidth: "320px",
             maxWidth: "100%",
           }}
         >
@@ -193,7 +193,7 @@ export default function ClimateInteractionMatrix({
           {COLS.map((col) => (
             <div
               key={col}
-              className="text-center text-[9px] sm:text-[10px] md:text-xs font-medium text-slate-500 px-1"
+              className="text-center text-[8px] sm:text-[9px] md:text-[10px] font-medium text-slate-500 px-0.5"
             >
               {col}
             </div>
@@ -201,7 +201,7 @@ export default function ClimateInteractionMatrix({
 
           {ROWS.map((row) => (
             <div key={row} className="contents">
-              <div className="flex items-center text-[10px] sm:text-xs md:text-sm text-slate-700 pr-2">
+              <div className="flex items-center text-[9px] sm:text-[10px] md:text-xs text-slate-700 pr-1">
                 {row}
               </div>
 
@@ -212,7 +212,7 @@ export default function ClimateInteractionMatrix({
                   return (
                     <div
                       key={`${row}-${col}`}
-                      className="h-8 border border-slate-100 bg-white"
+                      className="h-6 border border-slate-100 bg-white"
                     />
                   );
                 }
@@ -227,18 +227,18 @@ export default function ClimateInteractionMatrix({
                     onClick={() => setSelectedCell(cell)}
                     onMouseEnter={() => setSelectedCell(cell)}
                     className={`
-                      h-8
+                      h-6
                       border border-slate-200
                       transition-all duration-200
                       hover:scale-105
                       touch-manipulation
-                      ${isSelected ? "ring-2 ring-slate-900 z-10" : ""}
+                      ${isSelected ? "ring-1 ring-slate-900 z-10" : ""}
                     `}
                     style={{
                       backgroundColor: getColor(cell.value),
                     }}
                   >
-                    <div className="text-[10px] sm:text-xs font-semibold text-white">
+                    <div className="text-[8px] sm:text-[9px] font-semibold text-white">
                       {Math.round(cell.value * 100)}
                     </div>
                   </button>
