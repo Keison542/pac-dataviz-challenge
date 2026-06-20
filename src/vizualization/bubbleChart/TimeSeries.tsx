@@ -46,7 +46,6 @@ const METRICS = [
   },
 ];
 
-// Trend metric (aggregated from all metrics)
 const TREND_METRIC = {
   key: "trend",
   label: "Overall Trend",
@@ -54,7 +53,6 @@ const TREND_METRIC = {
   lightColor: "#7dd3fc",
 };
 
-// Bubble Chart metric (country-level data)
 const BUBBLE_METRIC = {
   key: "bubble",
   label: "Country Impact",
@@ -88,7 +86,6 @@ export function TimeSeriesDashboard({
   const [showTrend, setShowTrend] = useState(true);
   const [showBubble, setShowBubble] = useState(true);
 
-  // ─── Responsive sizing ───
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -120,7 +117,6 @@ export function TimeSeriesDashboard({
 
   const { width, height } = dimensions;
 
-  // ─── Responsive margins ───
   const responsiveMargin = useMemo(() => {
     if (width < 400) {
       return { top: 30, right: 10, bottom: 50, left: 55 };
@@ -145,7 +141,6 @@ export function TimeSeriesDashboard({
     });
   }, []);
 
-  // ─── Responsive font sizes ───
   const getFontSize = useCallback((base: number) => {
     if (width < 400) return base * 0.5;
     if (width < 600) return base * 0.65;
@@ -154,10 +149,69 @@ export function TimeSeriesDashboard({
     return base;
   }, [width]);
 
-  // ─── Years for Y-axis (every single year) ───
-  const years = useMemo(() => {
-    return data.map((d) => d.year).sort((a, b) => a - b);
-  }, [data]);
+  // ─── Group years into intervals ───
+  const getYearInterval = useCallback((year: number, interval: number = 5) => {
+    return Math.floor(year / interval) * interval;
+  }, []);
+
+  // ─── Group data by year interval ───
+  const groupedYears = useMemo(() => {
+    const interval = width < 500 ? 10 : width < 768 ? 8 : 5;
+    const yearMap = new Map<number, { year: number; count: number }>();
+
+    data.forEach((d) => {
+      const groupedYear = getYearInterval(d.year, interval);
+      if (!yearMap.has(groupedYear)) {
+        yearMap.set(groupedYear, { year: groupedYear, count: 0 });
+      }
+      yearMap.get(groupedYear)!.count++;
+    });
+
+    return Array.from(yearMap.values())
+      .map((item) => ({
+        ...item,
+        // Use the actual years from data for this interval
+        years: data
+          .filter((d) => getYearInterval(d.year, interval) === item.year)
+          .map((d) => d.year),
+      }))
+      .sort((a, b) => a.year - b.year);
+  }, [data, width, getYearInterval]);
+
+  // ─── Aggregate data by year interval ───
+  const aggregatedData = useMemo(() => {
+    const interval = width < 500 ? 10 : width < 768 ? 8 : 5;
+    const result: DataPoint[] = [];
+
+    groupedYears.forEach((group) => {
+      const yearsInGroup = group.years;
+      const avgData: DataPoint = {
+        year: group.year,
+        cropYield: 0,
+        livestockYield: 0,
+        touristArrivals: 0,
+      };
+
+      let count = 0;
+      data.forEach((d) => {
+        if (yearsInGroup.includes(d.year)) {
+          avgData.cropYield += d.cropYield || 0;
+          avgData.livestockYield += d.livestockYield || 0;
+          avgData.touristArrivals += d.touristArrivals || 0;
+          count++;
+        }
+      });
+
+      if (count > 0) {
+        avgData.cropYield = avgData.cropYield / count;
+        avgData.livestockYield = avgData.livestockYield / count;
+        avgData.touristArrivals = avgData.touristArrivals / count;
+        result.push(avgData);
+      }
+    });
+
+    return result;
+  }, [data, groupedYears, width]);
 
   // ─── Metric columns for X-axis ───
   const metricColumns = useMemo(() => {
@@ -173,11 +227,16 @@ export function TimeSeriesDashboard({
     return cols;
   }, [visibleMetrics, showTrend, showBubble]);
 
-  // ─── Compute trend data ───
+  // ─── Years for Y-axis (grouped) ───
+  const years = useMemo(() => {
+    return aggregatedData.map((d) => d.year);
+  }, [aggregatedData]);
+
+  // ─── Compute trend data from aggregated data ───
   const trendData = useMemo(() => {
     const map = new Map<number, number>();
 
-    data.forEach((d) => {
+    aggregatedData.forEach((d) => {
       METRICS.forEach((m) => {
         if (visibleMetrics.has(m.key)) {
           const value = d[m.key as keyof DataPoint] as number;
@@ -189,14 +248,14 @@ export function TimeSeriesDashboard({
     return Array.from(map.entries())
       .map(([year, value]) => ({ year, value }))
       .sort((a, b) => a.year - b.year);
-  }, [data, visibleMetrics]);
+  }, [aggregatedData, visibleMetrics]);
 
   // ─── Compute bubble chart data ───
   const bubbleData = useMemo(() => {
     const countries = ["Fiji", "Samoa", "Tonga", "Vanuatu", "Solomon Is."];
     const result: { country: string; year: number; value: number }[] = [];
 
-    data.forEach((d) => {
+    aggregatedData.forEach((d) => {
       const baseValue = d.cropYield || 0;
       countries.forEach((country, i) => {
         const variation = 0.6 + (i / countries.length) * 0.8;
@@ -208,7 +267,7 @@ export function TimeSeriesDashboard({
     });
 
     return result;
-  }, [data]);
+  }, [aggregatedData]);
 
   const maxBubbleValue = useMemo(
     () => Math.max(...bubbleData.map((d) => d.value), 1),
@@ -220,7 +279,7 @@ export function TimeSeriesDashboard({
     return scaleBand()
       .domain(years.map(String))
       .range([0, boundsHeight])
-      .padding(0.15);
+      .padding(0.4);
   }, [years, boundsHeight]);
 
   const xScale = useMemo(() => {
@@ -234,7 +293,7 @@ export function TimeSeriesDashboard({
   const radiusScale = useMemo(() => {
     let maxValue = 0;
 
-    data.forEach((d) => {
+    aggregatedData.forEach((d) => {
       METRICS.forEach((m) => {
         if (visibleMetrics.has(m.key)) {
           maxValue = Math.max(
@@ -252,14 +311,14 @@ export function TimeSeriesDashboard({
     maxValue = Math.max(maxValue, maxBubbleValue);
 
     const maxRadius = Math.min(
-      width < 500 ? 12 : width < 768 ? 16 : 20,
-      yScale.bandwidth() * 0.3,
-      xScale.bandwidth() * 0.35
+      width < 500 ? 16 : width < 768 ? 20 : 26,
+      yScale.bandwidth() * 0.4,
+      xScale.bandwidth() * 0.4
     );
     return scaleSqrt()
       .domain([0, maxValue || 1])
-      .range([2, Math.max(4, maxRadius)]);
-  }, [data, visibleMetrics, trendData, maxBubbleValue, width, yScale, xScale]);
+      .range([3, Math.max(5, maxRadius)]);
+  }, [aggregatedData, visibleMetrics, trendData, maxBubbleValue, width, yScale, xScale]);
 
   const format = (v: number) =>
     v >= 1_000_000
@@ -280,9 +339,6 @@ export function TimeSeriesDashboard({
 
   const fontSize = getFontSize(12);
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-  // Determine if we need smaller font for years based on count
-  const yearFontSize = years.length > 30 ? Math.max(6, fontSize * 0.6) : Math.max(8, fontSize * 0.75);
 
   return (
     <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
@@ -393,7 +449,7 @@ export function TimeSeriesDashboard({
               {METRICS.map((metric) => {
                 if (!visibleMetrics.has(metric.key)) return null;
                 
-                const points = data
+                const points = aggregatedData
                   .map((d) => {
                     const value = d[metric.key as keyof DataPoint] as number;
                     if (value === 0) return null;
@@ -445,7 +501,7 @@ export function TimeSeriesDashboard({
               )}
 
               {/* ─── BUBBLES FOR METRICS ─── */}
-              {data.map((d) =>
+              {aggregatedData.map((d) =>
                 METRICS.map((metric) => {
                   if (!visibleMetrics.has(metric.key)) return null;
 
@@ -620,25 +676,23 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── Y-AXIS LABELS (every single year) ─── */}
+              {/* ─── Y-AXIS LABELS ─── */}
               {years.map((year) => {
                 const yPos = yScale(String(year)) ?? 0;
                 const isLastYear = year === years[years.length - 1];
                 const isFirstYear = year === years[0];
                 
-                // Only show year label if there's enough space
                 if (yPos < 5 || yPos > boundsHeight - 5) return null;
                 
                 return (
                   <text
                     key={`y-label-${year}`}
-                    x={-4}
-                    y={yPos + yScale.bandwidth() / 2 + 2}
+                    x={-6}
+                    y={yPos + yScale.bandwidth() / 2 + 3}
                     textAnchor="end"
-                    fontSize={yearFontSize}
+                    fontSize={Math.max(9, fontSize * 0.8)}
                     fill={isLastYear ? "#1a1a2e" : (isFirstYear ? "#475569" : "#94a3b8")}
                     fontWeight={isLastYear ? "600" : "400"}
-                    opacity={isLastYear ? 1 : 0.7}
                   >
                     {year}
                   </text>
