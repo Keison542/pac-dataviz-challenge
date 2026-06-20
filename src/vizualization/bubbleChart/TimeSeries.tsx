@@ -1,7 +1,9 @@
 "use client";
 
-import { scaleLinear, scaleBand, scaleSqrt } from "d3-scale";
+import { scaleLinear } from "d3-scale";
+import { line, curveCardinal, area } from "d3-shape";
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { LineItem } from "@/vizualization/lineChart/LineItem";
 
 type DataPoint = {
   year: number;
@@ -20,29 +22,26 @@ type Props = {
   className?: string;
 };
 
-const MARGIN = { top: 50, right: 50, bottom: 70, left: 160 };
+const MARGIN = { top: 70, right: 130, bottom: 100, left: 100 };
 
 const METRICS = [
   {
     key: "cropYield",
     label: "Food Production",
     unit: "t/ha",
-    color: "#1a1a2e",
-    darkColor: "#0f0f1a",
+    color: "#475569",
   },
   {
     key: "livestockYield",
     label: "Livelihood Assets",
     unit: "tons",
-    color: "#4a4a6a",
-    darkColor: "#2a2a4a",
+    color: "#94a3b8",
   },
   {
     key: "touristArrivals",
     label: "Income Diversification",
     unit: "",
-    color: "#94a3b8",
-    darkColor: "#64748b",
+    color: "#cbd5e1",
   },
 ];
 
@@ -51,6 +50,8 @@ export function TimeSeriesDashboard({
   height: propHeight,
   data,
   selectedCountry,
+  // title = "Livelihood & Economic Resilience Trends",
+  subtitle,
   className = "",
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -75,7 +76,7 @@ export function TimeSeriesDashboard({
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         const width = propWidth || rect.width || 600;
-        const height = propHeight || Math.min(rect.width * 0.55, 480);
+        const height = propHeight || Math.min(rect.width * 0.6, 500);
         setDimensions({ width, height });
         setIsMobile(width < 768);
       }
@@ -104,13 +105,13 @@ export function TimeSeriesDashboard({
   // ─── Responsive margins ───
   const responsiveMargin = useMemo(() => {
     if (width < 400) {
-      return { top: 40, right: 15, bottom: 50, left: 100 };
+      return { top: 50, right: 20, bottom: 70, left: 60 };
     }
     if (width < 600) {
-      return { top: 45, right: 20, bottom: 60, left: 120 };
+      return { top: 60, right: 30, bottom: 80, left: 75 };
     }
     if (width < 768) {
-      return { top: 48, right: 30, bottom: 65, left: 135 };
+      return { top: 65, right: 40, bottom: 90, left: 85 };
     }
     return MARGIN;
   }, [width]);
@@ -128,18 +129,12 @@ export function TimeSeriesDashboard({
 
   // ─── Responsive font sizes ───
   const getFontSize = useCallback((base: number) => {
-    if (width < 400) return base * 0.5;
-    if (width < 600) return base * 0.65;
-    if (width < 768) return base * 0.8;
+    if (width < 400) return base * 0.55;
+    if (width < 600) return base * 0.7;
+    if (width < 768) return base * 0.85;
     if (width < 1024) return base * 0.9;
     return base;
   }, [width]);
-
-  // ─── Metric rows for Y-axis ───
-  const metricRows = useMemo(
-    () => METRICS.filter((m) => visibleMetrics.has(m.key)).map((m) => m.label),
-    [visibleMetrics]
-  );
 
   // ─── Scales ───
   const xScale = useMemo(() => {
@@ -149,42 +144,66 @@ export function TimeSeriesDashboard({
       .range([0, boundsWidth]);
   }, [data, boundsWidth]);
 
-  // Y-scale with good padding
   const yScale = useMemo(() => {
-    return scaleBand()
-      .domain(metricRows)
-      .range([0, boundsHeight])
-      .padding(0.45);
-  }, [metricRows, boundsHeight]);
-
-  // ─── Bubble radius scale ───
-  const radiusScale = useMemo(() => {
     let maxValue = 0;
 
     data.forEach((d) => {
       METRICS.forEach((m) => {
         if (visibleMetrics.has(m.key)) {
-          maxValue = Math.max(
-            maxValue,
-            d[m.key as keyof DataPoint] as number
-          );
+          maxValue = Math.max(maxValue, d[m.key as keyof DataPoint] as number);
         }
       });
     });
 
-    const maxRadius = width < 500 ? 16 : width < 768 ? 20 : 26;
-    return scaleSqrt()
-      .domain([0, maxValue || 1])
-      .range([3, maxRadius]);
-  }, [data, visibleMetrics, width]);
+    return scaleLinear()
+      .domain([0, maxValue * 1.1 || 1])
+      .range([boundsHeight, 0])
+      .nice();
+  }, [data, boundsHeight, visibleMetrics]);
 
-  // ─── Dynamic ticks ───
+  // ─── Paths ───
+  const linePaths = useMemo(() => {
+    const paths: Record<string, string> = {};
+
+    METRICS.forEach((m) => {
+      if (!visibleMetrics.has(m.key)) return;
+
+      const gen = line<DataPoint>()
+        .x((d) => xScale(d.year))
+        .y((d) => yScale(d[m.key as keyof DataPoint] as number))
+        .curve(curveCardinal.tension(0.7));
+
+      paths[m.key] = gen(data) || "";
+    });
+
+    return paths;
+  }, [data, xScale, yScale, visibleMetrics]);
+
+  const areaPaths = useMemo(() => {
+    const paths: Record<string, string> = {};
+
+    METRICS.forEach((m) => {
+      if (!visibleMetrics.has(m.key)) return;
+
+      const gen = area<DataPoint>()
+        .x((d) => xScale(d.year))
+        .y0(boundsHeight)
+        .y1((d) => d[m.key as keyof DataPoint] as number)
+        .curve(curveCardinal.tension(0.7));
+
+      paths[m.key] = gen(data) || "";
+    });
+
+    return paths;
+  }, [data, xScale, yScale, boundsHeight, visibleMetrics]);
+
+  // ─── Dynamic ticks based on available space ───
   const xTicks = useMemo(() => {
     const years = data.map((d) => d.year);
     const min = Math.min(...years);
     const max = Math.max(...years);
     
-    const maxTicks = width < 500 ? 4 : width < 768 ? 5 : 7;
+    const maxTicks = width < 500 ? 3 : width < 768 ? 4 : 6;
     const step = Math.max(1, Math.floor((max - min) / maxTicks));
     
     const ticks: number[] = [];
@@ -193,6 +212,12 @@ export function TimeSeriesDashboard({
 
     return ticks;
   }, [data, width]);
+
+  const yTicks = useMemo(() => {
+    const max = yScale.domain()[1];
+    const count = width < 500 ? 3 : 5;
+    return Array.from({ length: count }, (_, i) => (max / (count - 1)) * i);
+  }, [yScale, width]);
 
   const format = (v: number) =>
     v >= 1_000_000
@@ -212,58 +237,51 @@ export function TimeSeriesDashboard({
   }
 
   const fontSize = getFontSize(12);
+  const titleFontSize = getFontSize(16);
+  const legendFontSize = getFontSize(11);
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   return (
     <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
       <div className="w-full max-w-4xl px-2 sm:px-4">
-        {/* ─── NARRATIVE HEADER ─── */}
-        <div className="mb-4 text-center">
-          <h3 className="text-base sm:text-lg font-semibold text-slate-900">
-            Structural System Shift
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-2xl mx-auto leading-relaxed mt-1">
-            Long-term socioeconomic indicators reveal how climate pressure gradually reshapes
-            national economic structures and adaptive capacity.
-          </p>
-          <p className="text-xs text-slate-400 max-w-2xl mx-auto leading-relaxed mt-2">
-            Larger circles indicate periods where livelihood systems carried greater economic importance or
-            production value. Patterns reveal how resilience shifted across food production, livelihood assets and
-            tourism.
-          </p>
+        {/* ─── HEADER ─── */}
+        <div className="mb-5 text-center">
+          {/* <h3 
+            className="font-medium text-slate-800"
+            style={{ fontSize: titleFontSize }}
+          >
+            {title}
+          </h3> */}
+          {subtitle && (
+            <p 
+              className="text-slate-500 mt-1"
+              style={{ fontSize: fontSize * 0.85 }}
+            >
+              {subtitle}
+            </p>
+          )}
         </div>
 
         {/* ─── LEGEND ─── */}
-        <div className="flex flex-wrap gap-4 mb-4 justify-center">
-          {METRICS.map((m) => {
-            const isVisible = visibleMetrics.has(m.key);
-            return (
-              <button
-                key={m.key}
-                onClick={() => toggleMetric(m.key)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-[10px] sm:text-xs font-medium"
-                style={{
-                  borderColor: isVisible ? m.color : "#e2e8f0",
-                  color: isVisible ? m.color : "#94a3b8",
-                  background: isVisible ? "white" : "#f8fafc",
-                  boxShadow: isVisible ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
-                }}
-              >
-                <span 
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ 
-                    background: m.color,
-                    opacity: isVisible ? 1 : 0.3
-                  }}
-                />
-                <span className="whitespace-nowrap">{m.label}</span>
-              </button>
-            );
-          })}
+        <div className="flex flex-wrap gap-2 mb-4 justify-center">
+          {METRICS.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => toggleMetric(m.key)}
+              className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border transition-all text-[10px] sm:text-xs"
+              style={{
+                borderColor: visibleMetrics.has(m.key) ? m.color : "#e2e8f0",
+                color: visibleMetrics.has(m.key) ? m.color : "#94a3b8",
+                background: visibleMetrics.has(m.key) ? m.color + "10" : "white",
+              }}
+            >
+              <span className="whitespace-nowrap">{m.label}</span>
+            </button>
+          ))}
         </div>
 
         {/* ─── CHART ─── */}
-        <div className="relative w-full overflow-visible">
+        <div className="relative w-full overflow-hidden">
           <svg 
             width={width} 
             height={height} 
@@ -272,40 +290,20 @@ export function TimeSeriesDashboard({
             style={{ maxWidth: '100%', height: 'auto' }}
           >
             <g transform={`translate(${responsiveMargin.left},${responsiveMargin.top})`}>
-              {/* ─── LIGHT BACKGROUND ROWS ─── */}
-              {metricRows.map((row, index) => {
-                const yPos = yScale(row) ?? 0;
-                const isEven = index % 2 === 0;
-                return (
-                  <rect
-                    key={`bg-${row}`}
-                    x={0}
-                    y={yPos}
-                    width={boundsWidth}
-                    height={yScale.bandwidth()}
-                    fill={isEven ? "#f8fafc" : "transparent"}
-                    rx={2}
-                  />
-                );
-              })}
+              {/* GRID */}
+              {yTicks.map((v, i) => (
+                <line
+                  key={`grid-y-${i}`}
+                  x1={0}
+                  x2={boundsWidth}
+                  y1={yScale(v)}
+                  y2={yScale(v)}
+                  stroke="#f1f5f9"
+                  strokeDasharray="4 4"
+                  strokeWidth={0.5}
+                />
+              ))}
 
-              {/* ─── GRID - Horizontal lines ─── */}
-              {metricRows.map((row) => {
-                const yPos = yScale(row) ?? 0;
-                return (
-                  <line
-                    key={`grid-${row}`}
-                    x1={0}
-                    x2={boundsWidth}
-                    y1={yPos + yScale.bandwidth()}
-                    y2={yPos + yScale.bandwidth()}
-                    stroke="#e2e8f0"
-                    strokeWidth={0.5}
-                  />
-                );
-              })}
-
-              {/* ─── GRID - Vertical lines (light) ─── */}
               {xTicks.map((x, i) => {
                 const xPos = xScale(x);
                 if (xPos < 5 || xPos > boundsWidth - 5) return null;
@@ -318,216 +316,148 @@ export function TimeSeriesDashboard({
                     y1={0}
                     y2={boundsHeight}
                     stroke="#f1f5f9"
-                    strokeDasharray="3 3"
+                    strokeDasharray="4 4"
                     strokeWidth={0.5}
                   />
                 );
               })}
 
-              {/* ─── CONNECTING LINES (to show trajectory) ─── */}
-              {METRICS.map((metric) => {
-                if (!visibleMetrics.has(metric.key)) return null;
-                
-                const points = data
-                  .map((d) => {
-                    const value = d[metric.key as keyof DataPoint] as number;
-                    if (value === 0) return null;
-                    return {
-                      x: xScale(d.year),
-                      y: (yScale(metric.label) ?? 0) + yScale.bandwidth() / 2,
-                      value,
-                    };
-                  })
-                  .filter((p) => p !== null);
-
-                if (points.length < 2) return null;
-
-                const linePath = points
-                  .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
-                  .join(' ');
-
-                return (
-                  <path
-                    key={`line-${metric.key}`}
-                    d={linePath}
-                    fill="none"
-                    stroke={metric.color}
-                    strokeWidth={1.5}
-                    strokeOpacity={0.2}
-                    strokeDasharray="3 3"
+              {/* LINES */}
+              {METRICS.map((m) =>
+                visibleMetrics.has(m.key) ? (
+                  <LineItem
+                    key={m.key}
+                    path={linePaths[m.key]}
+                    color={m.color}
+                    strokeWidth={Math.max(1.5, Math.min(2.5, width / 200))}
+                    opacity={0.8}
+                    onHover={() => {}}
                   />
-                );
-              })}
+                ) : null
+              )}
 
-              {/* ─── BUBBLES ─── */}
+              {/* POINTS */}
               {data.map((d) =>
-                METRICS.map((metric) => {
-                  if (!visibleMetrics.has(metric.key)) return null;
+                METRICS.map((m) => {
+                  if (!visibleMetrics.has(m.key)) return null;
 
-                  const value = d[metric.key as keyof DataPoint] as number;
-                  if (value === 0) return null;
-
-                  const cx = xScale(d.year);
-                  const cy = (yScale(metric.label) ?? 0) + yScale.bandwidth() / 2;
-
-                  const isActive =
-                    hoveredPoint?.metric === metric.label &&
-                    hoveredPoint?.year === d.year;
-
-                  const radius = radiusScale(value);
-                  if (radius < 2) return null;
-
-                  // Get the metric color
-                  const metricConfig = METRICS.find(m => m.label === metric.label);
-                  const color = metricConfig?.color || '#94a3b8';
+                  const v = d[m.key as keyof DataPoint] as number;
+                  const x = xScale(d.year);
+                  const y = yScale(v);
+                  const isActive = hoveredPoint?.metric === m.label && hoveredPoint?.year === d.year;
+                  const pointRadius = isActive 
+                    ? Math.max(4, Math.min(6, width / 120))
+                    : Math.max(2, Math.min(3.5, width / 180));
 
                   return (
-                    <g key={`${metric.key}-${d.year}`}>
-                      {/* Glow effect on active */}
-                      {isActive && (
-                        <circle
-                          cx={cx}
-                          cy={cy}
-                          r={radius + 6}
-                          fill={color}
-                          opacity={0.08}
-                        />
-                      )}
-                      <circle
-                        cx={cx}
-                        cy={cy}
-                        r={radius}
-                        fill={color}
-                        opacity={isActive ? 0.95 : 0.6}
-                        stroke="white"
-                        strokeWidth={isActive ? 2 : 1}
-                        onMouseEnter={() =>
-                          setHoveredPoint({
-                            metric: metric.label,
-                            year: d.year,
-                            value,
-                            x: cx,
-                            y: cy,
-                          })
-                        }
-                        onMouseLeave={() => setHoveredPoint(null)}
-                        className={!isTouchDevice ? "cursor-pointer" : ""}
-                        style={{
-                          transition: 'all 0.2s ease',
-                          filter: isActive ? 'drop-shadow(0 2px 8px rgba(0,0,0,0.12))' : 'none',
-                        }}
-                      />
-                      {/* Value label inside bubble if large enough */}
-                      {radius > 12 && (
-                        <text
-                          x={cx}
-                          y={cy + 3}
-                          textAnchor="middle"
-                          fontSize={Math.min(8, radius * 0.4)}
-                          fill="white"
-                          fontWeight="500"
-                          opacity={0.8}
-                        >
-                          {format(value)}
-                        </text>
-                      )}
-                    </g>
+                    <circle
+                      key={`${m.key}-${d.year}`}
+                      cx={x}
+                      cy={y}
+                      r={pointRadius}
+                      fill={isActive ? m.color : m.color}
+                      stroke="#fff"
+                      strokeWidth={isActive ? 2 : 1.5}
+                      opacity={isActive ? 1 : 0.5}
+                      onMouseEnter={() =>
+                        setHoveredPoint({
+                          metric: m.label,
+                          year: d.year,
+                          value: v,
+                          x,
+                          y,
+                        })
+                      }
+                      onMouseLeave={() => setHoveredPoint(null)}
+                      className={!isTouchDevice ? "cursor-pointer" : ""}
+                    />
                   );
                 })
               )}
 
-              {/* ─── X-AXIS TICK LABELS ─── */}
+              {/* AXIS LABELS */}
+              <text
+                x={boundsWidth / 2}
+                y={boundsHeight + (width < 500 ? 30 : 40)}
+                textAnchor="middle"
+                fontSize={fontSize * 0.85}
+                fill="#94a3b8"
+              >
+                Year
+              </text>
+
+              <text
+                transform="rotate(-90)"
+                x={-boundsHeight / 2}
+                y={-(width < 500 ? 35 : 50)}
+                textAnchor="middle"
+                fontSize={fontSize * 0.85}
+                fill="#94a3b8"
+              >
+                Value
+              </text>
+
+              {/* X-AXIS TICK LABELS */}
               {xTicks.map((x, i) => {
                 const xPos = xScale(x);
                 if (xPos < 5 || xPos > boundsWidth - 5) return null;
-                
-                const isLastYear = i === xTicks.length - 1;
                 
                 return (
                   <text
                     key={`x-label-${i}`}
                     x={xPos}
-                    y={boundsHeight + 18}
+                    y={boundsHeight + (width < 500 ? 18 : 20)}
                     textAnchor="middle"
-                    fontSize={Math.max(9, fontSize * 0.8)}
-                    fill={isLastYear ? "#1a1a2e" : "#94a3b8"}
-                    fontWeight={isLastYear ? "600" : "400"}
+                    fontSize={Math.max(7, fontSize * 0.7)}
+                    fill="#94a3b8"
                   >
                     {x}
                   </text>
                 );
               })}
 
-              {/* ─── X-AXIS LABEL ─── */}
-              <text
-                x={boundsWidth / 2}
-                y={boundsHeight + 40}
-                textAnchor="middle"
-                fontSize={fontSize * 0.7}
-                fill="#94a3b8"
-                letterSpacing="0.08em"
-                className="uppercase"
-              >
-                Year
-              </text>
-
-              {/* ─── Y-AXIS TICK LABELS ─── */}
-              {metricRows.map((metric) => {
-                const yPos = yScale(metric) ?? 0;
-                const isLast = metric === metricRows[metricRows.length - 1];
+              {/* Y-AXIS TICK LABELS */}
+              {yTicks.map((v, i) => {
+                const yPos = yScale(v);
+                if (yPos < 5 || yPos > boundsHeight - 5) return null;
                 
                 return (
                   <text
-                    key={`y-label-${metric}`}
-                    x={-14}
-                    y={yPos + yScale.bandwidth() / 2 + 4}
+                    key={`y-label-${i}`}
+                    x={-6}
+                    y={yPos + 3}
                     textAnchor="end"
-                    fontSize={Math.max(9, fontSize * 0.85)}
-                    fill={isLast ? "#1a1a2e" : "#475569"}
-                    fontWeight={isLast ? "600" : "500"}
+                    fontSize={Math.max(7, fontSize * 0.7)}
+                    fill="#94a3b8"
                   >
-                    {metric}
+                    {format(v)}
                   </text>
                 );
               })}
-
-              {/* ─── Y-AXIS LABEL ─── */}
-              <text
-                transform="rotate(-90)"
-                x={-boundsHeight / 2}
-                y={-(responsiveMargin.left - 10)}
-                textAnchor="middle"
-                fontSize={fontSize * 0.7}
-                fill="#94a3b8"
-                letterSpacing="0.08em"
-                className="uppercase"
-              >
-                Livelihood Dimension
-              </text>
             </g>
           </svg>
 
           {/* ─── TOOLTIP ─── */}
           {hoveredPoint && !isMobile && (
             <div
-              className="absolute rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-lg pointer-events-none z-10"
+              className="absolute rounded border border-slate-200 bg-white p-2 sm:p-3 text-xs shadow-sm pointer-events-none z-10"
               style={{
                 left: Math.min(
-                  hoveredPoint.x + responsiveMargin.left + 14,
-                  width - 170
+                  hoveredPoint.x + responsiveMargin.left + 10,
+                  width - 160
                 ),
                 top: Math.min(
-                  hoveredPoint.y + responsiveMargin.top - 10,
-                  height - 90
+                  hoveredPoint.y + responsiveMargin.top + 10,
+                  height - 80
                 ),
-                maxWidth: Math.min(190, width - 40),
+                maxWidth: Math.min(180, width - 40),
               }}
             >
-              <div className="font-semibold text-slate-900 text-sm">
+              <div className="font-medium text-slate-900">
                 {hoveredPoint.metric}
               </div>
-              <div className="text-slate-500 text-[10px]">{hoveredPoint.year}</div>
-              <div className="text-sm font-semibold text-slate-800 mt-0.5">
+              <div className="text-slate-500">{hoveredPoint.year}</div>
+              <div className="text-sm font-medium text-slate-800">
                 {format(hoveredPoint.value)}
               </div>
             </div>
@@ -535,10 +465,10 @@ export function TimeSeriesDashboard({
 
           {/* ─── MOBILE TOOLTIP ─── */}
           {hoveredPoint && isMobile && (
-            <div className="mt-3 text-center bg-white border border-slate-200 rounded-lg p-3 mx-2 shadow-sm">
-              <div className="font-semibold text-xs text-slate-900">{hoveredPoint.metric}</div>
+            <div className="mt-2 text-center bg-white border border-slate-200 rounded p-2 mx-2">
+              <div className="font-medium text-xs text-slate-900">{hoveredPoint.metric}</div>
               <div className="text-xs text-slate-500">{hoveredPoint.year}</div>
-              <div className="text-sm font-semibold text-slate-800 mt-0.5">
+              <div className="text-sm font-medium text-slate-800">
                 {format(hoveredPoint.value)}
               </div>
             </div>
