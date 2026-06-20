@@ -163,9 +163,9 @@ export function DoughnutClimateDashboard({
           baseline: 1950–1980 climate normal
         </div> */}
 
-        <p>
-        Let's begin with the numbers to understand the scale of climate-related consequences. Numbers rarely tell the whole story, but they provide a clear signal of rising climate pressures across the Pacific. This is evident in a climate anomaly index derived for each country from historical trends in temperature, rainfall, sea surface temperature, and sea level.
-        </p>
+      <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">
+  Let's begin with the numbers to understand the scale of climate-related consequences. Numbers rarely tell the whole story, but they provide a clear signal of rising climate pressures across the Pacific. This is evident in a climate anomaly index derived for each country from historical trends in temperature, rainfall, sea surface temperature, and sea level.
+    </p>
 
         <div className="flex items-center justify-center gap-3 mt-2">
 
@@ -221,7 +221,7 @@ export function DoughnutClimateDashboard({
         ))}
       </div>
 
-       <p>
+       <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">
          A measurable climate anomaly is emerging. Across the Pacific, climate events such as flood, coral erosion, heavy rainfall, {" "}
               <a
                 href="https://www.pacificmet.net/news/el-nino-likely-mid-2026-pacific-islands-climate-outlook-forum-18-warns"
