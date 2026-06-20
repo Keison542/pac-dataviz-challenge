@@ -111,9 +111,9 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="hover:text-cyan-700 underline underline-offset-2"
               >
-                projected El Niño
+                current El Niño
               </a>{" "}
-              in the Pacific is sending a warning
+              across the countries in the Pacific including PNG is sending a warning
             </>
           </h2>
         </div>
