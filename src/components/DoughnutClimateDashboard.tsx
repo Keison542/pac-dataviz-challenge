@@ -164,7 +164,7 @@ export function DoughnutClimateDashboard({
         </div> */}
 
         <div className="text-xs font-semibold tracking-widest text-slate-500 mt-2">
-          They say numbers don't lie and this tend to ascertain impending disaster across Pacific as evident by a measurable climate index calculated from the historical climate norms across temperature, rainfall, sea surface temperature, and sea level.
+        Let's begin with the numbers to understand the scale of climate-related consequences. Numbers rarely tell the whole story, but they provide a clear signal of rising climate pressures across the Pacific. This is evident in a climate anomaly index derived from historical trends in temperature, rainfall, sea surface temperature, and sea level.
         </div>
 
         <div className="flex items-center justify-center gap-3 mt-2">
