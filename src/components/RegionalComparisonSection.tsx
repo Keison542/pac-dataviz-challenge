@@ -21,12 +21,8 @@ export function RegionalComparisonSection({ selectedCountry, countriesCount, ran
         <MultiMetricRankedDashboard width={chartWidth * 2 + 20} height={520} data={rankedData} />
       </div>
 
-       <div className="mt-12 w-full">
-        <PacificClimateStoryMap
-
-         data={rankedData} 
-                  
-          />
+      <div className="mt-12 w-full max-w-7xl mx-auto px-4">
+        <PacificClimateStoryMap data={rankedData} />
       </div>
       
     </div>
