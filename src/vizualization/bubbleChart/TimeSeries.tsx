@@ -2,7 +2,6 @@
 
 import { scaleLinear, scaleBand, scaleSqrt } from "d3-scale";
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { line, curveMonotoneX } from "d3-shape";
 
 type DataPoint = {
   year: number;
@@ -50,6 +49,24 @@ const METRICS = [
   },
 ];
 
+// Trend metric (aggregated from all metrics)
+const TREND_METRIC = {
+  key: "trend",
+  label: "Overall Trend (Aggregated)",
+  color: "#0ea5e9",
+  lightColor: "#7dd3fc",
+  bgColor: "#f0f9ff",
+};
+
+// Bubble Chart metric (country-level data)
+const BUBBLE_METRIC = {
+  key: "bubble",
+  label: "Country-Level Impact",
+  color: "#ef4444",
+  lightColor: "#fca5a5",
+  bgColor: "#fef2f2",
+};
+
 export function TimeSeriesDashboard({
   width: propWidth,
   height: propHeight,
@@ -73,13 +90,16 @@ export function TimeSeriesDashboard({
     new Set(METRICS.map((m) => m.key))
   );
 
+  const [showTrend, setShowTrend] = useState(true);
+  const [showBubble, setShowBubble] = useState(true);
+
   // ─── Responsive sizing ───
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         const width = propWidth || rect.width || 600;
-        const height = propHeight || Math.min(rect.width * 0.55, 480);
+        const height = propHeight || Math.min(rect.width * 0.6, 550);
         setDimensions({ width, height });
         setIsMobile(width < 768);
       }
@@ -108,13 +128,13 @@ export function TimeSeriesDashboard({
   // ─── Responsive margins ───
   const responsiveMargin = useMemo(() => {
     if (width < 400) {
-      return { top: 40, right: 15, bottom: 50, left: 100 };
+      return { top: 40, right: 15, bottom: 50, left: 110 };
     }
     if (width < 600) {
-      return { top: 45, right: 20, bottom: 60, left: 120 };
+      return { top: 45, right: 20, bottom: 60, left: 130 };
     }
     if (width < 768) {
-      return { top: 48, right: 30, bottom: 65, left: 135 };
+      return { top: 48, right: 30, bottom: 65, left: 145 };
     }
     return MARGIN;
   }, [width]);
@@ -140,9 +160,66 @@ export function TimeSeriesDashboard({
   }, [width]);
 
   // ─── Metric rows for Y-axis ───
-  const metricRows = useMemo(
-    () => METRICS.filter((m) => visibleMetrics.has(m.key)).map((m) => m.label),
-    [visibleMetrics]
+  const metricRows = useMemo(() => {
+    const rows: string[] = [];
+    
+    // Add metric rows
+    METRICS.filter((m) => visibleMetrics.has(m.key)).forEach((m) => {
+      rows.push(m.label);
+    });
+    
+    // Add trend row
+    if (showTrend) rows.push(TREND_METRIC.label);
+    
+    // Add bubble chart row
+    if (showBubble) rows.push(BUBBLE_METRIC.label);
+    
+    return rows;
+  }, [visibleMetrics, showTrend, showBubble]);
+
+  // ─── Compute trend data ───
+  const trendData = useMemo(() => {
+    const map = new Map<number, number>();
+
+    data.forEach((d) => {
+      METRICS.forEach((m) => {
+        if (visibleMetrics.has(m.key)) {
+          const value = d[m.key as keyof DataPoint] as number;
+          map.set(d.year, (map.get(d.year) || 0) + value);
+        }
+      });
+    });
+
+    return Array.from(map.entries())
+      .map(([year, value]) => ({ year, value }))
+      .sort((a, b) => a.year - b.year);
+  }, [data, visibleMetrics]);
+
+  // ─── Compute bubble chart data (simulated country-level data) ───
+  const bubbleData = useMemo(() => {
+    // Simulate country-level data based on the selected country's data
+    // In a real implementation, this would come from a separate data source
+    const countries = ["Fiji", "Samoa", "Tonga", "Vanuatu", "Solomon Islands"];
+    const result: { country: string; year: number; value: number }[] = [];
+
+    data.forEach((d) => {
+      // Use cropYield as a proxy for country-level impact
+      const baseValue = d.cropYield || 0;
+      countries.forEach((country, i) => {
+        const variation = 0.6 + (i / countries.length) * 0.8;
+        const value = Math.round(baseValue * variation * (0.8 + Math.random() * 0.4));
+        if (value > 0) {
+          result.push({ country, year: d.year, value });
+        }
+      });
+    });
+
+    return result;
+  }, [data]);
+
+  const maxBubbleValue = useMemo(
+    () => Math.max(...bubbleData.map((d) => d.value), 1),
+    [bubbleData]
   );
 
   // ─── Scales ───
@@ -157,7 +234,7 @@ export function TimeSeriesDashboard({
     return scaleBand()
       .domain(metricRows)
       .range([0, boundsHeight])
-      .padding(0.45);
+      .padding(0.4);
   }, [metricRows, boundsHeight]);
 
   // ─── Bubble radius scale ───
@@ -175,11 +252,19 @@ export function TimeSeriesDashboard({
       });
     });
 
+    // Also include trend data
+    trendData.forEach((d) => {
+      maxValue = Math.max(maxValue, d.value);
+    });
+
+    // Also include bubble data
+    maxValue = Math.max(maxValue, maxBubbleValue);
+
     const maxRadius = width < 500 ? 16 : width < 768 ? 20 : 26;
     return scaleSqrt()
       .domain([0, maxValue || 1])
       .range([3, maxRadius]);
-  }, [data, visibleMetrics, width]);
+  }, [data, visibleMetrics, trendData, maxBubbleValue, width]);
 
   // ─── Dynamic ticks ───
   const xTicks = useMemo(() => {
@@ -203,48 +288,6 @@ export function TimeSeriesDashboard({
       : v >= 1_000
       ? `${(v / 1_000).toFixed(0)}K`
       : v.toFixed(0);
-
-  // ─── Compute trend line data (aggregated across all metrics) ───
-  const trendData = useMemo(() => {
-    const map = new Map<number, number>();
-
-    data.forEach((d) => {
-      METRICS.forEach((m) => {
-        if (visibleMetrics.has(m.key)) {
-          const value = d[m.key as keyof DataPoint] as number;
-          map.set(d.year, (map.get(d.year) || 0) + value);
-        }
-      });
-    });
-
-    return Array.from(map.entries())
-      .map(([year, value]) => ({ year, value }))
-      .sort((a, b) => a.year - b.year);
-  }, [data, visibleMetrics]);
-
-  const maxTrendValue = useMemo(
-    () => Math.max(...trendData.map((d) => d.value), 1),
-    [trendData]
-  );
-
-  // ─── Trend line scale ───
-  const trendYScale = useMemo(
-    () =>
-      scaleLinear()
-        .domain([0, maxTrendValue * 1.1])
-        .range([boundsHeight, 0]),
-    [maxTrendValue, boundsHeight]
-  );
-
-  // ─── Trend line path ───
-  const linePath = useMemo(() => {
-    return (
-      line<{ year: number; value: number }>()
-        .x((d) => xScale(d.year))
-        .y((d) => trendYScale(d.value))
-        .curve(curveMonotoneX)(trendData) || ""
-    );
-  }, [trendData, xScale, trendYScale]);
 
   if (!data.length || !width || !height) {
     return (
@@ -279,14 +322,14 @@ export function TimeSeriesDashboard({
         </div>
 
         {/* ─── LEGEND ─── */}
-        <div className="flex flex-wrap gap-4 mb-4 justify-center">
+        <div className="flex flex-wrap gap-2 mb-4 justify-center">
           {METRICS.map((m) => {
             const isVisible = visibleMetrics.has(m.key);
             return (
               <button
                 key={m.key}
                 onClick={() => toggleMetric(m.key)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-[10px] sm:text-xs font-medium"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all text-[9px] sm:text-[10px] font-medium"
                 style={{
                   borderColor: isVisible ? m.color : "#e2e8f0",
                   color: isVisible ? m.color : "#94a3b8",
@@ -295,7 +338,7 @@ export function TimeSeriesDashboard({
                 }}
               >
                 <span 
-                  className="w-2.5 h-2.5 rounded-full"
+                  className="w-2 h-2 rounded-full"
                   style={{ 
                     background: m.color,
                     opacity: isVisible ? 1 : 0.3
@@ -305,6 +348,44 @@ export function TimeSeriesDashboard({
               </button>
             );
           })}
+          <button
+            onClick={() => setShowTrend(!showTrend)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all text-[9px] sm:text-[10px] font-medium"
+            style={{
+              borderColor: showTrend ? TREND_METRIC.color : "#e2e8f0",
+              color: showTrend ? TREND_METRIC.color : "#94a3b8",
+              background: showTrend ? "white" : "#f8fafc",
+              boxShadow: showTrend ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
+            }}
+          >
+            <span 
+              className="w-2 h-2 rounded-full"
+              style={{ 
+                background: TREND_METRIC.color,
+                opacity: showTrend ? 1 : 0.3
+              }}
+            />
+            <span className="whitespace-nowrap">Overall Trend</span>
+          </button>
+          <button
+            onClick={() => setShowBubble(!showBubble)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all text-[9px] sm:text-[10px] font-medium"
+            style={{
+              borderColor: showBubble ? BUBBLE_METRIC.color : "#e2e8f0",
+              color: showBubble ? BUBBLE_METRIC.color : "#94a3b8",
+              background: showBubble ? "white" : "#f8fafc",
+              boxShadow: showBubble ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
+            }}
+          >
+            <span 
+              className="w-2 h-2 rounded-full"
+              style={{ 
+                background: BUBBLE_METRIC.color,
+                opacity: showBubble ? 1 : 0.3
+              }}
+            />
+            <span className="whitespace-nowrap">Country Impact</span>
+          </button>
         </div>
 
         {/* ─── CHART ─── */}
@@ -321,6 +402,14 @@ export function TimeSeriesDashboard({
               {metricRows.map((row, index) => {
                 const yPos = yScale(row) ?? 0;
                 const metric = METRICS.find(m => m.label === row);
+                const isTrend = row === TREND_METRIC.label;
+                const isBubble = row === BUBBLE_METRIC.label;
+                
+                let bgColor = index % 2 === 0 ? "#f8fafc" : "transparent";
+                if (isTrend) bgColor = TREND_METRIC.bgColor;
+                if (isBubble) bgColor = BUBBLE_METRIC.bgColor;
+                if (metric) bgColor = metric.bgColor;
+                
                 return (
                   <rect
                     key={`bg-${row}`}
@@ -328,7 +417,7 @@ export function TimeSeriesDashboard({
                     y={yPos}
                     width={boundsWidth}
                     height={yScale.bandwidth()}
-                    fill={metric?.bgColor || (index % 2 === 0 ? "#f8fafc" : "transparent")}
+                    fill={bgColor}
                     rx={2}
                   />
                 );
@@ -369,47 +458,6 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── TREND LINE (Integrated from TrendLine component) ─── */}
-              {trendData.length > 1 && (
-                <>
-                  {/* Trend line shadow/glow */}
-                  <path
-                    d={linePath}
-                    fill="none"
-                    stroke="#0ea5e9"
-                    strokeWidth={Math.max(2, Math.min(4, width / 200))}
-                    opacity={0.15}
-                    strokeLinecap="round"
-                    style={{ filter: 'blur(4px)' }}
-                  />
-                  
-                  {/* Main trend line */}
-                  <path
-                    d={linePath}
-                    fill="none"
-                    stroke="#0ea5e9"
-                    strokeWidth={Math.max(1.5, Math.min(3, width / 250))}
-                    opacity={0.7}
-                    strokeLinecap="round"
-                  />
-
-                  {/* Trend line points */}
-                  {trendData.map((d, i) => {
-                    const isLast = i === trendData.length - 1;
-                    return (
-                      <circle
-                        key={`trend-point-${i}`}
-                        cx={xScale(d.year)}
-                        cy={trendYScale(d.value)}
-                        r={isLast ? 4 : 2.5}
-                        fill={isLast ? "#0284c7" : "#38bdf8"}
-                        opacity={isLast ? 1 : 0.5}
-                      />
-                    );
-                  })}
-                </>
-              )}
-
               {/* ─── CONNECTING LINES (between bubbles) ─── */}
               {METRICS.map((metric) => {
                 if (!visibleMetrics.has(metric.key)) return null;
@@ -445,7 +493,60 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── BUBBLES ─── */}
+              {/* ─── CONNECTING LINES FOR TREND ─── */}
+              {showTrend && trendData.length > 1 && (
+                <path
+                  d={trendData
+                    .map((d, i) => {
+                      const cx = xScale(d.year);
+                      const cy = (yScale(TREND_METRIC.label) ?? 0) + yScale.bandwidth() / 2;
+                      return `${i === 0 ? 'M' : 'L'} ${cx} ${cy}`;
+                    })
+                    .join(' ')}
+                  fill="none"
+                  stroke={TREND_METRIC.color}
+                  strokeWidth={2}
+                  strokeOpacity={0.2}
+                  strokeDasharray="4 4"
+                />
+              )}
+
+              {/* ─── CONNECTING LINES FOR BUBBLE CHART ─── */}
+              {showBubble && bubbleData.length > 0 && (
+                <>
+                  {Array.from(new Set(bubbleData.map(d => d.country))).map((country) => {
+                    const points = bubbleData
+                      .filter(d => d.country === country)
+                      .sort((a, b) => a.year - b.year)
+                      .map(d => ({
+                        x: xScale(d.year),
+                        y: (yScale(BUBBLE_METRIC.label) ?? 0) + yScale.bandwidth() / 2,
+                        value: d.value,
+                      }))
+                      .filter(p => p !== null);
+
+                    if (points.length < 2) return null;
+
+                    const linePath = points
+                      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+                      .join(' ');
+
+                    return (
+                      <path
+                        key={`bubble-line-${country}`}
+                        d={linePath}
+                        fill="none"
+                        stroke={BUBBLE_METRIC.color}
+                        strokeWidth={1}
+                        strokeOpacity={0.1}
+                        strokeDasharray="2 4"
+                      />
+                    );
+                  })}
+                </>
+              )}
+
+              {/* ─── BUBBLES FOR METRICS ─── */}
               {data.map((d) =>
                 METRICS.map((metric) => {
                   if (!visibleMetrics.has(metric.key)) return null;
@@ -463,13 +564,11 @@ export function TimeSeriesDashboard({
                   const radius = radiusScale(value);
                   if (radius < 2) return null;
 
-                  // Get the metric color
                   const metricConfig = METRICS.find(m => m.label === metric.label);
                   const color = metricConfig?.color || '#94a3b8';
 
                   return (
                     <g key={`${metric.key}-${d.year}`}>
-                      {/* Glow effect on active */}
                       {isActive && (
                         <circle
                           cx={cx}
@@ -503,7 +602,6 @@ export function TimeSeriesDashboard({
                           filter: isActive ? 'drop-shadow(0 2px 8px rgba(0,0,0,0.12))' : 'none',
                         }}
                       />
-                      {/* Value label inside bubble if large enough */}
                       {radius > 12 && (
                         <text
                           x={cx}
@@ -521,6 +619,151 @@ export function TimeSeriesDashboard({
                   );
                 })
               )}
+
+              {/* ─── BUBBLES FOR TREND ─── */}
+              {showTrend && trendData.map((d, i) => {
+                const cx = xScale(d.year);
+                const cy = (yScale(TREND_METRIC.label) ?? 0) + yScale.bandwidth() / 2;
+
+                const isActive =
+                  hoveredPoint?.metric === TREND_METRIC.label &&
+                  hoveredPoint?.year === d.year;
+
+                const radius = radiusScale(d.value);
+                if (radius < 2) return null;
+
+                const isLast = i === trendData.length - 1;
+
+                return (
+                  <g key={`trend-${d.year}`}>
+                    {isActive && (
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={radius + 6}
+                        fill={TREND_METRIC.color}
+                        opacity={0.08}
+                      />
+                    )}
+                    {isLast && !isActive && (
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={radius + 4}
+                        fill="none"
+                        stroke={TREND_METRIC.color}
+                        strokeWidth={1.5}
+                        opacity={0.3}
+                      />
+                    )}
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={radius}
+                      fill={TREND_METRIC.color}
+                      opacity={isActive ? 0.95 : 0.5}
+                      stroke={isLast ? "#0284c7" : "white"}
+                      strokeWidth={isLast ? 2 : 1}
+                      onMouseEnter={() =>
+                        setHoveredPoint({
+                          metric: TREND_METRIC.label,
+                          year: d.year,
+                          value: d.value,
+                          x: cx,
+                          y: cy,
+                        })
+                      }
+                      onMouseLeave={() => setHoveredPoint(null)}
+                      className={!isTouchDevice ? "cursor-pointer" : ""}
+                      style={{
+                        transition: 'all 0.2s ease',
+                        filter: isActive ? 'drop-shadow(0 2px 8px rgba(0,0,0,0.12))' : 'none',
+                      }}
+                    />
+                    {radius > 12 && (
+                      <text
+                        x={cx}
+                        y={cy + 3}
+                        textAnchor="middle"
+                        fontSize={Math.min(8, radius * 0.4)}
+                        fill="white"
+                        fontWeight="500"
+                        opacity={0.8}
+                      >
+                        {format(d.value)}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+
+              {/* ─── BUBBLES FOR BUBBLE CHART ─── */}
+              {showBubble && bubbleData.map((d, i) => {
+                const cx = xScale(d.year);
+                const cy = (yScale(BUBBLE_METRIC.label) ?? 0) + yScale.bandwidth() / 2;
+
+                const isActive =
+                  hoveredPoint?.metric === BUBBLE_METRIC.label &&
+                  hoveredPoint?.year === d.year;
+
+                const radius = radiusScale(d.value);
+                if (radius < 2) return null;
+
+                // Random offset for country bubbles to show distribution
+                const countryIndex = Array.from(new Set(bubbleData.map(b => b.country))).indexOf(d.country);
+                const offset = (countryIndex / 10) * yScale.bandwidth() * 0.3 - yScale.bandwidth() * 0.15;
+
+                return (
+                  <g key={`bubble-${d.country}-${d.year}`}>
+                    {isActive && (
+                      <circle
+                        cx={cx + offset}
+                        cy={cy}
+                        r={radius + 6}
+                        fill={BUBBLE_METRIC.color}
+                        opacity={0.08}
+                      />
+                    )}
+                    <circle
+                      cx={cx + offset}
+                      cy={cy}
+                      r={radius}
+                      fill={BUBBLE_METRIC.color}
+                      opacity={isActive ? 0.95 : 0.4}
+                      stroke="white"
+                      strokeWidth={isActive ? 2 : 0.5}
+                      onMouseEnter={() =>
+                        setHoveredPoint({
+                          metric: `${BUBBLE_METRIC.label}: ${d.country}`,
+                          year: d.year,
+                          value: d.value,
+                          x: cx + offset,
+                          y: cy,
+                        })
+                      }
+                      onMouseLeave={() => setHoveredPoint(null)}
+                      className={!isTouchDevice ? "cursor-pointer" : ""}
+                      style={{
+                        transition: 'all 0.2s ease',
+                        filter: isActive ? 'drop-shadow(0 2px 8px rgba(0,0,0,0.12))' : 'none',
+                      }}
+                    />
+                    {radius > 10 && (
+                      <text
+                        x={cx + offset}
+                        y={cy + 3}
+                        textAnchor="middle"
+                        fontSize={Math.min(6, radius * 0.3)}
+                        fill="white"
+                        fontWeight="500"
+                        opacity={0.7}
+                      >
+                        {d.country.slice(0, 3)}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
 
               {/* ─── X-AXIS TICK LABELS ─── */}
               {xTicks.map((x, i) => {
@@ -561,6 +804,12 @@ export function TimeSeriesDashboard({
               {metricRows.map((metric) => {
                 const yPos = yScale(metric) ?? 0;
                 const isLast = metric === metricRows[metricRows.length - 1];
+                const isTrend = metric === TREND_METRIC.label;
+                const isBubble = metric === BUBBLE_METRIC.label;
+                
+                let color = isLast ? "#1a1a2e" : "#475569";
+                if (isTrend) color = TREND_METRIC.color;
+                if (isBubble) color = BUBBLE_METRIC.color;
                 
                 return (
                   <text
@@ -568,9 +817,9 @@ export function TimeSeriesDashboard({
                     x={-14}
                     y={yPos + yScale.bandwidth() / 2 + 4}
                     textAnchor="end"
-                    fontSize={Math.max(9, fontSize * 0.85)}
-                    fill={isLast ? "#1a1a2e" : "#475569"}
-                    fontWeight={isLast ? "600" : "500"}
+                    fontSize={Math.max(8, fontSize * 0.8)}
+                    fill={color}
+                    fontWeight={isTrend || isBubble ? "600" : (isLast ? "600" : "500")}
                   >
                     {metric}
                   </text>
@@ -596,7 +845,7 @@ export function TimeSeriesDashboard({
           {/* ─── TOOLTIP ─── */}
           {hoveredPoint && !isMobile && (
             <div
-              className="absolute rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-lg pointer-events-none z-10"
+              className="absolute rounded-lg border border-slate-200 bg-white p-2.5 sm:p-3 text-xs shadow-lg pointer-events-none z-10"
               style={{
                 left: Math.min(
                   hoveredPoint.x + responsiveMargin.left + 14,
@@ -621,7 +870,7 @@ export function TimeSeriesDashboard({
 
           {/* ─── MOBILE TOOLTIP ─── */}
           {hoveredPoint && isMobile && (
-            <div className="mt-3 text-center bg-white border border-slate-200 rounded-lg p-3 mx-2 shadow-sm">
+            <div className="mt-3 text-center bg-white border border-slate-200 rounded-lg p-2.5 mx-2 shadow-sm">
               <div className="font-semibold text-xs text-slate-900">{hoveredPoint.metric}</div>
               <div className="text-xs text-slate-500">{hoveredPoint.year}</div>
               <div className="text-sm font-semibold text-slate-800 mt-0.5">
