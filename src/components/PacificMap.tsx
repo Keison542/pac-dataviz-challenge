@@ -566,10 +566,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
 
         {/* ─── HAZARD FILTERS ─── */}
         <g transform={`translate(30, ${hazardFilterY})`}>
-          <text x={0} y={0} fontSize={9} fill="#94a3b8" letterSpacing="0.05em">
-            {activeHazard ? "▼ Showing hazard impact" : "▼ Filter by hazard"}
-          </text>
-
           {[
             { key: "cyclone", label: "Cyclones", color: HAZARD_COLORS.cyclone },
             { key: "flood", label: "Flooding", color: HAZARD_COLORS.flood },
