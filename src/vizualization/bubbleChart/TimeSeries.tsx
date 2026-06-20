@@ -154,7 +154,7 @@ export function TimeSeriesDashboard({
     return base;
   }, [width]);
 
-  // ─── Years for Y-axis ───
+  // ─── Years for Y-axis (every single year) ───
   const years = useMemo(() => {
     return data.map((d) => d.year).sort((a, b) => a - b);
   }, [data]);
@@ -220,7 +220,7 @@ export function TimeSeriesDashboard({
     return scaleBand()
       .domain(years.map(String))
       .range([0, boundsHeight])
-      .padding(0.25);
+      .padding(0.15);
   }, [years, boundsHeight]);
 
   const xScale = useMemo(() => {
@@ -252,20 +252,14 @@ export function TimeSeriesDashboard({
     maxValue = Math.max(maxValue, maxBubbleValue);
 
     const maxRadius = Math.min(
-      width < 500 ? 14 : width < 768 ? 18 : 22,
-      yScale.bandwidth() * 0.35,
+      width < 500 ? 12 : width < 768 ? 16 : 20,
+      yScale.bandwidth() * 0.3,
       xScale.bandwidth() * 0.35
     );
     return scaleSqrt()
       .domain([0, maxValue || 1])
       .range([2, Math.max(4, maxRadius)]);
   }, [data, visibleMetrics, trendData, maxBubbleValue, width, yScale, xScale]);
-
-  // ─── Dynamic ticks ───
-  const visibleYears = useMemo(() => {
-    const step = Math.max(1, Math.floor(years.length / (width < 500 ? 5 : width < 768 ? 7 : 10)));
-    return years.filter((_, i) => i % step === 0 || i === years.length - 1);
-  }, [years, width]);
 
   const format = (v: number) =>
     v >= 1_000_000
@@ -286,6 +280,9 @@ export function TimeSeriesDashboard({
 
   const fontSize = getFontSize(12);
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  // Determine if we need smaller font for years based on count
+  const yearFontSize = years.length > 30 ? Math.max(6, fontSize * 0.6) : Math.max(8, fontSize * 0.75);
 
   return (
     <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
@@ -623,20 +620,25 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── Y-AXIS LABELS ─── */}
-              {visibleYears.map((year) => {
+              {/* ─── Y-AXIS LABELS (every single year) ─── */}
+              {years.map((year) => {
                 const yPos = yScale(String(year)) ?? 0;
                 const isLastYear = year === years[years.length - 1];
+                const isFirstYear = year === years[0];
+                
+                // Only show year label if there's enough space
+                if (yPos < 5 || yPos > boundsHeight - 5) return null;
                 
                 return (
                   <text
                     key={`y-label-${year}`}
-                    x={-6}
-                    y={yPos + yScale.bandwidth() / 2 + 3}
+                    x={-4}
+                    y={yPos + yScale.bandwidth() / 2 + 2}
                     textAnchor="end"
-                    fontSize={Math.max(8, fontSize * 0.75)}
-                    fill={isLastYear ? "#1a1a2e" : "#94a3b8"}
+                    fontSize={yearFontSize}
+                    fill={isLastYear ? "#1a1a2e" : (isFirstYear ? "#475569" : "#94a3b8")}
                     fontWeight={isLastYear ? "600" : "400"}
+                    opacity={isLastYear ? 1 : 0.7}
                   >
                     {year}
                   </text>
