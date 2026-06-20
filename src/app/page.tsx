@@ -103,8 +103,9 @@ export default function Home() {
       <section className="min-h-[70vh] flex items-center justify-center px-6">
         <div className="max-w-4xl text-center">
           <h2 className="text-4xl md:text-6xl font-light leading-tight">
+
             <>
-              The ocean and{" "}
+              The Pacific helped create little of the climate crisis. Yet its nations stand on the front line of its consequences. The ocean and for example {" "}
               <a
                 href="https://www.pacificmet.net/news/el-nino-likely-mid-2026-pacific-islands-climate-outlook-forum-18-warns"
                 target="_blank"
@@ -113,9 +114,10 @@ export default function Home() {
               >
                 current El Niño
               </a>{" "}
-              across the countries in the Pacific including PNG is sending a warning
+              across the countries in the Pacific including PNG is sending a warning. 
             </>
           </h2>
+       
         </div>
       </section>
 
