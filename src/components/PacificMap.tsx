@@ -96,14 +96,6 @@ const HAZARD_COLORS = {
   seaLevelRise: "#dc2626",
 };
 
-// ─── Hazard Labels ───
-const HAZARD_LABELS = {
-  cyclone: "cyclone",
-  flood: "flooding",
-  drought: "drought",
-  seaLevelRise: "sea-level rise",
-};
-
 // ─── Projection Functions ───
 const projectLon = (lon: number) => {
   let x = lon;
@@ -400,15 +392,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
     <div className={`w-full ${className}`}>
       {/* ─── NARRATIVE HEADER ─── */}
       <div className="mb-6 text-center max-w-4xl mx-auto">
-        {/* <p className="text-sm uppercase tracking-[0.15em] text-slate-500 font-medium">
-          Regional Vulnerability Map
-        </p>
-      
-        <h3 className="mt-1 text-xl md:text-2xl font-semibold text-slate-900">
-          Climate exposure is uneven across Pacific nations
-        </h3> */}
-      
-        <p className="mt-3 text-sm text-slate-500 leading-relaxed">
+        <p className="text-sm text-slate-500 leading-relaxed">
           Circle size represents composite vulnerability. Hover hazards below
           to reveal countries experiencing flooding, drought, cyclone impacts,
           or sea-level rise.
@@ -637,22 +621,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
               </g>
             );
           })}
-
-          {/* ─── ACTIVE HAZARD INDICATOR ─── */}
-          {activeHazard && (
-            <g transform={`translate(${hazardFilterStartX + 4 * 105 + 20}, -6)`}>
-              <rect
-                x={0}
-                y={-8}
-                width={180}
-                height={24}
-                rx={4}
-                fill="#f1f5f9"
-                stroke="#cbd5e1"
-                strokeWidth={1}
-              />
-            </g>
-          )}
         </g>
       </svg>
 
