@@ -20,7 +20,7 @@ type Props = {
   className?: string;
 };
 
-const MARGIN = { top: 50, right: 80, bottom: 70, left: 100 };
+const MARGIN = { top: 50, right: 30, bottom: 70, left: 80 };
 
 const METRICS = [
   {
@@ -29,7 +29,6 @@ const METRICS = [
     unit: "t/ha",
     color: "#1a1a2e",
     lightColor: "#4a4a6a",
-    bgColor: "#f0f0f5",
   },
   {
     key: "livestockYield",
@@ -37,7 +36,6 @@ const METRICS = [
     unit: "tons",
     color: "#4a4a6a",
     lightColor: "#7a7a9a",
-    bgColor: "#f5f5f8",
   },
   {
     key: "touristArrivals",
@@ -45,7 +43,6 @@ const METRICS = [
     unit: "",
     color: "#94a3b8",
     lightColor: "#c0c8d0",
-    bgColor: "#fafafa",
   },
 ];
 
@@ -55,16 +52,14 @@ const TREND_METRIC = {
   label: "Overall Trend",
   color: "#0ea5e9",
   lightColor: "#7dd3fc",
-  bgColor: "#f0f9ff",
 };
 
 // Bubble Chart metric (country-level data)
 const BUBBLE_METRIC = {
   key: "bubble",
-  label: "Country-Level Impact",
+  label: "Country Impact",
   color: "#ef4444",
   lightColor: "#fca5a5",
-  bgColor: "#fef2f2",
 };
 
 export function TimeSeriesDashboard({
@@ -99,7 +94,7 @@ export function TimeSeriesDashboard({
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         const width = propWidth || rect.width || 600;
-        const height = propHeight || Math.min(rect.width * 0.7, 550);
+        const height = propHeight || Math.min(rect.width * 0.8, 650);
         setDimensions({ width, height });
         setIsMobile(width < 768);
       }
@@ -128,13 +123,13 @@ export function TimeSeriesDashboard({
   // ─── Responsive margins ───
   const responsiveMargin = useMemo(() => {
     if (width < 400) {
-      return { top: 40, right: 30, bottom: 50, left: 60 };
+      return { top: 30, right: 10, bottom: 50, left: 55 };
     }
     if (width < 600) {
-      return { top: 45, right: 40, bottom: 60, left: 70 };
+      return { top: 35, right: 15, bottom: 60, left: 60 };
     }
     if (width < 768) {
-      return { top: 48, right: 50, bottom: 65, left: 80 };
+      return { top: 40, right: 20, bottom: 65, left: 65 };
     }
     return MARGIN;
   }, [width]);
@@ -168,15 +163,11 @@ export function TimeSeriesDashboard({
   const metricColumns = useMemo(() => {
     const cols: string[] = [];
     
-    // Add metric columns
     METRICS.filter((m) => visibleMetrics.has(m.key)).forEach((m) => {
       cols.push(m.label);
     });
     
-    // Add trend column
     if (showTrend) cols.push(TREND_METRIC.label);
-    
-    // Add bubble chart column
     if (showBubble) cols.push(BUBBLE_METRIC.label);
     
     return cols;
@@ -229,14 +220,14 @@ export function TimeSeriesDashboard({
     return scaleBand()
       .domain(years.map(String))
       .range([0, boundsHeight])
-      .padding(0.35);
+      .padding(0.25);
   }, [years, boundsHeight]);
 
   const xScale = useMemo(() => {
     return scaleBand()
       .domain(metricColumns)
       .range([0, boundsWidth])
-      .padding(0.3);
+      .padding(0.4);
   }, [metricColumns, boundsWidth]);
 
   // ─── Bubble radius scale ───
@@ -260,15 +251,19 @@ export function TimeSeriesDashboard({
 
     maxValue = Math.max(maxValue, maxBubbleValue);
 
-    const maxRadius = width < 500 ? 14 : width < 768 ? 18 : 22;
+    const maxRadius = Math.min(
+      width < 500 ? 14 : width < 768 ? 18 : 22,
+      yScale.bandwidth() * 0.35,
+      xScale.bandwidth() * 0.35
+    );
     return scaleSqrt()
       .domain([0, maxValue || 1])
-      .range([2, maxRadius]);
-  }, [data, visibleMetrics, trendData, maxBubbleValue, width]);
+      .range([2, Math.max(4, maxRadius)]);
+  }, [data, visibleMetrics, trendData, maxBubbleValue, width, yScale, xScale]);
 
   // ─── Dynamic ticks ───
   const visibleYears = useMemo(() => {
-    const step = Math.max(1, Math.floor(years.length / (width < 500 ? 4 : width < 768 ? 6 : 8)));
+    const step = Math.max(1, Math.floor(years.length / (width < 500 ? 5 : width < 768 ? 7 : 10)));
     return years.filter((_, i) => i % step === 0 || i === years.length - 1);
   }, [years, width]);
 
@@ -296,7 +291,7 @@ export function TimeSeriesDashboard({
     <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
       <div className="w-full max-w-4xl px-2 sm:px-4">
         {/* ─── NARRATIVE HEADER ─── */}
-        <div className="mb-4 text-center">
+        <div className="mb-3 text-center">
           <h3 className="text-base sm:text-lg font-semibold text-slate-900">
             Structural System Shift
           </h3>
@@ -304,15 +299,10 @@ export function TimeSeriesDashboard({
             Long-term socioeconomic indicators reveal how climate pressure gradually reshapes
             national economic structures and adaptive capacity.
           </p>
-          <p className="text-xs text-slate-400 max-w-2xl mx-auto leading-relaxed mt-2">
-            Larger circles indicate periods where livelihood systems carried greater economic importance or
-            production value. Patterns reveal how resilience shifted across food production, livelihood assets and
-            tourism.
-          </p>
         </div>
 
         {/* ─── LEGEND ─── */}
-        <div className="flex flex-wrap gap-2 mb-4 justify-center">
+        <div className="flex flex-wrap gap-2 mb-3 justify-center">
           {METRICS.map((m) => {
             const isVisible = visibleMetrics.has(m.key);
             return (
@@ -324,7 +314,6 @@ export function TimeSeriesDashboard({
                   borderColor: isVisible ? m.color : "#e2e8f0",
                   color: isVisible ? m.color : "#94a3b8",
                   background: isVisible ? "white" : "#f8fafc",
-                  boxShadow: isVisible ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
                 }}
               >
                 <span 
@@ -345,7 +334,6 @@ export function TimeSeriesDashboard({
               borderColor: showTrend ? TREND_METRIC.color : "#e2e8f0",
               color: showTrend ? TREND_METRIC.color : "#94a3b8",
               background: showTrend ? "white" : "#f8fafc",
-              boxShadow: showTrend ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
             }}
           >
             <span 
@@ -364,7 +352,6 @@ export function TimeSeriesDashboard({
               borderColor: showBubble ? BUBBLE_METRIC.color : "#e2e8f0",
               color: showBubble ? BUBBLE_METRIC.color : "#94a3b8",
               background: showBubble ? "white" : "#f8fafc",
-              boxShadow: showBubble ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
             }}
           >
             <span 
@@ -388,7 +375,7 @@ export function TimeSeriesDashboard({
             style={{ maxWidth: '100%', height: 'auto' }}
           >
             <g transform={`translate(${responsiveMargin.left},${responsiveMargin.top})`}>
-              {/* ─── LIGHT BACKGROUND ROWS ─── */}
+              {/* ─── BACKGROUND ROWS ─── */}
               {years.map((year, index) => {
                 const yPos = yScale(String(year)) ?? 0;
                 const isEven = index % 2 === 0;
@@ -405,7 +392,7 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── GRID - Horizontal lines ─── */}
+              {/* ─── HORIZONTAL GRID LINES ─── */}
               {years.map((year) => {
                 const yPos = yScale(String(year)) ?? 0;
                 return (
@@ -421,7 +408,7 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── GRID - Vertical lines ─── */}
+              {/* ─── VERTICAL GRID LINES ─── */}
               {metricColumns.map((col) => {
                 const xPos = xScale(col) ?? 0;
                 return (
@@ -438,7 +425,7 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── CONNECTING LINES (vertical - between years) ─── */}
+              {/* ─── CONNECTING LINES ─── */}
               {METRICS.map((metric) => {
                 if (!visibleMetrics.has(metric.key)) return null;
                 
@@ -467,14 +454,14 @@ export function TimeSeriesDashboard({
                     d={linePath}
                     fill="none"
                     stroke={metric.color}
-                    strokeWidth={1.5}
+                    strokeWidth={1}
                     strokeOpacity={0.15}
                     strokeDasharray="3 3"
                   />
                 );
               })}
 
-              {/* ─── CONNECTING LINES FOR TREND ─── */}
+              {/* ─── TREND CONNECTING LINES ─── */}
               {showTrend && trendData.length > 1 && (
                 <path
                   d={trendData
@@ -487,45 +474,10 @@ export function TimeSeriesDashboard({
                     .join(' L ')}
                   fill="none"
                   stroke={TREND_METRIC.color}
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   strokeOpacity={0.2}
                   strokeDasharray="4 4"
                 />
-              )}
-
-              {/* ─── CONNECTING LINES FOR BUBBLE CHART ─── */}
-              {showBubble && bubbleData.length > 0 && (
-                <>
-                  {Array.from(new Set(bubbleData.map(d => d.country))).map((country) => {
-                    const points = bubbleData
-                      .filter(d => d.country === country)
-                      .sort((a, b) => a.year - b.year)
-                      .map(d => ({
-                        x: (xScale(BUBBLE_METRIC.label) ?? 0) + xScale.bandwidth() / 2,
-                        y: (yScale(String(d.year)) ?? 0) + yScale.bandwidth() / 2,
-                        value: d.value,
-                      }))
-                      .filter(p => p !== null);
-
-                    if (points.length < 2) return null;
-
-                    const linePath = points
-                      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
-                      .join(' ');
-
-                    return (
-                      <path
-                        key={`bubble-line-${country}`}
-                        d={linePath}
-                        fill="none"
-                        stroke={BUBBLE_METRIC.color}
-                        strokeWidth={1}
-                        strokeOpacity={0.1}
-                        strokeDasharray="2 4"
-                      />
-                    );
-                  })}
-                </>
               )}
 
               {/* ─── BUBBLES FOR METRICS ─── */}
@@ -544,7 +496,7 @@ export function TimeSeriesDashboard({
                     hoveredPoint?.year === d.year;
 
                   const radius = radiusScale(value);
-                  if (radius < 2) return null;
+                  if (radius < 1.5) return null;
 
                   const metricConfig = METRICS.find(m => m.label === metric.label);
                   const color = metricConfig?.color || '#94a3b8';
@@ -555,7 +507,7 @@ export function TimeSeriesDashboard({
                         <circle
                           cx={cx}
                           cy={cy}
-                          r={radius + 6}
+                          r={radius + 5}
                           fill={color}
                           opacity={0.08}
                         />
@@ -565,9 +517,9 @@ export function TimeSeriesDashboard({
                         cy={cy}
                         r={radius}
                         fill={color}
-                        opacity={isActive ? 0.95 : 0.6}
+                        opacity={isActive ? 0.95 : 0.55}
                         stroke="white"
-                        strokeWidth={isActive ? 2 : 1}
+                        strokeWidth={isActive ? 2 : 0.5}
                         onMouseEnter={() =>
                           setHoveredPoint({
                             metric: metric.label,
@@ -584,25 +536,12 @@ export function TimeSeriesDashboard({
                           filter: isActive ? 'drop-shadow(0 2px 8px rgba(0,0,0,0.12))' : 'none',
                         }}
                       />
-                      {radius > 12 && (
-                        <text
-                          x={cx}
-                          y={cy + 3}
-                          textAnchor="middle"
-                          fontSize={Math.min(8, radius * 0.4)}
-                          fill="white"
-                          fontWeight="500"
-                          opacity={0.8}
-                        >
-                          {format(value)}
-                        </text>
-                      )}
                     </g>
                   );
                 })
               )}
 
-              {/* ─── BUBBLES FOR TREND ─── */}
+              {/* ─── TREND BUBBLES ─── */}
               {showTrend && trendData.map((d) => {
                 const cx = (xScale(TREND_METRIC.label) ?? 0) + xScale.bandwidth() / 2;
                 const cy = (yScale(String(d.year)) ?? 0) + yScale.bandwidth() / 2;
@@ -612,7 +551,7 @@ export function TimeSeriesDashboard({
                   hoveredPoint?.year === d.year;
 
                 const radius = radiusScale(d.value);
-                if (radius < 2) return null;
+                if (radius < 1.5) return null;
 
                 const isLast = d.year === trendData[trendData.length - 1]?.year;
 
@@ -622,7 +561,7 @@ export function TimeSeriesDashboard({
                       <circle
                         cx={cx}
                         cy={cy}
-                        r={radius + 6}
+                        r={radius + 5}
                         fill={TREND_METRIC.color}
                         opacity={0.08}
                       />
@@ -631,7 +570,7 @@ export function TimeSeriesDashboard({
                       <circle
                         cx={cx}
                         cy={cy}
-                        r={radius + 4}
+                        r={radius + 3}
                         fill="none"
                         stroke={TREND_METRIC.color}
                         strokeWidth={1.5}
@@ -645,7 +584,7 @@ export function TimeSeriesDashboard({
                       fill={TREND_METRIC.color}
                       opacity={isActive ? 0.95 : 0.5}
                       stroke={isLast ? "#0284c7" : "white"}
-                      strokeWidth={isLast ? 2 : 1}
+                      strokeWidth={isLast ? 2 : 0.5}
                       onMouseEnter={() =>
                         setHoveredPoint({
                           metric: TREND_METRIC.label,
@@ -662,24 +601,11 @@ export function TimeSeriesDashboard({
                         filter: isActive ? 'drop-shadow(0 2px 8px rgba(0,0,0,0.12))' : 'none',
                       }}
                     />
-                    {radius > 12 && (
-                      <text
-                        x={cx}
-                        y={cy + 3}
-                        textAnchor="middle"
-                        fontSize={Math.min(8, radius * 0.4)}
-                        fill="white"
-                        fontWeight="500"
-                        opacity={0.8}
-                      >
-                        {format(d.value)}
-                      </text>
-                    )}
                   </g>
                 );
               })}
 
-              {/* ─── BUBBLES FOR BUBBLE CHART ─── */}
+              {/* ─── COUNTRY IMPACT BUBBLES ─── */}
               {showBubble && bubbleData.map((d) => {
                 const cx = (xScale(BUBBLE_METRIC.label) ?? 0) + xScale.bandwidth() / 2;
                 const cy = (yScale(String(d.year)) ?? 0) + yScale.bandwidth() / 2;
@@ -689,29 +615,25 @@ export function TimeSeriesDashboard({
                   hoveredPoint?.year === d.year;
 
                 const radius = radiusScale(d.value);
-                if (radius < 2) return null;
-
-                // Random offset for country bubbles to show distribution
-                const countryIndex = Array.from(new Set(bubbleData.map(b => b.country))).indexOf(d.country);
-                const offset = (countryIndex / 10) * xScale.bandwidth() * 0.3 - xScale.bandwidth() * 0.15;
+                if (radius < 1.5) return null;
 
                 return (
                   <g key={`bubble-${d.country}-${d.year}`}>
                     {isActive && (
                       <circle
-                        cx={cx + offset}
+                        cx={cx}
                         cy={cy}
-                        r={radius + 6}
+                        r={radius + 5}
                         fill={BUBBLE_METRIC.color}
                         opacity={0.08}
                       />
                     )}
                     <circle
-                      cx={cx + offset}
+                      cx={cx}
                       cy={cy}
                       r={radius}
                       fill={BUBBLE_METRIC.color}
-                      opacity={isActive ? 0.95 : 0.4}
+                      opacity={isActive ? 0.95 : 0.35}
                       stroke="white"
                       strokeWidth={isActive ? 2 : 0.5}
                       onMouseEnter={() =>
@@ -719,7 +641,7 @@ export function TimeSeriesDashboard({
                           metric: `${BUBBLE_METRIC.label}: ${d.country}`,
                           year: d.year,
                           value: d.value,
-                          x: cx + offset,
+                          x: cx,
                           y: cy,
                         })
                       }
@@ -730,24 +652,11 @@ export function TimeSeriesDashboard({
                         filter: isActive ? 'drop-shadow(0 2px 8px rgba(0,0,0,0.12))' : 'none',
                       }}
                     />
-                    {radius > 10 && (
-                      <text
-                        x={cx + offset}
-                        y={cy + 3}
-                        textAnchor="middle"
-                        fontSize={Math.min(6, radius * 0.3)}
-                        fill="white"
-                        fontWeight="500"
-                        opacity={0.7}
-                      >
-                        {d.country.slice(0, 3)}
-                      </text>
-                    )}
                   </g>
                 );
               })}
 
-              {/* ─── Y-AXIS TICK LABELS (Years) ─── */}
+              {/* ─── Y-AXIS LABELS ─── */}
               {visibleYears.map((year) => {
                 const yPos = yScale(String(year)) ?? 0;
                 const isLastYear = year === years[years.length - 1];
@@ -755,10 +664,10 @@ export function TimeSeriesDashboard({
                 return (
                   <text
                     key={`y-label-${year}`}
-                    x={-8}
-                    y={yPos + yScale.bandwidth() / 2 + 4}
+                    x={-6}
+                    y={yPos + yScale.bandwidth() / 2 + 3}
                     textAnchor="end"
-                    fontSize={Math.max(9, fontSize * 0.85)}
+                    fontSize={Math.max(8, fontSize * 0.75)}
                     fill={isLastYear ? "#1a1a2e" : "#94a3b8"}
                     fontWeight={isLastYear ? "600" : "400"}
                   >
@@ -767,11 +676,11 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── Y-AXIS LABEL ─── */}
+              {/* ─── Y-AXIS TITLE ─── */}
               <text
                 transform="rotate(-90)"
                 x={-boundsHeight / 2}
-                y={-(responsiveMargin.left - 20)}
+                y={-(responsiveMargin.left - 15)}
                 textAnchor="middle"
                 fontSize={fontSize * 0.7}
                 fill="#94a3b8"
@@ -781,10 +690,9 @@ export function TimeSeriesDashboard({
                 Year
               </text>
 
-              {/* ─── X-AXIS TICK LABELS ─── */}
+              {/* ─── X-AXIS LABELS ─── */}
               {metricColumns.map((col) => {
                 const xPos = xScale(col) ?? 0;
-                const isLast = col === metricColumns[metricColumns.length - 1];
                 
                 let color = "#475569";
                 if (col === TREND_METRIC.label) color = TREND_METRIC.color;
@@ -794,23 +702,23 @@ export function TimeSeriesDashboard({
                   <text
                     key={`x-label-${col}`}
                     x={xPos + xScale.bandwidth() / 2}
-                    y={boundsHeight + 18}
+                    y={boundsHeight + 16}
                     textAnchor="middle"
-                    fontSize={Math.max(8, fontSize * 0.75)}
-                    fill={isLast ? "#1a1a2e" : color}
-                    fontWeight={isLast ? "600" : "500"}
+                    fontSize={Math.max(7, fontSize * 0.7)}
+                    fill={color}
+                    fontWeight="500"
                   >
                     {col}
                   </text>
                 );
               })}
 
-              {/* ─── X-AXIS LABEL ─── */}
+              {/* ─── X-AXIS TITLE ─── */}
               <text
                 x={boundsWidth / 2}
-                y={boundsHeight + 40}
+                y={boundsHeight + 38}
                 textAnchor="middle"
-                fontSize={fontSize * 0.7}
+                fontSize={fontSize * 0.65}
                 fill="#94a3b8"
                 letterSpacing="0.08em"
                 className="uppercase"
@@ -823,17 +731,17 @@ export function TimeSeriesDashboard({
           {/* ─── TOOLTIP ─── */}
           {hoveredPoint && !isMobile && (
             <div
-              className="absolute rounded-lg border border-slate-200 bg-white p-2.5 sm:p-3 text-xs shadow-lg pointer-events-none z-10"
+              className="absolute rounded-lg border border-slate-200 bg-white p-2.5 text-xs shadow-lg pointer-events-none z-10"
               style={{
                 left: Math.min(
-                  hoveredPoint.x + responsiveMargin.left + 14,
-                  width - 170
+                  hoveredPoint.x + responsiveMargin.left + 12,
+                  width - 160
                 ),
                 top: Math.min(
                   hoveredPoint.y + responsiveMargin.top - 10,
-                  height - 90
+                  height - 80
                 ),
-                maxWidth: Math.min(190, width - 40),
+                maxWidth: Math.min(180, width - 40),
               }}
             >
               <div className="font-semibold text-slate-900 text-sm">
@@ -848,7 +756,7 @@ export function TimeSeriesDashboard({
 
           {/* ─── MOBILE TOOLTIP ─── */}
           {hoveredPoint && isMobile && (
-            <div className="mt-3 text-center bg-white border border-slate-200 rounded-lg p-2.5 mx-2 shadow-sm">
+            <div className="mt-2 text-center bg-white border border-slate-200 rounded-lg p-2 mx-2 shadow-sm">
               <div className="font-semibold text-xs text-slate-900">{hoveredPoint.metric}</div>
               <div className="text-xs text-slate-500">{hoveredPoint.year}</div>
               <div className="text-sm font-semibold text-slate-800 mt-0.5">
