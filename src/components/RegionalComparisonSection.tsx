@@ -17,9 +17,9 @@ export function RegionalComparisonSection({ selectedCountry, countriesCount, ran
           How does {selectedCountry} compare to {countriesCount} other Pacific nations across 7 key metrics?
         </div>
       </div>
-      <div className="p-2">
+      {/* <div className="p-2">
         <MultiMetricRankedDashboard width={chartWidth * 2 + 20} height={520} data={rankedData} />
-      </div>
+      </div> */}
 
       <div className="mt-12 w-full max-w-7xl mx-auto px-4">
         <PacificClimateStoryMap data={rankedData} />
