@@ -200,7 +200,7 @@ export default function ClimateInteractionMatrix({
                   return (
                     <div
                       key={`${row}-${col}`}
-                      className="h-10 sm:h-11 md:h-12 border border-slate-100 bg-white"
+                      className="h-8 border border-slate-100 bg-white"
                     />
                   );
                 }
@@ -215,7 +215,7 @@ export default function ClimateInteractionMatrix({
                     onClick={() => setSelectedCell(cell)}
                     onMouseEnter={() => setSelectedCell(cell)}
                     className={`
-                      h-10 sm:h-11 md:h-12
+                      h-8
                       border border-slate-200
                       transition-all duration-200
                       hover:scale-105
