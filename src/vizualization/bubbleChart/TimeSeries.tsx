@@ -226,7 +226,7 @@ export function TimeSeriesDashboard({
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   return (
-    <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
+    // <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
       <div className="w-full max-w-4xl px-3 sm:px-6">
         {/* ─── NARRATIVE HEADER ─── */}
         <div className="mb-5 text-center">
@@ -592,8 +592,7 @@ export function TimeSeriesDashboard({
           )}
         </div>
       </div>
-    </div>
-  );
+    );
 }
 
 export default TimeSeriesDashboard;
