@@ -163,9 +163,9 @@ export function DoughnutClimateDashboard({
           baseline: 1950–1980 climate normal
         </div> */}
 
-        <div className="text-xs font-semibold tracking-widest text-slate-500 mt-2">
+        <p>
         Let's begin with the numbers to understand the scale of climate-related consequences. Numbers rarely tell the whole story, but they provide a clear signal of rising climate pressures across the Pacific. This is evident in a climate anomaly index derived for each country from historical trends in temperature, rainfall, sea surface temperature, and sea level.
-        </div>
+        </p>
 
         <div className="flex items-center justify-center gap-3 mt-2">
 
@@ -222,7 +222,7 @@ export function DoughnutClimateDashboard({
       </div>
 
        <p>
-          A measurable climate anomaly is emerging. Could this be a warning that the ocean and climate related disaster such as {" "}
+         A measurable climate anomaly is emerging. Across the Pacific, climate events such as flood, coral erosion, heavy rainfall, {" "}
               <a
                 href="https://www.pacificmet.net/news/el-nino-likely-mid-2026-pacific-islands-climate-outlook-forum-18-warns"
                 target="_blank"
@@ -230,8 +230,7 @@ export function DoughnutClimateDashboard({
                 className="hover:text-cyan-700 underline underline-offset-2"
               >
                 current El Niño
-              </a>{" "}
-              across the countries in the Pacific including PNG is sending a warning. 
+              </a>{" "} are already influencing weather patterns and livelihoods. The question is whether these changes represent the early signs of a larger shift.
         </p>
 
     </motion.div>
