@@ -105,16 +105,7 @@ export default function Home() {
           <h2 className="text-4xl md:text-6xl font-light leading-tight">
 
             <>
-              The Pacific helped create little of the climate crisis. Yet its nations stand on the front line of its consequences. The ocean and for example {" "}
-              <a
-                href="https://www.pacificmet.net/news/el-nino-likely-mid-2026-pacific-islands-climate-outlook-forum-18-warns"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-cyan-700 underline underline-offset-2"
-              >
-                current El Niño
-              </a>{" "}
-              across the countries in the Pacific including PNG is sending a warning. 
+              The Pacific helped create little of the climate crisis. Yet its nations stand on the front line of its consequences. 
             </>
           </h2>
        
