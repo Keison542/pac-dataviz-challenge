@@ -1,11 +1,11 @@
 "use client";
 
 import { scaleLinear } from "d3-scale";
-import { line, area, curveMonotoneX } from "d3-shape";
+import { line, curveMonotoneX } from "d3-shape";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { LineItem } from "./LineItem";
 
-const MARGIN = { top: 50, right: 40, bottom: 70, left: 75 };
+const MARGIN = { top: 40, right: 40, bottom: 60, left: 60 };
 
 export type ClimateDriverType =
   | "surfaceTempAnomaly"
@@ -93,26 +93,6 @@ export const LineChart = ({
     [safeData]
   );
 
-  const stats = useMemo(() => {
-    if (!processedData.length) return null;
-
-    const first = processedData[0].value;
-    const last = processedData[processedData.length - 1].value;
-
-    const percentChange =
-      first !== 0 ? ((last - first) / Math.abs(first)) * 100 : 0;
-
-    return {
-      percentChange,
-      trend:
-        percentChange > 0
-          ? "warming / rising"
-          : percentChange < 0
-          ? "cooling / falling"
-          : "stable",
-    };
-  }, [processedData]);
-
   const xScale = useMemo(() => {
     const years = processedData.map(d => d.year);
     return scaleLinear()
@@ -139,18 +119,7 @@ export const LineChart = ({
     [xScale, yScale]
   );
 
-  const areaBuilder = useMemo(
-    () =>
-      area<any>()
-        .x(d => xScale(d.year))
-        .y0(boundsHeight)
-        .y1(d => yScale(d.value))
-        .curve(curveMonotoneX),
-    [xScale, yScale, boundsHeight]
-  );
-
   const linePath = lineBuilder(processedData);
-  const areaPath = areaBuilder(processedData);
 
   const chartLabel = getChartLabel(dataType);
   const unit = getUnit(dataType);
@@ -182,19 +151,17 @@ export const LineChart = ({
 
   // ─── Tooltip handlers ───
   const handleMouseEnter = useCallback((event: React.MouseEvent, d: ClimateDataPoint) => {
-    // Clear any pending timer
     if (tooltipTimerRef.current) {
       clearTimeout(tooltipTimerRef.current);
       tooltipTimerRef.current = null;
     }
 
-    // Get cursor position relative to the page
     const mouseX = event.clientX;
     const mouseY = event.clientY;
 
     setTooltip({
-      x: mouseX + 15,  // Offset right of cursor
-      y: mouseY - 10,  // Offset slightly above cursor
+      x: mouseX + 15,
+      y: mouseY - 10,
       year: d.year,
       value: d.value,
     });
@@ -202,14 +169,12 @@ export const LineChart = ({
   }, []);
 
   const handleMouseLeave = useCallback(() => {
-    // Delay hiding to allow smooth interaction
     tooltipTimerRef.current = setTimeout(() => {
       setTooltip(null);
       setHoveredPoint(null);
     }, 100);
   }, []);
 
-  // Cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (tooltipTimerRef.current) {
@@ -222,41 +187,18 @@ export const LineChart = ({
 
   return (
     <div className="w-full relative">
-
-      {/* ─── HEADER ─── */}
-      <div className="text-center mb-6">
-        {stats && (
-          <div className="mt-2 text-sm text-slate-600">
-          {selectedCountry}'s climate has shifted towards overall{" "}
-          <span
-            className={
-              stats.percentChange > 0
-                ? "text-red-600 font-semibold"
-                : "text-blue-600 font-semibold"
-            }
-          >
-            {stats.trend}
-          </span>{" "} ({Math.abs(stats.percentChange).toFixed(1)}%) 
-            since {processedData[0]?.year}
-        </div>
-        )}
-      </div>
-
       {/* ─── TOOLTIP ─── */}
       {tooltip && (
         <div
-          className="fixed z-50 bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none"
+          className="fixed z-50 bg-white border border-slate-200 text-slate-800 text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none"
           style={{
             left: tooltip.x,
             top: tooltip.y,
             transform: "translate(0, 0)",
           }}
         >
-          <div className="font-semibold text-amber-300">{selectedCountry}</div>
-          <div className="text-slate-300">Year: {tooltip.year}</div>
-          <div className="text-slate-300">
-            Value: {tooltip.value.toFixed(2)} {unit}
-          </div>
+          <div className="font-medium">{tooltip.year}</div>
+          <div>{tooltip.value.toFixed(2)} {unit}</div>
         </div>
       )}
 
@@ -269,22 +211,25 @@ export const LineChart = ({
           className="overflow-visible"
         >
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-
-            {/* AREA */}
-            {areaPath && (
-              <path
-                d={areaPath}
-                fill="rgba(37, 99, 235, 0.1)"
-                opacity={1}
+            {/* ─── SUBTLE GRIDLINES ─── */}
+            {yScale.ticks(5).map((value) => (
+              <line
+                key={value}
+                x1={0}
+                x2={boundsWidth}
+                y1={yScale(value)}
+                y2={yScale(value)}
+                stroke="#e2e8f0"
+                strokeWidth={1}
               />
-            )}
+            ))}
 
-            {/* LINE */}
+            {/* ─── LINE ─── */}
             {linePath && (
               <LineItem
                 path={linePath}
                 color="#2563eb"
-                strokeWidth={3}
+                strokeWidth={2}
                 opacity={1}
               />
             )}
@@ -294,7 +239,7 @@ export const LineChart = ({
               const x = xScale(d.year);
               const y = yScale(d.value);
               const isHovered = hoveredPoint === d.year;
-              const pointRadius = isHovered ? 8 : 5;
+              const pointRadius = isHovered ? 5 : 3;
 
               return (
                 <g
@@ -303,17 +248,6 @@ export const LineChart = ({
                   onMouseLeave={handleMouseLeave}
                   style={{ cursor: "pointer" }}
                 >
-                  {/* Hover glow */}
-                  {isHovered && (
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r={pointRadius + 4}
-                      fill="#2563eb"
-                      opacity={0.2}
-                    />
-                  )}
-
                   {/* Main circle */}
                   <circle
                     cx={x}
@@ -321,22 +255,8 @@ export const LineChart = ({
                     r={pointRadius}
                     fill="#2563eb"
                     stroke="#fff"
-                    strokeWidth={2.5}
+                    strokeWidth={1.5}
                   />
-
-                  {/* Year label below point on hover */}
-                  {isHovered && (
-                    <text
-                      x={x}
-                      y={y + 18}
-                      textAnchor="middle"
-                      fontSize={9}
-                      fill="#2563eb"
-                      fontWeight="600"
-                    >
-                      {d.year}
-                    </text>
-                  )}
                 </g>
               );
             })}
@@ -357,7 +277,7 @@ export const LineChart = ({
                   />
                   <text
                     x={x}
-                    y={boundsHeight + 20}
+                    y={boundsHeight + 18}
                     fontSize={10}
                     textAnchor="middle"
                     fill={isHighlighted ? "#475569" : "#94a3b8"}
@@ -395,38 +315,28 @@ export const LineChart = ({
             })}
 
             {/* ─── AXIS LABELS ─── */}
-
-            {/* X Axis Label */}
             <text
               x={boundsWidth / 2}
-              y={boundsHeight + 55}
+              y={boundsHeight + 45}
               textAnchor="middle"
-              fontSize={12}
-              fill="#64748b"
+              fontSize={11}
+              fill="#94a3b8"
             >
               {xAxisLabel}
             </text>
 
-            {/* Y Axis Label */}
             <text
               x={-boundsHeight / 2}
-              y={-55}
+              y={-48}
               transform="rotate(-90)"
               textAnchor="middle"
-              fontSize={12}
-              fill="#64748b"
+              fontSize={11}
+              fill="#94a3b8"
             >
               {yAxisLabel || `${chartLabel} (${unit})`}
             </text>
-
           </g>
         </svg>
-      </div>
-
-      {/* ─── FOOTER ─── */}
-      <div className="mt-4 text-sm text-slate-600 text-center max-w-2xl mx-auto">
-        This chart isolates long-term {chartLabel.toLowerCase()} anomalies
-        in {selectedCountry}, showing whether a consistent climate signal is emerging. Hover over points for detailed values.
       </div>
     </div>
   );
