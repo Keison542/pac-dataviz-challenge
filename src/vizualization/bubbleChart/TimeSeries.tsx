@@ -86,6 +86,7 @@ export function TimeSeriesDashboard({
   const [showTrend, setShowTrend] = useState(true);
   const [showBubble, setShowBubble] = useState(true);
 
+  // ─── Responsive sizing ───
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -117,6 +118,7 @@ export function TimeSeriesDashboard({
 
   const { width, height } = dimensions;
 
+  // ─── Responsive margins ───
   const responsiveMargin = useMemo(() => {
     if (width < 400) {
       return { top: 30, right: 10, bottom: 50, left: 75 };
@@ -288,36 +290,38 @@ export function TimeSeriesDashboard({
       .padding(0.4);
   }, [metricRows, boundsHeight]);
 
-  // ─── Bubble radius scale ───
-  const radiusScale = useMemo(() => {
-    let maxValue = 0;
+  // ─── Find max value for radius scale ───
+  const maxValueForRadius = useMemo(() => {
+    let maxVal = 0;
 
     aggregatedData.forEach((d) => {
       METRICS.forEach((m) => {
         if (visibleMetrics.has(m.key)) {
-          maxValue = Math.max(
-            maxValue,
-            d[m.key as keyof DataPoint] as number
-          );
+          maxVal = Math.max(maxVal, d[m.key as keyof DataPoint] as number || 0);
         }
       });
     });
 
     trendData.forEach((d) => {
-      maxValue = Math.max(maxValue, d.value);
+      maxVal = Math.max(maxVal, d.value);
     });
 
-    maxValue = Math.max(maxValue, maxBubbleValue);
+    maxVal = Math.max(maxVal, maxBubbleValue);
 
+    return maxVal || 1;
+  }, [aggregatedData, visibleMetrics, trendData, maxBubbleValue]);
+
+  // ─── Bubble radius scale ───
+  const radiusScale = useMemo(() => {
     const maxRadius = Math.min(
       width < 500 ? 16 : width < 768 ? 20 : 26,
       yScale.bandwidth() * 0.4,
       xScale.bandwidth() * 0.35
     );
     return scaleSqrt()
-      .domain([0, maxValue || 1])
+      .domain([0, maxValueForRadius])
       .range([3, Math.max(5, maxRadius)]);
-  }, [aggregatedData, visibleMetrics, trendData, maxBubbleValue, width, yScale, xScale]);
+  }, [maxValueForRadius, width, yScale, xScale]);
 
   const format = (v: number) =>
     v >= 1_000_000
