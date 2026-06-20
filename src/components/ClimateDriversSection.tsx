@@ -4,7 +4,7 @@ interface ClimateDriversSectionProps {
   dataMap: any;
   tempTrend: number;
   chartWidth: number;
-  selectedCountry: string;  // ← ADD THIS
+  selectedCountry: string;  
 }
 
 export function ClimateDriversSection({ dataMap, tempTrend, chartWidth, selectedCountry }: ClimateDriversSectionProps) {
@@ -16,7 +16,7 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth, selected
   if (!hasTempData && !hasSeaData && !hasSSTData && !hasRainfallData) return null;
 
   return (
-    <div className="mb-12">
+    <>
       <div className="text-center mb-6">
         {/* <div className="text-[1.75rem] font-semibold mb-3 text-slate-900">The Drivers of Change</div> */}
         <div className="text-sm text-slate-500 max-w-[680px] mx-auto">
@@ -75,6 +75,6 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth, selected
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
