@@ -212,7 +212,7 @@ export function TimeSeriesDashboard({
     });
 
     return result;
-  }, [data, groupedYears, width]);
+  }, [data, groupedYears]);
 
   // ─── Metric rows for Y-axis ───
   const metricRows = useMemo(() => {
@@ -290,38 +290,46 @@ export function TimeSeriesDashboard({
       .padding(0.4);
   }, [metricRows, boundsHeight]);
 
-  // ─── Find max value for radius scale ───
+  // ─── Compute max value for radius scale (stabilized) ───
   const maxValueForRadius = useMemo(() => {
     let maxVal = 0;
 
     aggregatedData.forEach((d) => {
       METRICS.forEach((m) => {
         if (visibleMetrics.has(m.key)) {
-          maxVal = Math.max(maxVal, d[m.key as keyof DataPoint] as number || 0);
+          const val = d[m.key as keyof DataPoint] as number;
+          if (val > maxVal) maxVal = val;
         }
       });
     });
 
     trendData.forEach((d) => {
-      maxVal = Math.max(maxVal, d.value);
+      if (d.value > maxVal) maxVal = d.value;
     });
 
-    maxVal = Math.max(maxVal, maxBubbleValue);
+    bubbleData.forEach((d) => {
+      if (d.value > maxVal) maxVal = d.value;
+    });
 
     return maxVal || 1;
-  }, [aggregatedData, visibleMetrics, trendData, maxBubbleValue]);
+  }, [aggregatedData, visibleMetrics, trendData, bubbleData]);
 
-  // ─── Bubble radius scale ───
+  // ─── Bubble radius scale (simplified dependencies) ───
+  const { bandwidthY, bandwidthX } = useMemo(() => ({
+    bandwidthY: yScale.bandwidth(),
+    bandwidthX: xScale.bandwidth(),
+  }), [yScale, xScale]);
+
   const radiusScale = useMemo(() => {
     const maxRadius = Math.min(
       width < 500 ? 16 : width < 768 ? 20 : 26,
-      yScale.bandwidth() * 0.4,
-      xScale.bandwidth() * 0.35
+      bandwidthY * 0.4,
+      bandwidthX * 0.35
     );
     return scaleSqrt()
       .domain([0, maxValueForRadius])
       .range([3, Math.max(5, maxRadius)]);
-  }, [maxValueForRadius, width, yScale, xScale]);
+  }, [maxValueForRadius, width, bandwidthY, bandwidthX]);
 
   const format = (v: number) =>
     v >= 1_000_000
