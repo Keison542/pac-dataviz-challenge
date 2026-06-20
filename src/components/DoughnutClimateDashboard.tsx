@@ -212,7 +212,16 @@ export function DoughnutClimateDashboard({
           SIGNAL DETECTION · {selectedCountry}
         </div>
 
-        <h3 className="text-lg font-bold text-slate-800 mt-1">
+      </div>
+
+      {/* ===================== METRICS ===================== */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {metrics.map((m) => (
+          <MetricCircle key={m.key} m={m} />
+        ))}
+      </div>
+
+       <p>
           A measurable climate anomaly is emerging. Could this be a warning that the ocean and climate related disaster such as {" "}
               <a
                 href="https://www.pacificmet.net/news/el-nino-likely-mid-2026-pacific-islands-climate-outlook-forum-18-warns"
@@ -223,15 +232,7 @@ export function DoughnutClimateDashboard({
                 current El Niño
               </a>{" "}
               across the countries in the Pacific including PNG is sending a warning. 
-        </h3>
-      </div>
-
-      {/* ===================== METRICS ===================== */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {metrics.map((m) => (
-          <MetricCircle key={m.key} m={m} />
-        ))}
-      </div>
+        </p>
 
     </motion.div>
   );
