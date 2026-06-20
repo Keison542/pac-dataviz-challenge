@@ -387,17 +387,19 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
   return (
     <div className={`w-full ${className}`}>
       {/* ─── NARRATIVE HEADER ─── */}
-      <div className="mb-4 px-1" text-center>
-        <p className="text-sm uppercase tracking-wider text-slate-500 font-medium">
+      <div className="mb-6 text-center max-w-4xl mx-auto">
+        <p className="text-sm uppercase tracking-[0.15em] text-slate-500 font-medium">
           Regional Vulnerability Map
         </p>
-        <h3 className="text-xl font-semibold text-slate-900 mt-0.5">
+      
+        <h3 className="mt-1 text-xl md:text-2xl font-semibold text-slate-900">
           Climate exposure is uneven across Pacific nations
         </h3>
-        <p className="text-slate-500 mt-1.5 max-w-3xl text-sm leading-relaxed">
-          Circle size represents composite vulnerability.
-          Hover hazards below to reveal countries experiencing
-          flooding, drought, cyclone impacts, or sea-level rise.
+      
+        <p className="mt-3 text-sm text-slate-500 leading-relaxed">
+          Circle size represents composite vulnerability. Hover hazards below
+          to reveal countries experiencing flooding, drought, cyclone impacts,
+          or sea-level rise.
         </p>
       </div>
 
