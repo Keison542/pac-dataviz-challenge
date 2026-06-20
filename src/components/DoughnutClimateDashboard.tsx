@@ -164,7 +164,7 @@ export function DoughnutClimateDashboard({
         </div> */}
 
         <div className="text-xs font-semibold tracking-widest text-slate-500 mt-2">
-          They say numbers don't lie and this tend to ascertain impending disaster across Paicifc as evident by a measurable climate index of 37 for Fiji, 33 for Kiribati etc calculated from historical climate norms across temperature, rainfall, sea surface temperature, and sea level.
+          They say numbers don't lie and this tend to ascertain impending disaster across Pacific as evident by a measurable climate index calculated from the historical climate norms across temperature, rainfall, sea surface temperature, and sea level.
         </div>
 
         <div className="flex items-center justify-center gap-3 mt-2">
@@ -213,7 +213,16 @@ export function DoughnutClimateDashboard({
         </div>
 
         <h3 className="text-lg font-bold text-slate-800 mt-1">
-          A measurable climate anomaly is emerging
+          A measurable climate anomaly is emerging. Could this be a warning that the ocean and climate related disaster such as {" "}
+              <a
+                href="https://www.pacificmet.net/news/el-nino-likely-mid-2026-pacific-islands-climate-outlook-forum-18-warns"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-cyan-700 underline underline-offset-2"
+              >
+                current El Niño
+              </a>{" "}
+              across the countries in the Pacific including PNG is sending a warning. 
         </h3>
       </div>
 
