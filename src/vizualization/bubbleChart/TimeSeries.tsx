@@ -19,7 +19,7 @@ type Props = {
   className?: string;
 };
 
-const MARGIN = { top: 60, right: 50, bottom: 80, left: 70 };
+const MARGIN = { top: 50, right: 50, bottom: 80, left: 70 };
 
 const METRICS = [
   {
@@ -27,24 +27,21 @@ const METRICS = [
     label: "Food Production",
     unit: "t/ha",
     color: "#1a1a2e",
-    lightColor: "#e8e8ee",
-    gradient: ["#1a1a2e", "#4a4a6a"],
+    strokeWidth: 3,
   },
   {
     key: "livestockYield",
     label: "Livelihood Assets",
     unit: "tons",
-    color: "#4a4a6a",
-    lightColor: "#e0e0e8",
-    gradient: ["#4a4a6a", "#7a7a9a"],
+    color: "#e74c3c",
+    strokeWidth: 3,
   },
   {
     key: "touristArrivals",
     label: "Income Diversification",
     unit: "",
-    color: "#94a3b8",
-    lightColor: "#eef0f3",
-    gradient: ["#94a3b8", "#c0c8d0"],
+    color: "#2ecc71",
+    strokeWidth: 3,
   },
 ];
 
@@ -106,13 +103,13 @@ export function TimeSeriesDashboard({
   // ─── Responsive margins ───
   const responsiveMargin = useMemo(() => {
     if (width < 400) {
-      return { top: 40, right: 10, bottom: 60, left: 45 };
+      return { top: 35, right: 10, bottom: 60, left: 45 };
     }
     if (width < 600) {
-      return { top: 45, right: 15, bottom: 65, left: 55 };
+      return { top: 40, right: 15, bottom: 65, left: 55 };
     }
     if (width < 768) {
-      return { top: 50, right: 20, bottom: 70, left: 60 };
+      return { top: 45, right: 20, bottom: 70, left: 60 };
     }
     return MARGIN;
   }, [width]);
@@ -223,10 +220,9 @@ export function TimeSeriesDashboard({
   }
 
   const fontSize = getFontSize(12);
-  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   return (
-    // <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
+    <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
       <div className="w-full max-w-4xl px-3 sm:px-6">
         {/* ─── NARRATIVE HEADER ─── */}
         <div className="mb-5 text-center">
@@ -282,50 +278,7 @@ export function TimeSeriesDashboard({
             viewBox={width && height ? `0 0 ${width} ${height}` : undefined}
             style={{ maxWidth: '100%', height: 'auto' }}
           >
-            <defs>
-              <linearGradient id="chartBg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#fafbfc" stopOpacity="1" />
-                <stop offset="100%" stopColor="#f1f4f8" stopOpacity="1" />
-              </linearGradient>
-              {METRICS.map((m) => (
-                <linearGradient key={`gradient-${m.key}`} id={`gradient-${m.key}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={m.color} stopOpacity="0.15" />
-                  <stop offset="100%" stopColor={m.color} stopOpacity="0.01" />
-                </linearGradient>
-              ))}
-            </defs>
-
-            <rect width={width} height={height} fill="url(#chartBg)" rx={8} />
-
             <g transform={`translate(${responsiveMargin.left},${responsiveMargin.top})`}>
-              {/* ─── AREAS ─── */}
-              {METRICS.map((m) => {
-                if (!visibleMetrics.has(m.key)) return null;
-                const areaGen = line<DataPoint>()
-                  .x((d) => xScale(d.year))
-                  .y(() => yScale(0))
-                  .curve(curveMonotoneX);
-                
-                const areaData = data.map((d) => ({
-                  ...d,
-                  value: d[m.key as keyof DataPoint] as number || 0,
-                }));
-
-                const areaPath = areaGen(areaData) || "";
-                const linePath = linePaths[m.key] || "";
-
-                if (!linePath) return null;
-
-                return (
-                  <path
-                    key={`area-${m.key}`}
-                    d={`${linePath} L ${xScale(data[data.length - 1].year)} ${yScale(0)} L ${xScale(data[0].year)} ${yScale(0)} Z`}
-                    fill={`url(#gradient-${m.key})`}
-                    opacity={0.6}
-                  />
-                );
-              })}
-
               {/* ─── HORIZONTAL GRID LINES ─── */}
               {yTicks.map((v, i) => {
                 const yPos = yScale(v);
@@ -368,15 +321,17 @@ export function TimeSeriesDashboard({
                 const path = linePaths[m.key];
                 if (!path) return null;
 
+                const isHovered = hoveredPoint?.metric === m.label;
+
                 return (
                   <g key={`line-${m.key}`}>
-                    {/* Glow line */}
+                    {/* Glow line on hover */}
                     <path
                       d={path}
                       fill="none"
                       stroke={m.color}
-                      strokeWidth={4}
-                      opacity={0.08}
+                      strokeWidth={isHovered ? 8 : 4}
+                      opacity={isHovered ? 0.15 : 0.06}
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
@@ -385,85 +340,14 @@ export function TimeSeriesDashboard({
                       d={path}
                       fill="none"
                       stroke={m.color}
-                      strokeWidth={2.5}
-                      opacity={0.9}
+                      strokeWidth={isHovered ? 3.5 : 2.5}
+                      opacity={isHovered ? 1 : 0.85}
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                   </g>
                 );
               })}
-
-              {/* ─── DOTS ─── */}
-              {data.map((d) =>
-                METRICS.map((m) => {
-                  if (!visibleMetrics.has(m.key)) return null;
-
-                  const value = d[m.key as keyof DataPoint] as number || 0;
-                  if (value === 0) return null;
-
-                  const cx = xScale(d.year);
-                  const cy = yScale(value);
-
-                  const isActive =
-                    hoveredPoint?.metric === m.label &&
-                    hoveredPoint?.year === d.year;
-
-                  const dotRadius = isActive ? 7 : width < 500 ? 4 : 5;
-
-                  return (
-                    <g key={`${m.key}-${d.year}`}>
-                      {/* Outer ring on hover */}
-                      {isActive && (
-                        <circle
-                          cx={cx}
-                          cy={cy}
-                          r={dotRadius + 6}
-                          fill="none"
-                          stroke={m.color}
-                          strokeWidth={1.5}
-                          opacity={0.15}
-                        />
-                      )}
-                      {/* Glow on hover */}
-                      {isActive && (
-                        <circle
-                          cx={cx}
-                          cy={cy}
-                          r={dotRadius + 3}
-                          fill={m.color}
-                          opacity={0.15}
-                        />
-                      )}
-                      {/* Main dot */}
-                      <circle
-                        cx={cx}
-                        cy={cy}
-                        r={dotRadius}
-                        fill={isActive ? m.color : "white"}
-                        stroke={m.color}
-                        strokeWidth={isActive ? 2.5 : 2}
-                        onMouseEnter={() =>
-                          setHoveredPoint({
-                            metric: m.label,
-                            year: d.year,
-                            value,
-                            x: cx,
-                            y: cy,
-                          })
-                        }
-                        onMouseLeave={() => setHoveredPoint(null)}
-                        className={!isTouchDevice ? "cursor-pointer transition-all duration-200" : ""}
-                        style={{
-                          filter: isActive ? 'drop-shadow(0 4px 12px rgba(0,0,0,0.15))' : 'none',
-                          transform: isActive ? 'scale(1.15)' : 'scale(1)',
-                          transformOrigin: `${cx}px ${cy}px`,
-                        }}
-                      />
-                    </g>
-                  );
-                })
-              )}
 
               {/* ─── X-AXIS TICK LABELS ─── */}
               {xTicks.map((x, i) => {
@@ -592,7 +476,8 @@ export function TimeSeriesDashboard({
           )}
         </div>
       </div>
-    );
+    </div>
+  );
 }
 
 export default TimeSeriesDashboard;
