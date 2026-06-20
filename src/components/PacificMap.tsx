@@ -651,7 +651,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
                 stroke="#cbd5e1"
                 strokeWidth={1}
               />
-              <text
+              {/* <text
                 x={8}
                 y={8}
                 fontSize={9}
@@ -659,7 +659,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
                 fontWeight="500"
               >
                 Currently viewing impacts from: {HAZARD_LABELS[activeHazard as keyof typeof HAZARD_LABELS]}
-              </text>
+              </text> */}
               <text
                 x={140}
                 y={8}
