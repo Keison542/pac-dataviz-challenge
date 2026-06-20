@@ -119,6 +119,12 @@ export default function ClimateInteractionMatrix({
     );
   }
 
+  // Format the detail panel as a sentence
+  const formatDetailSentence = (cell: MatrixCell) => {
+    const strength = Math.round(cell.value * 100);
+    return `${cell.row} impacts ${cell.col.toLowerCase()}. ${cell.narrative} Interaction strength: ${strength}/100.`;
+  };
+
   return (
     <div className="w-full flex flex-col items-center px-2 sm:px-4">
       {/* Header */}
@@ -170,8 +176,8 @@ export default function ClimateInteractionMatrix({
       <div 
         className="w-full overflow-x-auto scrollbar-hide"
         style={{
-          scrollbarWidth: 'none', /* Firefox */
-          msOverflowStyle: 'none', /* IE and Edge */
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
         }}
       >
         <div
@@ -243,38 +249,22 @@ export default function ClimateInteractionMatrix({
         </div>
       </div>
 
-      {/* Detail Panel */}
+      {/* Detail Panel - Now in sentence form */}
       {selectedCell && (
         <div className="mt-6 border-t border-slate-200 pt-5 w-full max-w-3xl px-4">
-          <div className="text-[10px] uppercase tracking-wide text-slate-500">
-            Climate Driver
-          </div>
-
-          <div className="text-sm font-medium text-slate-900">
-            {selectedCell.row}
-          </div>
-
-          <div className="mt-3 text-[10px] uppercase tracking-wide text-slate-500">
-            Impact Area
-          </div>
-
-          <div className="text-sm font-medium text-slate-900">
-            {selectedCell.col}
-          </div>
-
-          <p className="mt-3 text-sm sm:text-base leading-relaxed text-slate-600">
-            {selectedCell.narrative}
+          <p className="text-sm sm:text-base leading-relaxed text-slate-700">
+            {formatDetailSentence(selectedCell)}
           </p>
-
-          <div className="mt-4">
+          
+          {/* Progress bar for visual reference */}
+          <div className="mt-3">
             <div className="flex justify-between text-[10px] text-slate-500">
               <span>Interaction Strength</span>
               <span>{Math.round(selectedCell.value * 100)}/100</span>
             </div>
-
             <div className="mt-1 h-1 bg-slate-100">
               <div
-                className="h-1 bg-slate-900"
+                className="h-1 bg-slate-900 transition-all duration-300"
                 style={{
                   width: `${selectedCell.value * 100}%`,
                 }}
