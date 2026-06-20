@@ -727,7 +727,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
               <span className="font-medium text-slate-700">{topCountry.country}</span> shows the highest
               composite vulnerability across the Pacific, with a {stats?.gapPercent.toFixed(0)}% gap
               between the highest and average scores across {stats?.count} countries.
-              /* {activeHazard && ` Currently viewing impacts from ${HAZARD_LABELS[activeHazard as keyof typeof HAZARD_LABELS]}.`} */
             </span>
           )}
         </p>
