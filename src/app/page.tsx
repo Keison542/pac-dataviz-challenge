@@ -73,7 +73,7 @@ export default function Home() {
             onSelectCountry={setSelectedCountry}
           />
 
-          <div className="max-w-4xl mx-auto text-center mt-10">
+          {/* <div className="max-w-4xl mx-auto text-center mt-10">
             <h1 className="text-5xl md:text-7xl font-light leading-tight">
               The Pacific helped create little of the climate crisis.
             </h1>
@@ -92,7 +92,7 @@ export default function Home() {
             >
               Scroll to explore ↓
             </motion.div>
-          </div>
+          </div> */}
         </div>
       </section>
 
