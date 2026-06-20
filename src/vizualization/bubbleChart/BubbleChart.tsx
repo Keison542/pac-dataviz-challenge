@@ -26,7 +26,7 @@ export function BubbleChart({
   data,
   className = "",
   title = "Livelihood shocks are uneven",
-  subtitle = "Bubble size = impact severity",
+  subtitle = "Historical records reveal persistent hotspots of vulnerability across the Pacific.",
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -203,7 +203,7 @@ export function BubbleChart({
                   cy={cy + (y.bandwidth() / 2)}
                   r={radius}
                   fill="#ef4444"
-                  opacity={isHovered ? 0.95 : 0.7}
+                  opacity={isHovered ? 0.95 : 0.55}
                   stroke={isHovered ? "#b91c1c" : "none"}
                   strokeWidth={isHovered ? Math.max(1.5, 2) : 0}
                   onMouseEnter={() => setHovered(d)}
@@ -259,7 +259,7 @@ export function BubbleChart({
             })}
 
             {/* AXIS LABELS */}
-            <text
+            {/* <text
               x={chartWidth / 2}
               y={chartHeight + (width < 500 ? 40 : 55)}
               textAnchor="middle"
@@ -278,7 +278,7 @@ export function BubbleChart({
               fill="#64748b"
             >
               Countries
-            </text>
+            </text> */}
           </g>
         </svg>
 
@@ -303,8 +303,12 @@ export function BubbleChart({
               {hovered.country}
             </div>
             <div className="text-slate-500 text-xs sm:text-sm">{hovered.year}</div>
-            <div className="text-sm sm:text-base font-bold text-red-600 mt-1">
+            {/* <div className="text-sm sm:text-base font-bold text-red-600 mt-1">
               {hovered.value.toLocaleString()} impacted
+            </div> */}
+
+            <div className="text-sm sm:text-base font-semibold text-red-600 mt-1">
+              {hovered.value.toLocaleString()} people affected
             </div>
           </div>
         )}
