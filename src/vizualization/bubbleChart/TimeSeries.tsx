@@ -591,13 +591,6 @@ export function TimeSeriesDashboard({
             </div>
           )}
         </div>
-
-        {/* ─── FOOTER NOTE ─── */}
-        <div className="mt-4 text-center">
-          <p className="text-[10px] text-slate-400 tracking-wide">
-            Hover over data points for details · Click legend to toggle dimensions
-          </p>
-        </div>
       </div>
     </div>
   );
