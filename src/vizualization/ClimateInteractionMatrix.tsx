@@ -167,7 +167,13 @@ export default function ClimateInteractionMatrix({
       </div>
 
       {/* Matrix */}
-      <div className="w-full overflow-x-auto">
+      <div 
+        className="w-full overflow-x-auto scrollbar-hide"
+        style={{
+          scrollbarWidth: 'none', /* Firefox */
+          msOverflowStyle: 'none', /* IE and Edge */
+        }}
+      >
         <div
           className="mx-auto grid gap-1"
           style={{
