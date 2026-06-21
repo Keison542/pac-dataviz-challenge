@@ -20,7 +20,7 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth, selected
       <div className="text-center mb-6">
         {/* <div className="text-[1.75rem] font-semibold mb-3 text-slate-900">The Drivers of Change</div> */}
         <div className="text-sm text-slate-500 max-w-[680px] mx-auto">
-         However, deeper dive into individual driver of change per country has uncovered both emerging and stable signals of climate variation since 1950. For example, in {selectedCountry},  Surface temperatures have {tempTrend > 0 ? `risen ${tempTrend.toFixed(1)}%` : tempTrend < 0 ? `fallen ${Math.abs(tempTrend).toFixed(1)}%` : "remained stable"} over the recorded period.
+         However, deeper dive into individual driver of change per country has uncovered both emerging and stable signals of climate variation since 1950. For example, in {selectedCountry}, surface temperatures have {tempTrend > 0 ? `risen ${tempTrend.toFixed(1)}%` : tempTrend < 0 ? `fallen ${Math.abs(tempTrend).toFixed(1)}%` : "remained stable"} over the recorded period.
         </div>
         <div className="text-sm mt-2 font-medium">Hotter air → warmer oceans → more energy for storms → heavier rain</div>
       </div>
