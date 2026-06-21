@@ -51,6 +51,39 @@ export function HumanEconomicSection({
   const formatLoss = (v: number) => `$${(v / 1e6).toFixed(0)}M`;
   const formatPeople = (v: number) => `${(v / 1000).toFixed(0)}K`;
 
+  // ─── Find peak years for each metric ───
+  const findPeakYear = (data: any[], valueKey: string) => {
+    if (!data || data.length === 0) return null;
+    let maxValue = -Infinity;
+    let peakYear = null;
+    data.forEach((d: any) => {
+      const val = d[valueKey] || d.value || 0;
+      if (val > maxValue) {
+        maxValue = val;
+        peakYear = d.year;
+      }
+    });
+    return peakYear;
+  };
+
+  const economicPeakYear = findPeakYear(dataMap.loss, 'value');
+  const humanPeakYear = findPeakYear(dataMap.people, 'value');
+
+  // ─── Find peak year for structural shift (using timeSeriesData) ───
+  const structuralPeakYear = (() => {
+    if (!timeSeriesData || timeSeriesData.length === 0) return null;
+    let maxTotal = -Infinity;
+    let peakYear = null;
+    timeSeriesData.forEach((d: any) => {
+      const total = (d.cropYield || 0) + (d.livestockYield || 0) + (d.touristArrivals || 0);
+      if (total > maxTotal) {
+        maxTotal = total;
+        peakYear = d.year;
+      }
+    });
+    return peakYear;
+  })();
+
   return (
     <div ref={sectionRef} className="relative py-8">
       {/* ─── INTRO TEXT ─── */}
@@ -82,6 +115,11 @@ export function HumanEconomicSection({
                 economic stress signal in terms of financial losses incurred by natural 
                 disaster is {formatLoss(lossTotal)}. This is through damaged infrastructure, 
                 agricultural losses, and rising recovery costs.
+                {economicPeakYear && (
+                  <span> The peak of economic disruption occurred in {economicPeakYear}, 
+                  when losses reached their highest recorded level, straining national 
+                  recovery capacity and exposing critical infrastructure gaps.</span>
+                )}
               </p>
 
               <div className="flex justify-center mt-4">
@@ -113,6 +151,11 @@ export function HumanEconomicSection({
                 manifest through displacement, loss of livelihoods, food insecurity, and reduced 
                 access to essential services. The burden falls disproportionately on vulnerable 
                 communities, particularly in rural and coastal areas where adaptive capacity is limited.
+                {humanPeakYear && (
+                  <span> The most severe year was {humanPeakYear}, when exposure reached its 
+                  peak, highlighting the urgent need for targeted humanitarian support and 
+                  long-term resilience building in the most affected communities.</span>
+                )}
               </p>
 
               <div className="flex justify-center mt-4">
@@ -146,6 +189,11 @@ export function HumanEconomicSection({
                 climate stress drives a gradual shift in how resources are allocated, how livelihoods 
                 are sustained, and how communities adapt to changing environmental conditions. 
                 Some sectors expand, others contract, and new patterns of resilience emerge.
+                {structuralPeakYear && (
+                  <span> The system reached a critical inflection point around {structuralPeakYear}, 
+                  when the combined pressures of economic loss and human displacement began to 
+                  fundamentally alter the country's development trajectory and adaptive capacity.</span>
+                )}
               </p>
 
               <div className="flex justify-center mt-4">
