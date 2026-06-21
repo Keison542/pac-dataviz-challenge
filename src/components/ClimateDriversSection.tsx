@@ -75,7 +75,7 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth, selected
         )}
       </div>
 
-      <div>Fig 1</div>
+      <p>Fig 2: These charts isolates long-term sea level rise anomalies, sea surface temperature anomalies, rainfall anomaly anomalies in Fiji, showing whether a consistent climate signal is emerging.</p>
     </>
 
     
