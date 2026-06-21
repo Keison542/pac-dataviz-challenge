@@ -53,130 +53,136 @@ export function HumanEconomicSection({
 
   return (
     <div ref={sectionRef} className="relative py-8">
+      {/* ─── INTRO TEXT ─── */}
+      <div className="text-center w-full max-w-4xl mx-auto px-4">
         <p className="text-center">
           The pathway from environmental change to human impact is rarely direct. Climate pressures first place strain on economies, reducing productivity, damaging infrastructure, and increasing recovery costs. These economic stresses eventually reach households, where they affect income security, employment, food access, and resilience.
         </p>
-      </br>
 
-      <p className="text-center">Historical records show that vulnerability is not evenly distributed. Certain years and locations emerge as recurring hotspots where communities face repeated exposure to climate-related hazards. For many Pacific Island nations, the challenge is not a single disaster, but the cumulative effect of multiple shocks over time.</p>
-      <br/>
-
-     {/* =========================
-    SCROLL NARRATIVE
-========================= */}
-<div className="relative min-h-[1400px]">
-
-  {/* =========================
-      1. ECONOMIC
-  ========================== */}
-  {hasEconomicData && (
-  <motion.div
-    style={{ opacity: economicOpacity, y: economicY }}
-    className="sticky top-20 mb-20 flex justify-center"
-  >
-    <div className="text-center w-full max-w-5xl px-4">
-      <p className="text-center">
-        In {selectedCountry}, according to historical data from 2010 to 2020, 
-        economic stress signal in terms of financial losses incurred by natural 
-        disaster is {formatLoss(lossTotal)}. This is through damaged infrastructure, 
-        agricultural losses, and rising recovery costs.
-      </p>
-
-      <div className="flex justify-center mt-4">
-        <TrendLine
-          width={Math.min(chartWidth * 1.3, 1100)}
-          height={240}
-          data={dataMap.loss}
-          dataType="loss"
-          setSelectedCountry={setSelectedCountry}
-          className="w-full max-w-4xl"
-        />
+        <p className="text-center mt-4">
+          Historical records show that vulnerability is not evenly distributed. Certain years and locations emerge as recurring hotspots where communities face repeated exposure to climate-related hazards. For many Pacific Island nations, the challenge is not a single disaster, but the cumulative effect of multiple shocks over time.
+        </p>
       </div>
-    </div>
-  </motion.div>
-)}
 
-  {/* =========================
-      2. HUMAN
-  ========================== */}
-  {hasHumanData && (
-    <motion.div
-      style={{ opacity: humanOpacity, y: humanY }}
-      className="sticky top-20 mb-20 flex justify-center"
-    >
-      <div className="text-center w-full max-w-5xl px-4">
-        <div className="text-sm font-medium text-slate-700 mb-1">
-          2. Human Exposure
-        </div>
+      {/* =========================
+          SCROLL NARRATIVE
+      ========================= */}
+      <div className="relative min-h-[1400px]">
 
-        <div className="text-xs text-slate-400 mb-2">
-          People affected:
-          <span className="font-semibold text-slate-600 ml-1">
-            {formatPeople(peopleTotal)}
-          </span>
-        </div>
+        {/* =========================
+            1. ECONOMIC
+        ========================== */}
+        {hasEconomicData && (
+          <motion.div
+            style={{ opacity: economicOpacity, y: economicY }}
+            className="sticky top-20 mb-20 flex justify-center"
+          >
+            <div className="text-center w-full max-w-5xl px-4">
+              <p className="text-center">
+                In {selectedCountry}, according to historical data from 2010 to 2020, 
+                economic stress signal in terms of financial losses incurred by natural 
+                disaster is {formatLoss(lossTotal)}. This is through damaged infrastructure, 
+                agricultural losses, and rising recovery costs.
+              </p>
 
-        <div className="text-[11px] text-slate-400 mb-4 max-w-md mx-auto">
-          Economic stress ultimately becomes a human story—affecting
-          livelihoods, increasing displacement risk, and exposing communities
-          to long-term vulnerability.
-        </div>
+              <div className="flex justify-center mt-4">
+                <TrendLine
+                  width={Math.min(chartWidth * 1.3, 1100)}
+                  height={240}
+                  data={dataMap.loss}
+                  dataType="loss"
+                  setSelectedCountry={setSelectedCountry}
+                  className="w-full max-w-4xl"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
 
-        <div className="flex justify-center">
-          <BubbleChart
-            width={Math.min(chartWidth * 1.3, 1100)}
-            height={260}
-            data={dataMap.people}
-            className="w-full max-w-4xl"
-          />
-        </div>
+        {/* =========================
+            2. HUMAN
+        ========================== */}
+        {hasHumanData && (
+          <motion.div
+            style={{ opacity: humanOpacity, y: humanY }}
+            className="sticky top-20 mb-20 flex justify-center"
+          >
+            <div className="text-center w-full max-w-5xl px-4">
+              <div className="text-sm font-medium text-slate-700 mb-1">
+                2. Human Exposure
+              </div>
+
+              <div className="text-xs text-slate-400 mb-2">
+                People affected:
+                <span className="font-semibold text-slate-600 ml-1">
+                  {formatPeople(peopleTotal)}
+                </span>
+              </div>
+
+              <div className="text-[11px] text-slate-400 mb-4 max-w-md mx-auto">
+                Economic stress ultimately becomes a human story—affecting
+                livelihoods, increasing displacement risk, and exposing communities
+                to long-term vulnerability.
+              </div>
+
+              <div className="flex justify-center">
+                <BubbleChart
+                  width={Math.min(chartWidth * 1.3, 1100)}
+                  height={260}
+                  data={dataMap.people}
+                  className="w-full max-w-4xl"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* =========================
+            3. STRUCTURAL SHIFT
+            NOT STICKY
+        ========================== */}
+        {hasSocioeconomicData && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.25 }}
+            transition={{ duration: 0.7 }}
+            className="mt-32 flex justify-center"
+          >
+            <div className="text-center w-full max-w-6xl px-4">
+              <div className="text-sm font-medium text-slate-700 mb-1">
+                3. Structural System Shift
+              </div>
+
+              <div className="text-[11px] text-slate-400 mb-4 max-w-md mx-auto">
+                Long-term socioeconomic indicators reveal how climate pressure
+                gradually reshapes national economic structures and adaptive
+                capacity.
+              </div>
+              <div className="flex justify-center">
+                <TimeSeriesDashboard
+                  width={Math.min(chartWidth * 2 + 40, 1400)}
+                  height={500}
+                  data={timeSeriesData}
+                  selectedCountry={selectedCountry}
+                  className="w-full max-w-5xl"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
-    </motion.div>
-  )}
-
-  {/* =========================
-      3. STRUCTURAL SHIFT
-      NOT STICKY
-  ========================== */}
-  {hasSocioeconomicData && (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 0.7 }}
-      className="mt-32 flex justify-center"
-    >
-      <div className="text-center w-full max-w-6xl px-4">
-        <div className="text-sm font-medium text-slate-700 mb-1">
-          3. Structural System Shift
-        </div>
-
-        <div className="text-[11px] text-slate-400 mb-4 max-w-md mx-auto">
-          Long-term socioeconomic indicators reveal how climate pressure
-          gradually reshapes national economic structures and adaptive
-          capacity.
-        </div>
-        <div className="flex justify-center">
-          <TimeSeriesDashboard
-            width={Math.min(chartWidth * 2 + 40, 1400)}
-            height={500}
-            data={timeSeriesData}
-            selectedCountry={selectedCountry}
-            className="w-full max-w-5xl"
-          />
-        </div>
-      </div>
-    </motion.div>
-  )}
-</div>
 
       {/* =========================
           FOOTER INSIGHT
       ========================== */}
       <div className="text-center text-xs text-slate-400 mt-12 mb-24 max-w-xl mx-auto">
-        This sequence demonstrates a causal chain: climate stress → economic loss → human vulnerability → structural transformation.
-        <p className="text-center">Over the longer term, these pressures begin to reshape national systems. Trends in food production, livelihood assets, and income diversification reveal how countries gradually adapt to changing environmental conditions. Some sectors expand, others contract, and communities develop new strategies to manage risk and sustain livelihoods.</p>
-      <br/>
+        <p>
+          This sequence demonstrates a causal chain: climate stress → economic loss → human vulnerability → structural transformation.
+        </p>
+        <p className="mt-3">
+          Over the longer term, these pressures begin to reshape national systems. Trends in food production, livelihood assets, and income diversification reveal how countries gradually adapt to changing environmental conditions. Some sectors expand, others contract, and communities develop new strategies to manage risk and sustain livelihoods.
+        </p>
       </div>
     </div>
   );
