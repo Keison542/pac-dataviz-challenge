@@ -1,5 +1,5 @@
 import { LineChart } from "@/vizualization/lineChart/LineChart";
-import getChartLabel from "@/vizualization/lineChart/LineChart";
+import { getChartLabel } from "@/vizualization/lineChart/LineChart";
 // import { getChartLabel } from "./LineChart";
 
 const chartLabel = getChartLabel(dataType);
