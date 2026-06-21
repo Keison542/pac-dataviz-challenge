@@ -79,7 +79,7 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth, selected
         )}
       </div>
 
-      <p>Fig 2:This chart isolates long-term {chartLabel.toLowerCase()} anomalies in {selectedCountry}, showing whether a consistent climate signal is emerging.</p>
+      <p>Fig 2:This chart isolates long-term {chartLabel(dataType).toLowerCase()} anomalies in {selectedCountry}, showing whether a consistent climate signal is emerging.</p>
     </>
 
     
