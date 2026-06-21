@@ -1,6 +1,6 @@
 import { LineChart } from "@/vizualization/lineChart/LineChart";
 import getChartLabel from "@/vizualization/lineChart/LineChart";
-const chartLabel = getChartLabel(dataType);
+// const chartLabel = getChartLabel(dataType);
 
 interface ClimateDriversSectionProps {
   dataMap: any;
