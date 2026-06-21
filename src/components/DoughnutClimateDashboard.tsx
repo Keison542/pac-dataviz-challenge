@@ -164,7 +164,7 @@ export function DoughnutClimateDashboard({
         </div> */}
 
       <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">
-  Let's begin with the numbers to understand the scale of climate-related consequences. Numbers rarely tell the whole story, but they provide a clear signal of rising climate pressures across the Pacific. This is evident in a climate anomaly index derived for {selectedCountry} from historical trends in temperature, rainfall, sea surface temperature, and sea level.
+  Let's begin with the numbers to understand the scale of climate-related consequences. Numbers rarely tell the whole story, but they provide a clear signal of rising climate pressures across the Pacific. This is evident in a climate anomaly index derived below for {selectedCountry} from historical trends in temperature, rainfall, sea surface temperature, and sea level.
     </p>
 
         <div className="flex items-center justify-center gap-3 mt-2">
