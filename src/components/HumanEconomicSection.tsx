@@ -70,30 +70,31 @@ export function HumanEconomicSection({
       1. ECONOMIC
   ========================== */}
   {hasEconomicData && (
-    <motion.div
-      style={{ opacity: economicOpacity, y: economicY }}
-      className="sticky top-20 mb-20 flex justify-center"
-    >
-      <div className="text-center w-full max-w-5xl px-4">
-        <p className="text-center">
-        
-          In {selectedCountry}, according to historical data from 2010 to 2020, economic stress signal in terms of financial losses incured by natural disaster is {formatLoss(lossTotal)}. This is through damaged infrastructure, agricultural losses, and rising recovery costs.
-        </p>
-      </br>
+  <motion.div
+    style={{ opacity: economicOpacity, y: economicY }}
+    className="sticky top-20 mb-20 flex justify-center"
+  >
+    <div className="text-center w-full max-w-5xl px-4">
+      <p className="text-center">
+        In {selectedCountry}, according to historical data from 2010 to 2020, 
+        economic stress signal in terms of financial losses incurred by natural 
+        disaster is {formatLoss(lossTotal)}. This is through damaged infrastructure, 
+        agricultural losses, and rising recovery costs.
+      </p>
 
-        <div className="flex justify-center">
-          <TrendLine
-            width={Math.min(chartWidth * 1.3, 1100)}
-            height={240}
-            data={dataMap.loss}
-            dataType="loss"
-            setSelectedCountry={setSelectedCountry}
-            className="w-full max-w-4xl"
-          />
-        </div>
+      <div className="flex justify-center mt-4">
+        <TrendLine
+          width={Math.min(chartWidth * 1.3, 1100)}
+          height={240}
+          data={dataMap.loss}
+          dataType="loss"
+          setSelectedCountry={setSelectedCountry}
+          className="w-full max-w-4xl"
+        />
       </div>
-    </motion.div>
-  )}
+    </div>
+  </motion.div>
+)}
 
   {/* =========================
       2. HUMAN
