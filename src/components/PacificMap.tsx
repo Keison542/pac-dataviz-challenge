@@ -380,6 +380,35 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
     return () => clearTimeout(timer);
   }, []);
 
+  // ─── Build narrative story ───
+  const buildNarrative = () => {
+    if (!topCountry || !stats) return null;
+
+    const countryName = topCountry.country;
+    const score = topCountry.compositeScore.toFixed(2);
+    const gap = stats.gapPercent.toFixed(0);
+    const countryCount = stats.count;
+
+    let narrative = `In the Pacific region, ${countryName} emerges as the most vulnerable nation, with a composite vulnerability score of ${score}. This is ${gap}% higher than the regional average across ${countryCount} countries. `;
+
+    // Add context about the hazard if active
+    if (activeHazard) {
+      const hazardNames: Record<string, string> = {
+        cyclone: "tropical cyclones",
+        flood: "flooding",
+        drought: "drought",
+        seaLevelRise: "sea-level rise"
+      };
+      narrative += `When filtered for ${hazardNames[activeHazard] || activeHazard} impacts, the vulnerability patterns shift, revealing which nations are most exposed to specific climate hazards. `;
+    }
+
+    narrative += `This uneven distribution of risk highlights the need for targeted adaptation strategies that address the unique climate challenges facing each Pacific nation.`;
+
+    return narrative;
+  };
+
+  const narrativeText = buildNarrative();
+
   // ─── Compact annotation position ───
   const annotationX = WIDTH - 220;
   const annotationStartY = 60;
@@ -392,12 +421,23 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
     <div className={`w-full ${className}`}>
       {/* ─── NARRATIVE HEADER ─── */}
       <div className="mb-6 text-center max-w-4xl mx-auto">
-        <p className="text-sm text-slate-500 leading-relaxed">
-          Circle size represents composite vulnerability. Hover hazards below
-          to reveal countries experiencing flooding, drought, cyclone impacts,
-          or sea-level rise.
-        </p>
+        <div className="inline-block px-3 py-0.5 rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 tracking-wider uppercase mb-2">
+          Pacific Climate Vulnerability
+        </div>
+        <h2 className="text-xl sm:text-2xl font-light text-slate-800 tracking-tight">
+          Uneven Exposure Across the <span className="font-semibold text-slate-900">Pacific</span>
+        </h2>
+        <div className="w-12 h-0.5 bg-slate-300 mx-auto mt-3 mb-3" />
       </div>
+
+      {/* ─── NARRATIVE STORY ─── */}
+      {narrativeText && (
+        <div className="mb-5 text-center max-w-3xl mx-auto px-4">
+          <p className="text-sm text-slate-700 leading-relaxed">
+            {narrativeText}
+          </p>
+        </div>
+      )}
 
       {/* ─── MAP ─── */}
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto" style={{ background: "transparent" }}>
@@ -672,6 +712,9 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
               <span className="font-medium text-slate-700">{topCountry.country}</span> shows the highest
               composite vulnerability across the Pacific, with a {stats?.gapPercent.toFixed(0)}% gap
               between the highest and average scores across {stats?.count} countries.
+              {activeHazard && (
+                <span className="text-slate-400"> Currently viewing impacts filtered by hazard.</span>
+              )}
             </span>
           )}
         </p>
