@@ -122,37 +122,41 @@ export default function ClimateInteractionMatrix({
 
     let narrative = "";
 
-    // Surface Temperature story
+    // Surface Temperature story - clamp to 0-100%
+    const tempInteraction = Math.min(Math.round(t * 0.9 * 100), 100);
     if (t > 0.5) {
-      narrative += `In ${selectedCountry}, rising surface temperatures (${(t * 0.9 * 100).toFixed(0)}% interaction strength) are altering ecosystems and biodiversity, while also increasing health risks for local communities. `;
+      narrative += `In ${selectedCountry}, rising surface temperatures (${tempInteraction}% interaction strength) are altering ecosystems and biodiversity, while also increasing health risks for local communities. `;
     } else if (t > 0.2) {
       narrative += `Surface temperatures in ${selectedCountry} are showing moderate warming trends, with measurable impacts on both environmental systems and human health. `;
     }
 
     // Sea Surface Temperature story
+    const sstInteraction = Math.min(Math.round(ss * 100), 100);
     if (ss > 0.5) {
-      narrative += `Warmer ocean temperatures (${(ss * 100).toFixed(0)}% interaction strength) are fueling stronger tropical cyclones and more extreme weather events. `;
+      narrative += `Warmer ocean temperatures (${sstInteraction}% interaction strength) are fueling stronger tropical cyclones and more extreme weather events. `;
     } else if (ss > 0.2) {
       narrative += `Sea surface temperatures are rising, contributing to increased storm activity and disaster risk. `;
     }
 
     // Sea Level story
+    const seaInteraction = Math.min(Math.round(s * 100), 100);
     if (s > 0.5) {
-      narrative += `Sea-level rise (${(s * 100).toFixed(0)}% interaction strength) poses a direct threat to coastal communities, infrastructure, and livelihoods. `;
+      narrative += `Sea-level rise (${seaInteraction}% interaction strength) poses a direct threat to coastal communities, infrastructure, and livelihoods. `;
     } else if (s > 0.2) {
       narrative += `Rising sea levels are gradually affecting coastal areas, increasing vulnerability to flooding and erosion. `;
     }
 
     // Rainfall story
+    const rainInteraction = Math.min(Math.round(r * 100), 100);
     if (r > 0.5) {
-      narrative += `Extreme rainfall events (${(r * 100).toFixed(0)}% interaction strength) are disrupting agriculture, damaging infrastructure, and creating significant economic losses. `;
+      narrative += `Extreme rainfall events (${rainInteraction}% interaction strength) are disrupting agriculture, damaging infrastructure, and creating significant economic losses. `;
     } else if (r > 0.2) {
       narrative += `Changing rainfall patterns are affecting agricultural productivity and increasing the risk of flooding and landslides. `;
     }
 
     // Strongest interaction highlight
     if (strongest) {
-      const strengthPct = Math.round(strongest.value * 100);
+      const strengthPct = Math.min(Math.round(strongest.value * 100), 100);
       narrative += `The strongest climate interaction in ${selectedCountry} is between ${strongest.row} and ${strongest.col}, with an interaction strength of ${strengthPct}%. ${strongest.narrative}`;
     }
 
@@ -169,9 +173,9 @@ export default function ClimateInteractionMatrix({
     );
   }
 
-  // Format the detail panel as a sentence
+  // Format the detail panel as a sentence - clamp to 0-100%
   const formatDetailSentence = (cell: MatrixCell) => {
-    const strength = Math.round(cell.value * 100);
+    const strength = Math.min(Math.round(cell.value * 100), 100);
     return `${cell.row} impacts ${cell.col.toLowerCase()}. ${cell.narrative} Interaction strength: ${strength}/100.`;
   };
 
@@ -204,7 +208,7 @@ export default function ClimateInteractionMatrix({
             <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />
             Strongest: {strongest.row} → {strongest.col}
             <span className="text-slate-400">·</span>
-            {Math.round(strongest.value * 100)}% interaction
+            {Math.min(Math.round(strongest.value * 100), 100)}% interaction
           </div>
         </div>
       )}
@@ -270,27 +274,29 @@ export default function ClimateInteractionMatrix({
                   selectedCell?.row === row &&
                   selectedCell?.col === col;
 
+                // Clamp the display value to 0-100%
+                const displayValue = Math.min(Math.round(cell.value * 100), 100);
+
                 return (
-                  <button
+                  <div
                     key={`${row}-${col}`}
-                    onClick={() => setSelectedCell(cell)}
-                    onMouseEnter={() => setSelectedCell(cell)}
                     className={`
                       h-5
                       border border-slate-200
                       transition-all duration-200
-                      hover:scale-105
-                      touch-manipulation
                       ${isSelected ? "ring-1 ring-slate-900 z-10" : ""}
                     `}
                     style={{
                       backgroundColor: getColor(cell.value),
+                      cursor: "default",
                     }}
+                    onMouseEnter={() => setSelectedCell(cell)}
+                    onMouseLeave={() => setSelectedCell(null)}
                   >
-                    <div className="text-[7px] sm:text-[8px] font-semibold text-white leading-none">
-                      {Math.round(cell.value * 100)}
+                    <div className="text-[7px] sm:text-[8px] font-semibold text-white leading-none text-center flex items-center justify-center h-full">
+                      {displayValue}
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -308,26 +314,19 @@ export default function ClimateInteractionMatrix({
           <div className="mt-3">
             <div className="flex justify-between text-[10px] text-slate-500">
               <span>Interaction Strength</span>
-              <span>{Math.round(selectedCell.value * 100)}/100</span>
+              <span>{Math.min(Math.round(selectedCell.value * 100), 100)}/100</span>
             </div>
             <div className="mt-1 h-1 bg-slate-100">
               <div
                 className="h-1 bg-slate-900 transition-all duration-300"
                 style={{
-                  width: `${selectedCell.value * 100}%`,
+                  width: `${Math.min(selectedCell.value * 100, 100)}%`,
                 }}
               />
             </div>
           </div>
         </div>
       )}
-
-      {/* ─── FOOTER NOTE ─── */}
-      <div className="mt-4 text-center">
-        <p className="text-[10px] text-slate-400 tracking-wide">
-          Click any cell to explore specific climate interactions
-        </p>
-      </div>
     </div>
   );
 }
