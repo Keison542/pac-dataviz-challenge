@@ -111,6 +111,56 @@ export default function ClimateInteractionMatrix({
   const getCell = (r: string, c: string) =>
     matrix.find((m) => m.row === r && m.col === c);
 
+  // ─── Build the narrative story ───
+  const buildNarrative = () => {
+    if (!latest) return null;
+
+    const t = Math.abs(latest.temp || 0);
+    const r = Math.abs(latest.rainfall || 0);
+    const s = Math.abs(latest.sea || 0);
+    const ss = Math.abs(latest.sea_surface_temperature || 0);
+
+    let narrative = "";
+
+    // Surface Temperature story
+    if (t > 0.5) {
+      narrative += `In ${selectedCountry}, rising surface temperatures (${(t * 0.9 * 100).toFixed(0)}% interaction strength) are altering ecosystems and biodiversity, while also increasing health risks for local communities. `;
+    } else if (t > 0.2) {
+      narrative += `Surface temperatures in ${selectedCountry} are showing moderate warming trends, with measurable impacts on both environmental systems and human health. `;
+    }
+
+    // Sea Surface Temperature story
+    if (ss > 0.5) {
+      narrative += `Warmer ocean temperatures (${(ss * 100).toFixed(0)}% interaction strength) are fueling stronger tropical cyclones and more extreme weather events. `;
+    } else if (ss > 0.2) {
+      narrative += `Sea surface temperatures are rising, contributing to increased storm activity and disaster risk. `;
+    }
+
+    // Sea Level story
+    if (s > 0.5) {
+      narrative += `Sea-level rise (${(s * 100).toFixed(0)}% interaction strength) poses a direct threat to coastal communities, infrastructure, and livelihoods. `;
+    } else if (s > 0.2) {
+      narrative += `Rising sea levels are gradually affecting coastal areas, increasing vulnerability to flooding and erosion. `;
+    }
+
+    // Rainfall story
+    if (r > 0.5) {
+      narrative += `Extreme rainfall events (${(r * 100).toFixed(0)}% interaction strength) are disrupting agriculture, damaging infrastructure, and creating significant economic losses. `;
+    } else if (r > 0.2) {
+      narrative += `Changing rainfall patterns are affecting agricultural productivity and increasing the risk of flooding and landslides. `;
+    }
+
+    // Strongest interaction highlight
+    if (strongest) {
+      const strengthPct = Math.round(strongest.value * 100);
+      narrative += `The strongest climate interaction in ${selectedCountry} is between ${strongest.row} and ${strongest.col}, with an interaction strength of ${strengthPct}%. ${strongest.narrative}`;
+    }
+
+    return narrative;
+  };
+
+  const narrativeText = buildNarrative();
+
   if (!latest) {
     return (
       <div className="border border-slate-200 bg-white p-6 text-center text-slate-500">
@@ -127,52 +177,51 @@ export default function ClimateInteractionMatrix({
 
   return (
     <div className="w-full flex flex-col items-center px-2 sm:px-4">
-      {/* Header */}
-      <div className="mb-6 text-center w-full max-w-4xl px-4">
-        <h2 className="text-base sm:text-lg md:text-xl font-semibold text-slate-900">
-          Climate Interaction Pathways in {selectedCountry}
+      {/* ─── NARRATIVE HEADER ─── */}
+      <div className="mb-4 text-center w-full max-w-4xl px-4">
+        <div className="inline-block px-3 py-0.5 rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 tracking-wider uppercase mb-2">
+          Climate System Dynamics
+        </div>
+        <h2 className="text-xl sm:text-2xl font-light text-slate-800 tracking-tight">
+          Climate Interaction <span className="font-semibold text-slate-900">Pathways</span>
         </h2>
-
-        <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          Climate indicators interact through environmental, economic,
-          human and disaster-risk systems. Darker cells indicate
-          stronger interactions.
-        </p>
+        <div className="w-12 h-0.5 bg-slate-300 mx-auto mt-3 mb-3" />
       </div>
 
-      {/* Strongest Interaction */}
-      {strongest && (
-        <div className="mb-5 border-b border-slate-200 pb-4 text-center w-full max-w-3xl px-4">
-          <div className="text-[10px] uppercase tracking-[0.15em] text-slate-500">
-            Strongest Climate Interaction
-          </div>
-
-          <div className="mt-1 text-sm font-semibold text-slate-900">
-            {strongest.row} → {strongest.col}
-          </div>
-
-          <p className="mt-1 text-xs text-slate-600 max-w-md mx-auto">
-            {strongest.narrative}
+      {/* ─── NARRATIVE STORY ─── */}
+      {narrativeText && (
+        <div className="mb-5 text-center w-full max-w-3xl px-4">
+          <p className="text-sm text-slate-700 leading-relaxed">
+            {narrativeText}
           </p>
         </div>
       )}
 
-      {/* Legend */}
-      <div className="mb-5 flex items-center justify-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-slate-500 px-4">
-        <span>Low</span>
+      {/* ─── STRONGEST INTERACTION (Compact) ─── */}
+      {strongest && (
+        <div className="mb-4 text-center w-full max-w-3xl px-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-medium text-slate-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />
+            Strongest: {strongest.row} → {strongest.col}
+            <span className="text-slate-400">·</span>
+            {Math.round(strongest.value * 100)}% interaction
+          </div>
+        </div>
+      )}
 
+      {/* ─── LEGEND ─── */}
+      <div className="mb-4 flex items-center justify-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-slate-500 px-4">
+        <span>Low</span>
         <div
           className="h-2 w-20 sm:w-28 md:w-36"
           style={{
-            background:
-              "linear-gradient(to right,#e2e8f0,#0f172a)",
+            background: "linear-gradient(to right,#e2e8f0,#0f172a)",
           }}
         />
-
         <span>High</span>
       </div>
 
-      {/* Matrix */}
+      {/* ─── MATRIX ─── */}
       <div 
         className="w-full overflow-x-auto scrollbar-hide"
         style={{
@@ -249,14 +298,13 @@ export default function ClimateInteractionMatrix({
         </div>
       </div>
 
-      {/* Detail Panel - Now in sentence form */}
+      {/* ─── DETAIL PANEL ─── */}
       {selectedCell && (
-        <div className="mt-6 border-t border-slate-200 pt-5 w-full max-w-3xl px-4">
+        <div className="mt-5 border-t border-slate-200 pt-4 w-full max-w-3xl px-4">
           <p className="text-sm sm:text-base leading-relaxed text-slate-700">
             {formatDetailSentence(selectedCell)}
           </p>
           
-          {/* Progress bar for visual reference */}
           <div className="mt-3">
             <div className="flex justify-between text-[10px] text-slate-500">
               <span>Interaction Strength</span>
@@ -273,6 +321,13 @@ export default function ClimateInteractionMatrix({
           </div>
         </div>
       )}
+
+      {/* ─── FOOTER NOTE ─── */}
+      <div className="mt-4 text-center">
+        <p className="text-[10px] text-slate-400 tracking-wide">
+          Click any cell to explore specific climate interactions
+        </p>
+      </div>
     </div>
   );
 }
