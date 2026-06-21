@@ -220,12 +220,10 @@ export const TrendLine = ({
               onHover={() => {}}
             />
 
-            {/* POINTS - Always show, but smaller on mobile */}
+            {/* POINTS - Increased size to 12 */}
             {trendData.map((d, i) => {
               const isActive = hovered?.year === d.year;
-              const pointRadius = isActive 
-                ? Math.max(5, Math.min(8, width / 80)) 
-                : Math.max(2.5, Math.min(4, width / 150));
+              const pointRadius = 12; // Increased from dynamic sizing to 12
 
               return (
                 <circle
@@ -234,7 +232,7 @@ export const TrendLine = ({
                   cy={yScale(d.value)}
                   r={pointRadius}
                   fill={isActive ? "#0284c7" : "#38bdf8"}
-                  opacity={isActive ? 1 : 0.6}
+                  opacity={isActive ? 1 : 0.8}
                   onMouseEnter={() => setHovered(d)}
                   onMouseLeave={() => setHovered(null)}
                   onClick={() => isTouchDevice && setHovered(d)}
