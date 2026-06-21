@@ -59,8 +59,9 @@ export function HumanEconomicSection({
           The pathway from environmental change to human impact is rarely direct. Climate pressures first place strain on economies, reducing productivity, damaging infrastructure, and increasing recovery costs. These economic stresses eventually reach households, where they affect income security, employment, food access, and resilience.
         </p>
 
-        <p className="text-center mt-4">
-          Historical records show that vulnerability is not evenly distributed. Certain years and locations emerge as recurring hotspots where communities face repeated exposure to climate-related hazards. For many Pacific Island nations, the challenge is not a single disaster, but the cumulative effect of multiple shocks over time.
+        <p className="text-center">
+          Historical records show that vulnerability is not evenly distributed. Certain years and locations emerge as recurring hotspots where communities face repeated exposure to climate-related hazards. 
+          For many Pacific Island nations, the challenge is not a single disaster, but the cumulative effect of multiple shocks over time.
         </p>
       </div>
 
