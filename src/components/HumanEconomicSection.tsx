@@ -53,17 +53,11 @@ export function HumanEconomicSection({
 
   return (
     <div ref={sectionRef} className="relative py-8">
-
-      {/* =========================
-          STORY HEADER
-      ========================== */}
-
         <p className="text-center">
           The pathway from environmental change to human impact is rarely direct. Climate pressures first place strain on economies, reducing productivity, damaging infrastructure, and increasing recovery costs. These economic stresses eventually reach households, where they affect income security, employment, food access, and resilience.
         </p>
-
+      <br />
       
-
      {/* =========================
     SCROLL NARRATIVE
 ========================= */}
