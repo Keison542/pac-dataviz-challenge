@@ -424,10 +424,10 @@ export const LineChart = ({
       </div>
 
       {/* ─── FOOTER ─── */}
-      <div className="mt-4 text-sm text-slate-600 text-center max-w-2xl mx-auto">
+      {/* <div className="mt-4 text-sm text-slate-600 text-center max-w-2xl mx-auto">
         This chart isolates long-term {chartLabel.toLowerCase()} anomalies
         in {selectedCountry}, showing whether a consistent climate signal is emerging. Hover over points for detailed values.
-      </div>
+      </div> */}
     </div>
   );
 };
