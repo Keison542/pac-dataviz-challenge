@@ -75,5 +75,7 @@ export function ClimateDriversSection({ dataMap, tempTrend, chartWidth, selected
         )}
       </div>
     </>
+
+    <div>Fig 1</div>
   );
 }
