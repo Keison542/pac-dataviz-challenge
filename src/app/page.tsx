@@ -164,7 +164,7 @@ export default function Home() {
           </h2>
 
           <p className="mt-10 text-xl text-slate-500">
-            The consequences appear when environmental change reaches people,
+            In other words, the consequences appear when environmental change reaches people,
             livelihoods and economies.
           </p>
         </div>
@@ -178,7 +178,7 @@ export default function Home() {
         <div className="text-center">
 
           <div className="mt-6 text-xl text-slate-500">
-            In {selectedCountry}
+          {selectedCountry} for example has
           </div>
           
           <div className="text-6xl md:text-8xl font-bold">
