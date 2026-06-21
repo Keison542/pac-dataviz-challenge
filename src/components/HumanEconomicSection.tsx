@@ -57,19 +57,12 @@ export function HumanEconomicSection({
       {/* =========================
           STORY HEADER
       ========================== */}
-      <div className="text-center mb-8">
-        <div className="text-xs uppercase tracking-widest text-slate-400">
-          Human & Economic Impact Pathway
-        </div>
 
-        <h3 className="text-lg font-semibold text-slate-900 mt-1">
-          Climate impacts cascade through interconnected systems
-        </h3>
-
-        <p className="text-sm text-slate-500 mt-2 max-w-xl mx-auto">
-          From financial stress → to household exposure → to structural economic change
+        <p className="text-center">
+          The pathway from environmental change to human impact is rarely direct. Climate pressures first place strain on economies, reducing productivity, damaging infrastructure, and increasing recovery costs. These economic stresses eventually reach households, where they affect income security, employment, food access, and resilience.
         </p>
-      </div>
+
+      
 
      {/* =========================
     SCROLL NARRATIVE
