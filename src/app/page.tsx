@@ -178,7 +178,7 @@ export default function Home() {
         <div className="text-center">
 
           <div className="mt-6 text-xl text-slate-500">
-          {selectedCountry} for example has
+          {selectedCountry}, for example, has seen
           </div>
           
           <div className="text-6xl md:text-8xl font-bold">
