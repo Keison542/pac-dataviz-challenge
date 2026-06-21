@@ -29,7 +29,7 @@ type LineChartProps = {
   title?: string;
 };
 
-const getChartLabel = (dataType: ClimateDriverType): string => {
+export const getChartLabel = (dataType: ClimateDriverType): string => {
   switch (dataType) {
     case "surfaceTempAnomaly":
       return "Surface Temperature";
