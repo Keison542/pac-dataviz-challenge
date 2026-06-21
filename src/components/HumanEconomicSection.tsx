@@ -75,11 +75,11 @@ export function HumanEconomicSection({
       className="sticky top-20 mb-20 flex justify-center"
     >
       <div className="text-center w-full max-w-5xl px-4">
-        <div className="text-sm font-medium text-slate-700 mb-1">
+        <p className="text-center">
         
           In {selectedCountry}, according to historical data from 2010 to 2020, economic stress signal in terms of financial losses incured by natural disaster is 
           {formatLoss(lossTotal)}. This is through damaged infrastructure, agricultural losses, and rising recovery costs.
-        </div>
+        </p>
 
         {/* <div className="text-xs text-slate-400 mb-2">
           Total losses:
