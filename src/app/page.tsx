@@ -299,13 +299,22 @@ export default function Home() {
       <div className="max-w-4xl text-center">
     
         <div className="text-sm uppercase tracking-[0.3em] text-slate-400">
-          Observation
+          One Pattern Emerges
+          
+
+
         </div>
     
         <h2 className="mt-4 text-5xl md:text-7xl font-light leading-tight">
-          Temperatures rise.
+          Climate signals intensify.
           <br />
-          Sea levels follow.
+         Economic losses accumulate.
+
+          <br />
+          Human exposure grows.
+
+          <br />
+          Across the Pacific, environmental change is increasingly translating into social and economic consequences.
         </h2>
     
       </div>
