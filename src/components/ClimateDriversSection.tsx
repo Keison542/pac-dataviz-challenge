@@ -44,9 +44,7 @@ export function ClimateDriversSection({
     <>
       <div className="text-center mb-6">
         <div className="text-sm text-slate-500 max-w-[680px] mx-auto">
-          However, deeper dive into individual driver of change per
-          country has uncovered both emerging and stable signals of
-          climate variation since 1950. For example, in{" "}
+         However, the climate signal becomes clearer when each driver is examined individually. Temperature, rainfall, sea surface temperature and sea level do not change at the same rate. Together, they reveal how environmental conditions have evolved across decades. For example, in{" "}
           {selectedCountry}, surface temperatures have{" "}
           {tempTrend > 0
             ? `risen ${tempTrend.toFixed(1)}%`
