@@ -305,7 +305,7 @@ export default function Home() {
 
         </div>
     
-        <h2 className="mt-4 text-5xl md:text-7xl font-light leading-tight">
+        <h2>
           Climate signals intensify.
           <br />
          Economic losses accumulate.
