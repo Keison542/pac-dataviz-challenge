@@ -111,14 +111,11 @@ export function HumanEconomicSection({
           >
             <div className="text-center w-full max-w-5xl px-4">
               <p className="text-center">
-                In {selectedCountry}, according to historical data from 2010 to 2020, 
-                economic stress signal in terms of financial losses incurred by natural 
-                disaster is {formatLoss(lossTotal)}. This is through damaged infrastructure, 
-                agricultural losses, and rising recovery costs.
-                {economicPeakYear && (
-                  <span> The peak of economic disruption occurred in {economicPeakYear}, 
+                Climate shocks first place strain on national economies.  Between 2010 to 2020, {selectedCountry}, recorded approximately {formatLoss(lossTotal)} in disaster-related losses.
+                Damage to infrastructure, agriculture and public assets increased recovery costs and reduced economic resilience.
+                 The peak of economic disruption occurred in {economicPeakYear}, 
                   when losses reached their highest recorded level, straining national 
-                  recovery capacity and exposing critical infrastructure gaps.</span>
+                  recovery capacity and exposing critical infrastructure gaps.
                 )}
               </p>
 
