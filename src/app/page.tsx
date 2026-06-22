@@ -314,14 +314,15 @@ export default function Home() {
           Human exposure grows.
 
           <br />
-          Across the Pacific, environmental change is increasingly translating into social and economic consequences.
+          Across the Pacific, environmental change is increasingly translating into social and economic consequences. This means climate impacts are not a future cost.
+          They are already part of everyday economic reality.
         </h2>
     
       </div>
     </section>
       
 
-      <section className="min-h-screen flex items-center justify-center px-6 border-y border-slate-100">
+      {/* <section className="min-h-screen flex items-center justify-center px-6 border-y border-slate-100">
         <div className="text-center">
           <div className="text-6xl md:text-8xl font-bold">
             ${Math.round(lossTotal / 1_000_000_000)}B
@@ -337,7 +338,7 @@ export default function Home() {
         </div>
           
         </div>
-      </section>
+      </section> */}
 
       {/* ========================================================= */}
       {/* FINAL REFLECTION */}
