@@ -72,27 +72,6 @@ export default function Home() {
             selectedCountry={selectedCountry}
             onSelectCountry={setSelectedCountry}
           />
-
-          {/* <div className="max-w-4xl mx-auto text-center mt-10">
-            <h1 className="text-5xl md:text-7xl font-light leading-tight">
-              The Pacific helped create little of the climate crisis.
-            </h1>
-
-            <p className="mt-8 text-xl text-slate-600">
-              Yet its nations stand on the front line of its consequences.
-            </p>
-
-            <motion.div
-              className="mt-20 text-slate-400 text-sm tracking-widest uppercase"
-              animate={{ y: [0, 10, 0] }}
-              transition={{
-                repeat: Infinity,
-                duration: 2,
-              }}
-            >
-              Scroll to explore ↓
-            </motion.div>
-          </div> */}
         </div>
       </section>
 
@@ -103,12 +82,10 @@ export default function Home() {
       <section className="min-h-[70vh] flex items-center justify-center px-6">
         <div className="max-w-4xl text-center">
           <h2 className="text-4xl md:text-6xl font-light leading-tight">
-
             <>
               The Pacific helped create little of the climate crisis. Yet its nations stand on the front line of its consequences. 
             </>
           </h2>
-       
         </div>
       </section>
 
@@ -176,11 +153,6 @@ export default function Home() {
 
       <section className="min-h-screen flex items-center justify-center px-6 border-y border-slate-100">
         <div className="text-center">
-
-          {/* <div className="mt-6 text-xl text-slate-500">
-          {selectedCountry}, for example, has seen
-          </div> */}
-          
           <div className="text-6xl md:text-8xl font-bold">
             {peopleTotal.toLocaleString()} lives disrupted
           </div>
@@ -216,55 +188,20 @@ export default function Home() {
       )}
 
       {/* ========================================================= */}
-      {/* SYSTEM INTRO */}
-      {/* ========================================================= */}
-
-      <section className="min-h-[80vh] flex items-center justify-center px-6">
-        <div className="max-w-5xl text-center">
-          <h2 className="text-5xl md:text-7xl font-light leading-tight">
-            Climate impacts rarely arrive alone.
-          </h2>
-
-          <p className="mt-10 text-xl text-slate-500">
-            Climate drivers reinforce each other and cascade through the system.
-          </p>
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* CAUSAL CHAIN */}
-      {/* ========================================================= */}
-
-      {hasCausalData && (
-        <motion.section
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          className="max-w-[1200px] mx-auto px-6 py-32"
-        >
-          <CausalChainSection
-            climateFlowData={climateFlowData}
-            beeswarmData={beeswarmData}
-            selectedCountry={selectedCountry}
-            chartWidth={chartWidth}
-          />
-        </motion.section>
-      )}
-
-      {/* ========================================================= */}
-      {/* INEQUALITY INTRO */}
+      {/* REGIONAL CONTEXT INTRO */}
       {/* ========================================================= */}
 
       <section className="min-h-[80vh] flex items-center justify-center px-6 border-t border-slate-100">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
-            The central question is: Why do some nations facing the same ocean experience different risks?
+            But are these pressures unique to {selectedCountry}?
           </h2>
 
           <p className="mt-10 text-xl text-slate-500">
-            Some Pacific nations face significantly higher exposure and lower
-            resilience than others.
+            To answer that question, we need to step back and compare climate
+            vulnerability across the Pacific. While every nation faces
+            environmental change, the capacity to absorb and recover from
+            climate shocks differs dramatically.
           </p>
         </div>
       </section>
@@ -291,96 +228,70 @@ export default function Home() {
       )}
 
       {/* ========================================================= */}
-      {/* BIG LOSS NUMBER */}
+      {/* SYSTEM INTRO - UPDATED */}
       {/* ========================================================= */}
 
-      {/* New section  */}
-      <section className="min-h-[60vh] flex items-center justify-center">
-      <div className="max-w-4xl text-center">
-    
-        <div className="text-sm uppercase tracking-[0.3em] text-slate-400">
-          One Pattern Emerges
-          
-
-
-        </div>
-    
-        <p>
-          Climate signals intensify.
-          <br />
-            <br />
-         Economic losses accumulate.
-
-          <br />
-            <br />
-          Human exposure grows.
-
-          <br />
-            <br />
-          Across the Pacific, environmental change is increasingly translating into social and economic consequences. This means climate impacts are not a future cost.
-          They are already part of everyday economic reality.
-        </p>
-    
-      </div>
-    </section>
-      
-
-      {/* <section className="min-h-screen flex items-center justify-center px-6 border-y border-slate-100">
-        <div className="text-center">
-          <div className="text-6xl md:text-8xl font-bold">
-            ${Math.round(lossTotal / 1_000_000_000)}B
-          </div>
-
-          <div className="mt-6 text-xl text-slate-500">
-            in recorded economic losses
-          </div>
-          
-          <div className="mt-6 max-w-3xl mx-auto text-slate-500">
-          For many Pacific nations, climate impacts are not a future cost.
-          They are already part of everyday economic reality.
-        </div>
-          
-        </div>
-      </section> */}
-
-      {/* ========================================================= */}
-      {/* FINAL REFLECTION */}
-      {/* ========================================================= */}
-
-      {/* <section className="min-h-screen flex items-center justify-center px-6">
+      <section className="min-h-[80vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
-          <p className="uppercase tracking-[0.3em] text-slate-400 mb-8">
-            Final Reflection
-          </p>
-
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
-            The Pacific is not
-            <br/>
-             a warning about the future.
+            Why does vulnerability emerge?
           </h2>
 
-          <h2 className="mt-10 text-6xl md:text-8xl font-light leading-tight">
-          It is a picture
-          <br />
-          of the present.
-        </h2>
-
-          <p className="mt-12 text-2xl text-slate-600 leading-relaxed">
-            The region contributes little to global emissions,
-            yet faces some of the world's highest climate risks.
-          </p>
-          
-          <p className="mt-8 text-xl text-slate-500">
-            Climate vulnerability is not determined only by geography.
-            It is shaped by resilience, capacity and inequality.
-          </p>
-
-          <p className="mt-8 text-lg text-slate-500">
-            Nations that contributed least to climate change are often among
-            those facing its most severe consequences.
+          <p className="mt-10 text-xl text-slate-500">
+            The answer lies in how climate drivers interact. Temperature,
+            rainfall, sea-level rise and ocean warming rarely operate in
+            isolation. Together they create cascading effects that amplify
+            risk across environmental, economic and human systems.
           </p>
         </div>
-      </section> */}
+      </section>
+
+      {/* ========================================================= */}
+      {/* CAUSAL CHAIN */}
+      {/* ========================================================= */}
+
+      {hasCausalData && (
+        <motion.section
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
+          className="max-w-[1200px] mx-auto px-6 py-32"
+        >
+          <CausalChainSection
+            climateFlowData={climateFlowData}
+            beeswarmData={beeswarmData}
+            selectedCountry={selectedCountry}
+            chartWidth={chartWidth}
+          />
+        </motion.section>
+      )}
+
+      {/* ========================================================= */}
+      {/* ONE PATTERN EMERGES */}
+      {/* ========================================================= */}
+
+      <section className="min-h-[60vh] flex items-center justify-center">
+        <div className="max-w-4xl text-center">
+          <div className="text-sm uppercase tracking-[0.3em] text-slate-400">
+            One Pattern Emerges
+          </div>
+        
+          <p className="mt-8 text-lg text-slate-600 leading-relaxed">
+            Climate signals intensify.
+            <br />
+            <br />
+            Economic losses accumulate.
+            <br />
+            <br />
+            Human exposure grows.
+            <br />
+            <br />
+            Across the Pacific, environmental change is increasingly translating into social and economic consequences. This means climate impacts are not a future cost.
+            They are already part of everyday economic reality.
+          </p>
+        </div>
+      </section>
 
       {/* ========================================================= */}
       {/* CONCLUSION */}
