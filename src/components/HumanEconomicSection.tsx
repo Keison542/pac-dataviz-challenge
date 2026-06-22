@@ -116,7 +116,7 @@ export function HumanEconomicSection({
                  The peak of economic disruption occurred in {economicPeakYear}, 
                   when losses reached their highest recorded level, straining national 
                   recovery capacity and exposing critical infrastructure gaps.
-                )}
+                
               </p>
 
               <div className="flex justify-center mt-4">
@@ -143,16 +143,10 @@ export function HumanEconomicSection({
           >
             <div className="text-center w-full max-w-5xl px-4">
               <p className="text-center">
-                In {selectedCountry}, approximately {formatPeople(peopleTotal)} people have been 
-                directly affected by climate-related disasters over the past decade. These impacts 
-                manifest through displacement, loss of livelihoods, food insecurity, and reduced 
-                access to essential services. The burden falls disproportionately on vulnerable 
-                communities, particularly in rural and coastal areas where adaptive capacity is limited.
-                {humanPeakYear && (
-                  <span> The most severe year was {humanPeakYear}, when exposure reached its 
+                Economic losses eventually reach households. Across the last decade, more than {formatPeople(peopleTotal)} people in {selectedCountry} experienced direct impacts from climate-related disasters through displacement, livelihood disruption, food insecurity or reduced access to essential services.
+               The most severe year was {humanPeakYear}, when exposure reached its 
                   peak, highlighting the urgent need for targeted humanitarian support and 
-                  long-term resilience building in the most affected communities.</span>
-                )}
+                  long-term resilience building in the most affected communities.
               </p>
 
               <div className="flex justify-center mt-4">
@@ -181,16 +175,13 @@ export function HumanEconomicSection({
           >
             <div className="text-center w-full max-w-6xl px-4">
               <p className="text-center">
-                Over the longer term, these recurring shocks begin to reshape the fundamental 
-                structure of {selectedCountry}'s economy and society. The cumulative pressure of 
-                climate stress drives a gradual shift in how resources are allocated, how livelihoods 
-                are sustained, and how communities adapt to changing environmental conditions. 
-                Some sectors expand, others contract, and new patterns of resilience emerge.
-                {structuralPeakYear && (
-                  <span> The system reached a critical inflection point around {structuralPeakYear}, 
-                  when the combined pressures of economic loss and human displacement began to 
-                  fundamentally alter the country's development trajectory and adaptive capacity.</span>
-                )}
+               Climate shocks leave impacts that extend far beyond the immediate recovery period. Each event adds pressure to livelihoods, 
+                infrastructure, and economic systems, gradually transforming how communities in {selectedCountry} live 
+                and adapt. Around {structuralPeakYear}, these pressures converged into a critical turning point, where mounting 
+                economic losses and population displacement began reshaping the nation's development trajectory and its capacity 
+                to withstand future climate risks.
+
+               
               </p>
 
               <div className="flex justify-center mt-4">
