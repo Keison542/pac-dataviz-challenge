@@ -305,18 +305,21 @@ export default function Home() {
 
         </div>
     
-        <h2>
+        <p>
           Climate signals intensify.
           <br />
+            <br />
          Economic losses accumulate.
 
           <br />
+            <br />
           Human exposure grows.
 
           <br />
+            <br />
           Across the Pacific, environmental change is increasingly translating into social and economic consequences. This means climate impacts are not a future cost.
           They are already part of everyday economic reality.
-        </h2>
+        </p>
     
       </div>
     </section>
