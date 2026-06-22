@@ -160,7 +160,7 @@ export default function Home() {
       <section className="min-h-[80vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
-            However, the numbers become real when they reach the people.
+            Climate change is often measured in degrees and centimetres, but its consequences are measured in disrupted lives.
           </h2>
 
           <p className="mt-10 text-xl text-slate-500">
