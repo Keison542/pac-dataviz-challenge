@@ -421,11 +421,11 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
     <div className={`w-full ${className}`}>
       {/* ─── NARRATIVE HEADER ─── */}
       <div className="mb-6 text-center max-w-4xl mx-auto">
-        <div className="inline-block px-3 py-0.5 rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 tracking-wider uppercase mb-2">
+        <p className="text-center">
           Not all Pacific nations face climate change equally.
           Countries experience similar environmental pressures, yet their ability to absorb and recover from those pressures varies dramatically.
           This uneven capacity creates large differences in vulnerability across the region.
-        </div>
+        </p>
         {/* <h2 className="text-xl sm:text-2xl font-light text-slate-800 tracking-tight">
           Uneven Exposure Across the <span className="font-semibold text-slate-900">Pacific</span>
         </h2>
