@@ -177,16 +177,16 @@ export default function Home() {
       <section className="min-h-screen flex items-center justify-center px-6 border-y border-slate-100">
         <div className="text-center">
 
-          <div className="mt-6 text-xl text-slate-500">
+          {/* <div className="mt-6 text-xl text-slate-500">
           {selectedCountry}, for example, has seen
-          </div>
+          </div> */}
           
           <div className="text-6xl md:text-8xl font-bold">
-            {peopleTotal.toLocaleString()}
+            {peopleTotal.toLocaleString()} lives disrupted
           </div>
 
           <div className="mt-6 text-xl text-slate-500">
-            lives disrupted by climate-related disasters. Behind every number are households, livelihoods, and communities adapting to repeated shocks across the Pacific Island Nations.
+            by climate-related disasters in {selectedCountry}. 
           </div>
         </div>
       </section>
