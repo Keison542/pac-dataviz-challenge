@@ -53,24 +53,21 @@ export function Hero({
           TITLE (STRENGTHENED HOOK)
       ========================== */}
       <h1 className="text-[clamp(2.2rem,5vw,3.8rem)] font-bold leading-tight text-slate-900 max-w-4xl mx-auto">
-        Climate pressure is rising — but
-        vulnerability is unequal
+      Climate change is not experienced equally across the Pacific.
       </h1>
 
       {/* =========================
           WINNING THESIS (KEY FIX)
       ========================== */}
       <p className="text-lg text-slate-600 max-w-2xl mx-auto mt-6 leading-relaxed">
-        Pacific vulnerability is driven not only by climate exposure,
-        but by unequal economic and human resilience across nations.
+        The region contributes little to global emissions, yet faces some of the world's highest climate risks.
       </p>
 
       {/* =========================
           STORY DIRECTION (NEW — IMPORTANT)
       ========================== */}
       <div className="mt-6 text-sm text-slate-500 max-w-xl mx-auto">
-        This story traces how climate stress becomes economic damage,
-        and why some nations are far more exposed than others.
+      This story follows how climate pressures become economic losses, human disruption, and unequal vulnerability across Pacific Island nations.
       </div>
 
       {/* =========================
