@@ -347,7 +347,7 @@ export default function Home() {
       {/* FINAL REFLECTION */}
       {/* ========================================================= */}
 
-      <section className="min-h-screen flex items-center justify-center px-6">
+      {/* <section className="min-h-screen flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
           <p className="uppercase tracking-[0.3em] text-slate-400 mb-8">
             Final Reflection
@@ -380,7 +380,7 @@ export default function Home() {
             those facing its most severe consequences.
           </p>
         </div>
-      </section>
+      </section> */}
 
       {/* ========================================================= */}
       {/* CONCLUSION */}
