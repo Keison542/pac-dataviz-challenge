@@ -389,7 +389,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
     const gap = stats.gapPercent.toFixed(0);
     const countryCount = stats.count;
 
-    let narrative = `In the Pacific region, ${countryName} emerges as the most vulnerable nation, with a composite vulnerability score of ${score}. This is ${gap}% higher than the regional average across ${countryCount} countries. `;
+    let narrative = `Among ${countryCount} Pacific nations, ${countryName} records the highest composite vulnerability score of ${score}. This is ${gap}% higher than the regional average, highlighting how exposure, economic resilience and human capacity combine to shape climate risk. `;
 
     // Add context about the hazard if active
     if (activeHazard) {
