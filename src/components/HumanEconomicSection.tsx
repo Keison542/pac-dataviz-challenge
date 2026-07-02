@@ -203,8 +203,9 @@ export function HumanEconomicSection({
       ========================== */}
       <div className="text-center w-full max-w-6xl px-4">
         <p>
-          This sequence demonstrates a causal chain: climate stress → economic loss → human vulnerability → structural transformation.
+          This sequence in Fig 2, 3, 4 and 5 demonstrates a causal chain: climate stress → economic loss → human vulnerability → structural transformation.
         </p>
+      </br>
         <p className="text-center w-full max-w-6xl px-4">
           Over the longer term, these pressures begin to reshape national systems. Trends in food production, livelihood assets, and income diversification reveal how countries gradually adapt to changing environmental conditions. Some sectors expand, others contract, and communities develop new strategies to manage risk and sustain livelihoods.
         </p>
