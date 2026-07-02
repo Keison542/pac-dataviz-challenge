@@ -216,10 +216,10 @@ export function TimeSeriesDashboard({
           <h3 className="text-lg sm:text-xl font-normal text-slate-800">
             Structural system shift
           </h3>
-          <p className="text-xs text-slate-500 max-w-2xl mx-auto mt-1 leading-relaxed">
+          {/* <p className="text-xs text-slate-500 max-w-2xl mx-auto mt-1 leading-relaxed">
             Long-term trends in food production, livelihood assets, and income diversification
             across the Pacific.
-          </p>
+          </p> */}
         </div>
 
         {/* ─── LEGEND ─── */}
@@ -398,6 +398,9 @@ export function TimeSeriesDashboard({
               </text>
             </g>
           </svg>
+
+          <p> Fig 5: Long-term trends in food production, livelihood assets, and income diversification
+            across the Pacific.</p>
 
           {/* ─── TOOLTIP ─── */}
           {hoveredPoint && !isMobile && (
