@@ -165,6 +165,40 @@ export default function ClimateInteractionMatrix({
 
   const narrativeText = buildNarrative();
 
+  // ─── Calculate correlation data for Fig 7 ───
+  const correlationData = useMemo(() => {
+    if (!latest) return null;
+
+    const t = Math.abs(latest.temp || 0);
+    const r = Math.abs(latest.rainfall || 0);
+    const s = Math.abs(latest.sea || 0);
+    const ss = Math.abs(latest.sea_surface_temperature || 0);
+
+    // Calculate average impact across all sectors for each climate signal
+    const tempImpacts = matrix
+      .filter(m => m.row === "Surface Temperature")
+      .reduce((sum, m) => sum + m.value, 0) / 2;
+
+    const sstImpacts = matrix
+      .filter(m => m.row === "Sea Surface Temperature")
+      .reduce((sum, m) => sum + m.value, 0) / 1;
+
+    const seaImpacts = matrix
+      .filter(m => m.row === "Sea Level")
+      .reduce((sum, m) => sum + m.value, 0) / 1;
+
+    const rainImpacts = matrix
+      .filter(m => m.row === "Rainfall")
+      .reduce((sum, m) => sum + m.value, 0) / 2;
+
+    return [
+      { signal: "Surface Temperature", impact: Math.min(Math.round(tempImpacts * 100), 100), raw: t },
+      { signal: "Sea Surface Temperature", impact: Math.min(Math.round(sstImpacts * 100), 100), raw: ss },
+      { signal: "Sea Level", impact: Math.min(Math.round(seaImpacts * 100), 100), raw: s },
+      { signal: "Rainfall", impact: Math.min(Math.round(rainImpacts * 100), 100), raw: r },
+    ];
+  }, [latest, matrix]);
+
   if (!latest) {
     return (
       <div className="border border-slate-200 bg-white p-6 text-center text-slate-500">
@@ -301,6 +335,70 @@ export default function ClimateInteractionMatrix({
               })}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* ─── FIG 7: CORRELATION OF IMPACT SIZE AGAINST CLIMATE SIGNALS ─── */}
+      <div className="mt-8 w-full max-w-3xl px-4">
+        <div className="border-t border-slate-200 pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-slate-800 tracking-tight">
+              Fig 7: Correlation of impact size against climate signals
+            </h3>
+            <span className="text-[10px] text-slate-400">{selectedCountry}</span>
+          </div>
+
+          <div className="space-y-3">
+            {correlationData?.map((item, index) => {
+              const barColor = 
+                item.signal === "Surface Temperature" ? "#ef4444" :
+                item.signal === "Sea Surface Temperature" ? "#f59e0b" :
+                item.signal === "Sea Level" ? "#3b82f6" :
+                "#10b981";
+
+              return (
+                <div key={index} className="flex items-center gap-3">
+                  <div className="w-32 sm:w-40 text-right">
+                    <span className="text-[10px] sm:text-xs text-slate-600">
+                      {item.signal}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="relative h-6 w-full bg-slate-100 rounded overflow-hidden">
+                      <div
+                        className="absolute left-0 top-0 h-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(item.impact, 100)}%`,
+                          backgroundColor: barColor,
+                          opacity: 0.8,
+                        }}
+                      />
+                      <span className="absolute inset-0 flex items-center px-2 text-[9px] sm:text-xs font-medium text-slate-700">
+                        {Math.min(item.impact, 100)}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-10 text-right">
+                    <span className="text-[9px] sm:text-xs text-slate-400">
+                      {item.raw.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex justify-between text-[8px] sm:text-[9px] text-slate-400">
+            <span>Low impact →</span>
+            <span className="text-center">Impact strength (%)</span>
+            <span>← High impact</span>
+          </div>
+
+          <p className="mt-3 text-[10px] sm:text-xs text-slate-500 leading-relaxed">
+            This correlation shows how different climate signals (raw values) translate into 
+            impact across multiple sectors. Higher impact percentages indicate stronger 
+            interaction with environmental, economic, human, and disaster risk systems.
+          </p>
         </div>
       </div>
 
