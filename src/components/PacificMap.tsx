@@ -695,7 +695,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
 
       {/* ─── KEY TAKEAWAY ─── */}
       <div className="mt-4 pt-3 border-t border-slate-100">
-        <p className="text-xs text-slate-500 max-w-3xl leading-relaxed">
+        <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">
           {topCountry && (
             <span>
               <span className="font-medium text-slate-700">{topCountry.country}</span> shows the highest
