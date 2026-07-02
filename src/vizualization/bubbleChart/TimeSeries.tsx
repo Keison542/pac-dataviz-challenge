@@ -402,10 +402,10 @@ export function TimeSeriesDashboard({
           <p> Fig 5: Long-term trends in food production, livelihood assets, and income diversification
             across the Pacific.</p>
 
-          <p>This sequence demonstrates a causal chain: climate stress → economic loss → human vulnerability → structural transformation. Over the longer term, these pressures begin to reshape national systems. 
+          {/* <p>This sequence demonstrates a causal chain: climate stress → economic loss → human vulnerability → structural transformation. Over the longer term, these pressures begin to reshape national systems. 
             Trends in food production, livelihood assets, and income diversification reveal how countries gradually adapt to changing environmental conditions. 
             Some sectors expand, others contract, and communities develop new strategies to manage risk and sustain livelihoods.
-          </p>
+          </p> */}
 
           {/* ─── TOOLTIP ─── */}
           {hoveredPoint && !isMobile && (
