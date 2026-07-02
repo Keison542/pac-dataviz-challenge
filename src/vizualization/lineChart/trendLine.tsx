@@ -318,7 +318,7 @@ export const TrendLine = ({
           </g>
         </svg>
 
-        <p> Fig 3: </p>
+        <p> Fig 3: Economic loss suffered as a result of climate changes</p>
 
         {/* ─── TOOLTIP ─── */}
         {hovered && (
