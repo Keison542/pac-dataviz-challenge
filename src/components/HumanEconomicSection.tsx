@@ -202,7 +202,7 @@ export function HumanEconomicSection({
       ========================== */}
     <div className="text-center w-full max-w-6xl px-4">
       <br />
-      <p className="mt-8 text-lg text-slate-600 leading-relaxed">
+      <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">
         The sequences in Fig 2, 3, 4 and 5 demonstrates a causal chain: climate stress → economic loss → human vulnerability → structural transformation.
       </p>
 
