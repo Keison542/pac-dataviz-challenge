@@ -419,27 +419,14 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
 
   return (
     <div className={`w-full ${className}`}>
-      {/* ─── NARRATIVE HEADER ─── */}
       <div className="mb-6 text-center max-w-4xl mx-auto">
         <p className="text-center">
           Not all Pacific nations face climate change equally.
           Countries experience similar environmental pressures, yet their ability to absorb and recover from those pressures varies dramatically.
           This uneven capacity creates large differences in vulnerability across the region.
         </p>
-        {/* <h2 className="text-xl sm:text-2xl font-light text-slate-800 tracking-tight">
-          Uneven Exposure Across the <span className="font-semibold text-slate-900">Pacific</span>
-        </h2>
-        <div className="w-12 h-0.5 bg-slate-300 mx-auto mt-3 mb-3" /> */}
+        
       </div>
-
-      {/* ─── NARRATIVE STORY ─── */}
-      {narrativeText && (
-        <div className="mb-5 text-center max-w-3xl mx-auto px-4">
-          <p className="text-sm text-slate-700 leading-relaxed">
-            {narrativeText}
-          </p>
-        </div>
-      )}
 
       {/* ─── MAP ─── */}
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto" style={{ background: "transparent" }}>
@@ -723,6 +710,15 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
       </div>
 
        <p>Fig 6: The composite vulnerability level across the Pacific, inclluding impact size of cyclone, flood, drought and rise in sea level</p>
+
+       {/* ─── NARRATIVE STORY ─── */}
+      {narrativeText && (
+        <div className="mb-5 text-center max-w-3xl mx-auto px-4">
+          <p className="text-sm text-slate-700 leading-relaxed">
+            {narrativeText}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
