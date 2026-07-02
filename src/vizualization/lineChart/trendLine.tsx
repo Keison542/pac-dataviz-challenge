@@ -318,6 +318,8 @@ export const TrendLine = ({
           </g>
         </svg>
 
+        <p> Fig 3: </p>
+
         {/* ─── TOOLTIP ─── */}
         {hovered && (
           <div 
