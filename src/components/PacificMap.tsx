@@ -709,9 +709,9 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         </p>
       </div>
 
-     <p>Fig 6: The composite vulnerability level across the Pacific, including impact size of cyclone, flood, drought and rise in sea level</p>
+     <p className="mt-8 text-lg text-slate-600 leading-relaxed>Fig 6: The composite vulnerability level across the Pacific, including impact size of cyclone, flood, drought and rise in sea level</p>
       <br />
-      <p>{narrativeText}</p>
+      <p className="mt-8 text-lg text-slate-600 leading-relaxed>{narrativeText}</p>
     </div>
   );
 }
