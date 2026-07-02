@@ -107,8 +107,7 @@ export function HumanEconomicSection({
         {hasEconomicData && (
           <motion.div
             style={{ opacity: economicOpacity, y: economicY }}
-            className="sticky top-20 mb-20 flex justify-center"
-          >
+            className="sticky top-20 mb-20 flex justify-center">
             <div className="text-center w-full max-w-5xl px-4">
               <p className="text-center">
                 Climate shocks first place strain on national economies.  Between 2010 to 2020, {selectedCountry}, recorded approximately {formatLoss(lossTotal)} in disaster-related losses.
@@ -174,7 +173,7 @@ export function HumanEconomicSection({
             className="mt-32 flex justify-center"
           >
             <div className="text-center w-full max-w-6xl px-4">
-              <p className="mt-8 text-lg text-slate-600 leading-relaxed>
+              <p className="mt-8 text-lg text-slate-600 leading-relaxed">
                Climate shocks leave impacts that extend far beyond the immediate recovery period. Each event adds pressure to livelihoods, 
                 infrastructure, and economic systems, gradually transforming how communities in {selectedCountry} live 
                 and adapt. Around {structuralPeakYear}, these pressures converged into a critical turning point, where mounting 
@@ -203,7 +202,7 @@ export function HumanEconomicSection({
       ========================== */}
     <div className="text-center w-full max-w-6xl px-4">
       <br />
-      <p className="mt-8 text-lg text-slate-600 leading-relaxed>
+      <p className="mt-8 text-lg text-slate-600 leading-relaxed">
         This sequence in Fig 2, 3, 4 and 5 demonstrates a causal chain: climate stress → economic loss → human vulnerability → structural transformation.
         Over the longer term, these pressures begin to reshape national systems. Trends in food production, livelihood assets, and income diversification reveal how countries gradually adapt to changing environmental conditions. Some sectors expand, others contract, and communities develop new strategies to manage risk and sustain livelihoods.
       </p>
