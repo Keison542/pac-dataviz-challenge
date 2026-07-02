@@ -192,13 +192,6 @@ export default function ClimateInteractionMatrix({
       {/* ─── FIG 7: CORRELATION ─── */}
       <div className="w-full max-w-3xl px-4">
         <div className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-slate-800 tracking-tight">
-              Fig 7: Correlation of impact size against climate signals
-            </h3>
-            <span className="text-[10px] text-slate-400">{selectedCountry}</span>
-          </div>
-
           <div className="space-y-3">
             {correlationData?.map((item, index) => {
               const barColor = getBarColor(item.signal);
@@ -229,6 +222,13 @@ export default function ClimateInteractionMatrix({
                       <span className="text-[9px] sm:text-xs text-slate-400">{item.raw.toFixed(2)}</span>
                     </div>
                   </div>
+
+                  <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-medium text-slate-800 tracking-tight">
+                    Fig 7: Correlation of impact size against climate signals
+                  </h3>
+                  <span className="text-[10px] text-slate-400">{selectedCountry}</span>
+                </div>
 
                   {/* ─── HOVER TOOLTIP WITH CONSEQUENCES ─── */}
                   {isHovered && item.consequences && (
