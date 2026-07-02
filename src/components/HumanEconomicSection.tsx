@@ -174,7 +174,7 @@ export function HumanEconomicSection({
             className="mt-32 flex justify-center"
           >
             <div className="text-center w-full max-w-6xl px-4">
-              <p className="text-center">
+              <p className="mt-8 text-lg text-slate-600 leading-relaxed>
                Climate shocks leave impacts that extend far beyond the immediate recovery period. Each event adds pressure to livelihoods, 
                 infrastructure, and economic systems, gradually transforming how communities in {selectedCountry} live 
                 and adapt. Around {structuralPeakYear}, these pressures converged into a critical turning point, where mounting 
