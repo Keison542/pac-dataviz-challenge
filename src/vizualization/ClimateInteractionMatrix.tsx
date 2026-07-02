@@ -122,7 +122,6 @@ export default function ClimateInteractionMatrix({
 
     let narrative = "";
 
-    // Surface Temperature story - clamp to 0-100%
     const tempInteraction = Math.min(Math.round(t * 0.9 * 100), 100);
     if (t > 0.5) {
       narrative += `In ${selectedCountry}, rising surface temperatures (${tempInteraction}% interaction strength) are altering ecosystems and biodiversity, while also increasing health risks for local communities. `;
@@ -130,7 +129,6 @@ export default function ClimateInteractionMatrix({
       narrative += `Surface temperatures in ${selectedCountry} are showing moderate warming trends, with measurable impacts on both environmental systems and human health. `;
     }
 
-    // Sea Surface Temperature story
     const sstInteraction = Math.min(Math.round(ss * 100), 100);
     if (ss > 0.5) {
       narrative += `Warmer ocean temperatures (${sstInteraction}% interaction strength) are fueling stronger tropical cyclones and more extreme weather events. `;
@@ -138,7 +136,6 @@ export default function ClimateInteractionMatrix({
       narrative += `Sea surface temperatures are rising, contributing to increased storm activity and disaster risk. `;
     }
 
-    // Sea Level story
     const seaInteraction = Math.min(Math.round(s * 100), 100);
     if (s > 0.5) {
       narrative += `Sea-level rise (${seaInteraction}% interaction strength) poses a direct threat to coastal communities, infrastructure, and livelihoods. `;
@@ -146,7 +143,6 @@ export default function ClimateInteractionMatrix({
       narrative += `Rising sea levels are gradually affecting coastal areas, increasing vulnerability to flooding and erosion. `;
     }
 
-    // Rainfall story
     const rainInteraction = Math.min(Math.round(r * 100), 100);
     if (r > 0.5) {
       narrative += `Extreme rainfall events (${rainInteraction}% interaction strength) are disrupting agriculture, damaging infrastructure, and creating significant economic losses. `;
@@ -154,7 +150,6 @@ export default function ClimateInteractionMatrix({
       narrative += `Changing rainfall patterns are affecting agricultural productivity and increasing the risk of flooding and landslides. `;
     }
 
-    // Strongest interaction highlight
     if (strongest) {
       const strengthPct = Math.min(Math.round(strongest.value * 100), 100);
       narrative += `The strongest climate interaction in ${selectedCountry} is between ${strongest.row} and ${strongest.col}, with an interaction strength of ${strengthPct}%. ${strongest.narrative}`;
@@ -174,7 +169,6 @@ export default function ClimateInteractionMatrix({
     const s = Math.abs(latest.sea || 0);
     const ss = Math.abs(latest.sea_surface_temperature || 0);
 
-    // Calculate average impact across all sectors for each climate signal
     const tempImpacts = matrix
       .filter(m => m.row === "Surface Temperature")
       .reduce((sum, m) => sum + m.value, 0) / 2;
@@ -207,7 +201,6 @@ export default function ClimateInteractionMatrix({
     );
   }
 
-  // Format the detail panel as a sentence - clamp to 0-100%
   const formatDetailSentence = (cell: MatrixCell) => {
     const strength = Math.min(Math.round(cell.value * 100), 100);
     return `${cell.row} impacts ${cell.col.toLowerCase()}. ${cell.narrative} Interaction strength: ${strength}/100.`;
@@ -215,7 +208,7 @@ export default function ClimateInteractionMatrix({
 
   return (
     <div className="w-full flex flex-col items-center px-2 sm:px-4">
-      {/* ─── NARRATIVE HEADER ─── */}
+      {/* ─── HEADER ─── */}
       <div className="mb-4 text-center w-full max-w-4xl px-4">
         <div className="inline-block px-3 py-0.5 rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 tracking-wider uppercase mb-2">
           Climate System Dynamics
@@ -226,16 +219,14 @@ export default function ClimateInteractionMatrix({
         <div className="w-12 h-0.5 bg-slate-300 mx-auto mt-3 mb-3" />
       </div>
 
-      {/* ─── NARRATIVE STORY ─── */}
+      {/* ─── NARRATIVE ─── */}
       {narrativeText && (
         <div className="mb-5 text-center w-full max-w-3xl px-4">
-          <p className="text-sm text-slate-700 leading-relaxed">
-            {narrativeText}
-          </p>
+          <p className="text-sm text-slate-700 leading-relaxed">{narrativeText}</p>
         </div>
       )}
 
-      {/* ─── STRONGEST INTERACTION (Compact) ─── */}
+      {/* ─── STRONGEST INTERACTION ─── */}
       {strongest && (
         <div className="mb-4 text-center w-full max-w-3xl px-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-medium text-slate-600">
@@ -250,23 +241,12 @@ export default function ClimateInteractionMatrix({
       {/* ─── LEGEND ─── */}
       <div className="mb-4 flex items-center justify-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-slate-500 px-4">
         <span>Low</span>
-        <div
-          className="h-2 w-20 sm:w-28 md:w-36"
-          style={{
-            background: "linear-gradient(to right,#e2e8f0,#0f172a)",
-          }}
-        />
+        <div className="h-2 w-20 sm:w-28 md:w-36" style={{ background: "linear-gradient(to right,#e2e8f0,#0f172a)" }} />
         <span>High</span>
       </div>
 
       {/* ─── MATRIX ─── */}
-      <div 
-        className="w-full overflow-x-auto scrollbar-hide"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-        }}
-      >
+      <div className="w-full overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         <div
           className="mx-auto grid gap-0.5"
           style={{
@@ -276,12 +256,8 @@ export default function ClimateInteractionMatrix({
           }}
         >
           <div />
-
           {COLS.map((col) => (
-            <div
-              key={col}
-              className="text-center text-[7px] sm:text-[8px] md:text-[9px] font-medium text-slate-500 px-0.5 leading-tight"
-            >
+            <div key={col} className="text-center text-[7px] sm:text-[8px] md:text-[9px] font-medium text-slate-500 px-0.5 leading-tight">
               {col}
             </div>
           ))}
@@ -291,39 +267,19 @@ export default function ClimateInteractionMatrix({
               <div className="flex items-center text-[8px] sm:text-[9px] md:text-[10px] text-slate-700 pr-1 leading-tight">
                 {row}
               </div>
-
               {COLS.map((col) => {
                 const cell = getCell(row, col);
-
                 if (!cell) {
-                  return (
-                    <div
-                      key={`${row}-${col}`}
-                      className="h-5 border border-slate-100 bg-white"
-                    />
-                  );
+                  return <div key={`${row}-${col}`} className="h-5 border border-slate-100 bg-white" />;
                 }
-
-                const isSelected =
-                  selectedCell?.row === row &&
-                  selectedCell?.col === col;
-
-                // Clamp the display value to 0-100%
+                const isSelected = selectedCell?.row === row && selectedCell?.col === col;
                 const displayValue = Math.min(Math.round(cell.value * 100), 100);
 
                 return (
                   <div
                     key={`${row}-${col}`}
-                    className={`
-                      h-5
-                      border border-slate-200
-                      transition-all duration-200
-                      ${isSelected ? "ring-1 ring-slate-900 z-10" : ""}
-                    `}
-                    style={{
-                      backgroundColor: getColor(cell.value),
-                      cursor: "default",
-                    }}
+                    className={`h-5 border border-slate-200 transition-all duration-200 ${isSelected ? "ring-1 ring-slate-900 z-10" : ""}`}
+                    style={{ backgroundColor: getColor(cell.value), cursor: "default" }}
                     onMouseEnter={() => setSelectedCell(cell)}
                     onMouseLeave={() => setSelectedCell(null)}
                   >
@@ -338,7 +294,7 @@ export default function ClimateInteractionMatrix({
         </div>
       </div>
 
-      {/* ─── FIG 7: CORRELATION OF IMPACT SIZE AGAINST CLIMATE SIGNALS ─── */}
+      {/* ─── FIG 7: CORRELATION ─── */}
       <div className="mt-8 w-full max-w-3xl px-4">
         <div className="border-t border-slate-200 pt-6">
           <div className="flex items-center justify-between mb-4">
@@ -353,25 +309,18 @@ export default function ClimateInteractionMatrix({
               const barColor = 
                 item.signal === "Surface Temperature" ? "#ef4444" :
                 item.signal === "Sea Surface Temperature" ? "#f59e0b" :
-                item.signal === "Sea Level" ? "#3b82f6" :
-                "#10b981";
+                item.signal === "Sea Level" ? "#3b82f6" : "#10b981";
 
               return (
                 <div key={index} className="flex items-center gap-3">
                   <div className="w-32 sm:w-40 text-right">
-                    <span className="text-[10px] sm:text-xs text-slate-600">
-                      {item.signal}
-                    </span>
+                    <span className="text-[10px] sm:text-xs text-slate-600">{item.signal}</span>
                   </div>
                   <div className="flex-1">
-                    <div className="relative h-6 w-full bg-slate-100 rounded overflow-hidden">
+                    <div className="relative h-5 w-full bg-slate-100 rounded overflow-hidden">
                       <div
                         className="absolute left-0 top-0 h-full transition-all duration-500"
-                        style={{
-                          width: `${Math.min(item.impact, 100)}%`,
-                          backgroundColor: barColor,
-                          opacity: 0.8,
-                        }}
+                        style={{ width: `${Math.min(item.impact, 100)}%`, backgroundColor: barColor, opacity: 0.8 }}
                       />
                       <span className="absolute inset-0 flex items-center px-2 text-[9px] sm:text-xs font-medium text-slate-700">
                         {Math.min(item.impact, 100)}%
@@ -379,9 +328,7 @@ export default function ClimateInteractionMatrix({
                     </div>
                   </div>
                   <div className="w-10 text-right">
-                    <span className="text-[9px] sm:text-xs text-slate-400">
-                      {item.raw.toFixed(2)}
-                    </span>
+                    <span className="text-[9px] sm:text-xs text-slate-400">{item.raw.toFixed(2)}</span>
                   </div>
                 </div>
               );
@@ -395,9 +342,7 @@ export default function ClimateInteractionMatrix({
           </div>
 
           <p className="mt-3 text-[10px] sm:text-xs text-slate-500 leading-relaxed">
-            This correlation shows how different climate signals (raw values) translate into 
-            impact across multiple sectors. Higher impact percentages indicate stronger 
-            interaction with environmental, economic, human, and disaster risk systems.
+            Correlation between climate signals (raw values) and their resulting impacts across environmental, economic, human, and disaster risk systems.
           </p>
         </div>
       </div>
@@ -405,22 +350,14 @@ export default function ClimateInteractionMatrix({
       {/* ─── DETAIL PANEL ─── */}
       {selectedCell && (
         <div className="mt-5 border-t border-slate-200 pt-4 w-full max-w-3xl px-4">
-          <p className="text-sm sm:text-base leading-relaxed text-slate-700">
-            {formatDetailSentence(selectedCell)}
-          </p>
-          
+          <p className="text-sm sm:text-base leading-relaxed text-slate-700">{formatDetailSentence(selectedCell)}</p>
           <div className="mt-3">
             <div className="flex justify-between text-[10px] text-slate-500">
               <span>Interaction Strength</span>
               <span>{Math.min(Math.round(selectedCell.value * 100), 100)}/100</span>
             </div>
             <div className="mt-1 h-1 bg-slate-100">
-              <div
-                className="h-1 bg-slate-900 transition-all duration-300"
-                style={{
-                  width: `${Math.min(selectedCell.value * 100, 100)}%`,
-                }}
-              />
+              <div className="h-1 bg-slate-900 transition-all duration-300" style={{ width: `${Math.min(selectedCell.value * 100, 100)}%` }} />
             </div>
           </div>
         </div>
