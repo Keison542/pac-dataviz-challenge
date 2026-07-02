@@ -282,6 +282,8 @@ export function BubbleChart({
           </g>
         </svg>
 
+        <p>Fig 4: Number of people affected by natural disasters</p>
+
         {/* ─── TOOLTIP ─── */}
         {hovered && (
           <div 
