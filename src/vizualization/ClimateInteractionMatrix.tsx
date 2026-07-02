@@ -223,13 +223,6 @@ export default function ClimateInteractionMatrix({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium text-slate-800 tracking-tight">
-                    Fig 7: Correlation of impact size against climate signals
-                  </h3>
-                  <span className="text-[10px] text-slate-400">{selectedCountry}</span>
-                </div>
-
                   {/* ─── HOVER TOOLTIP WITH CONSEQUENCES ─── */}
                   {isHovered && item.consequences && (
                     <div className="absolute z-10 left-0 right-0 mt-1 p-3 bg-white border border-slate-200 rounded-lg shadow-lg">
@@ -255,7 +248,7 @@ export default function ClimateInteractionMatrix({
           </div>
 
           <p className="mt-3 text-[10px] sm:text-xs text-slate-500 leading-relaxed">
-            Hover over any bar to see the consequences of each climate signal.
+            Fig 7: Correlation of impact size against climate signals. Hover over any bar to see the consequences of each climate signal.
           </p>
         </div>
       </div>
