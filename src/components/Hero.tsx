@@ -120,17 +120,106 @@ export function Hero({
               covering climate trends, economic indicators, and population impacts.
             </p>
 
-            <div className="flex flex-wrap gap-3 justify-center text-[11px]">
-              <a className="hover:text-cyan-600" href="https://stats.pacificdata.org">
-                Pacific Data Hub (SPC)
-              </a>
-              <a className="hover:text-cyan-600" href="https://stats.pacificdata.org">
-                Climate Indicators
-              </a>
-              <a className="hover:text-cyan-600" href="https://stats.pacificdata.org">
-                Socio-economic Data
-              </a>
-            </div>
+           <div className="flex flex-wrap gap-3 justify-center text-[11px]">
+            <a
+              href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.SST_ANOM.&pd=,&to[TIME_PERIOD]=false"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-cyan-600"
+            >
+              Sea Surface Temp
+            </a>
+          
+            <a
+              href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.RAIN_ANOM.&pd=,&to[TIME_PERIOD]=false"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-cyan-600"
+            >
+              Rainfall
+            </a>
+          
+            <a
+              href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.SEA_LVL.&pd=,&to[TIME_PERIOD]=false"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-cyan-600"
+            >
+              Sea Level
+            </a>
+          
+            <a
+              href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.ST_ANOM.&pd=,&to[TIME_PERIOD]=false"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-cyan-600"
+            >
+              Surface Temp
+            </a>
+          
+            <a
+              href="https://stats.pacificdata.org/vis?lc=en&df[ds]=ds%3ASPC2&df[id]=DF_SDG_11&df[ag]=SPC&df[vs]=3.0&dq=A.VC_DSR_AFFCT.........&pd=,&to[TIME_PERIOD]=false&lb=bt"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-cyan-600"
+            >
+              Affected Persons
+            </a>
+          
+            <a
+              href="https://stats.pacificdata.org/vis?lc=en&df[ds]=ds%3ASPC2&df[id]=DF_SDG_11&df[ag]=SPC&df[vs]=3.0&dq=A.VC_DSR_AALT...._T.....&pd=,&to[TIME_PERIOD]=false"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-cyan-600"
+            >
+              Economic Loss
+            </a>
+          
+            <a
+              href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.ALT_LAND_COVER.&pd=,&to[TIME_PERIOD]=false"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-cyan-600"
+            >
+              Land Cover
+            </a>
+          
+            <a
+              href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.LVST_YIELD.&pd=,&to[TIME_PERIOD]=false"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-cyan-600"
+            >
+              Livestock
+            </a>
+          
+            <a
+              href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.CROP_YIELD.&pd=,&to[TIME_PERIOD]=false"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-cyan-600"
+            >
+              Crop Yield
+            </a>
+          
+            <a
+              href="https://stats.pacificdata.org/vis?tm=population%20growth&pg=0&snb=11&df[ds]=ds%3ASPC2&df[id]=DF_NMDI_POP&df[ag]=SPC&df[vs]=1.0&dq=A..NMDI0002._T._T._T..&pd=,&to[TIME_PERIOD]=false"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-cyan-600"
+            >
+              Population
+            </a>
+          
+            <a
+              href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.TRSM_ARR.&pd=,&to[TIME_PERIOD]=false"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-cyan-600"
+            >
+              Tourism
+            </a>
+          </div>
 
             <p className="text-[10px] text-slate-400 mt-2">
               All visualizations are derived from publicly available datasets.
