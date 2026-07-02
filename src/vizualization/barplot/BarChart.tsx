@@ -511,6 +511,8 @@ export function MultiMetricRankedDashboard({
             </g>
           </svg>
 
+          <p>Figure 5:</p>
+
           {/* ─── Tooltip ─── */}
           {tooltip && !isMobile && (
             <div
