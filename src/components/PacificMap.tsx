@@ -662,8 +662,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         </g>
       </svg>
 
-      <p>Fig 6: The composite vulnerability level across the Pacific, inclluding impact size of cyclone, flood, drought and rise in sea level</p>
-
       {/* ─── TEMPERATURE TIMELINE ─── */}
       <svg
         viewBox={`0 0 ${WIDTH} ${TIMELINE_HEIGHT}`}
@@ -723,6 +721,8 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
           )}
         </p>
       </div>
+
+       <p>Fig 6: The composite vulnerability level across the Pacific, inclluding impact size of cyclone, flood, drought and rise in sea level</p>
     </div>
   );
 }
