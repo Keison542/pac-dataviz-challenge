@@ -10,40 +10,33 @@ export function Conclusion({
   countriesCount,
 }: ConclusionProps) {
   return (
-    <div className="text-center mt-20 pt-10 border-t border-slate-200">
 
-      <div className="text-[1.8rem] font-semibold text-slate-900 mb-4">
-        What the Data Reveals
-      </div>
+       <section className="min-h-[60vh] flex items-center justify-center">
+        <div className="max-w-4xl text-center">
+          <div className="text-sm uppercase tracking-[0.3em] text-slate-400">
+            From the data, one Pattern Emerges
+          </div>
+        
+          <p className="mt-8 text-lg text-slate-600 leading-relaxed">
+            Climate signals intensify.
+            <br />
+            <br />
+            Environmental changes persist.
+            <br />
+            <br />
 
-      <div className="mt-10 flex flex-wrap justify-center gap-2 text-xs">
-        <span className="px-3 py-1 rounded-full bg-slate-100">
-          Climate Drivers
-        </span>
-        <span>→</span>
-        <span className="px-3 py-1 rounded-full bg-slate-100">
-          Environmental Change
-        </span>
-        <span>→</span>
-        <span className="px-3 py-1 rounded-full bg-slate-100">
-          Livelihood Impacts
-        </span>
-        <span>→</span>
-        <span className="px-3 py-1 rounded-full bg-slate-100">
-          Economic Consequences
-        </span>
-        <span>→</span>
-        <span className="px-3 py-1 rounded-full bg-slate-100">
-          Human Outcomes
-        </span>
-      </div>
+             Economic losses accumulate.
+            <br />
+            <br />
+            Human exposure grows.
+            <br />
+            <br />
+            Climate change is already shaping everyday life across the Pacific. It is affecting crops, fisheries, tourism, coastlines, and the wellbeing of communities. These are no longer future challenges—they are happening now.
+            Understanding these impacts means looking beyond individual climate indicators. When environmental, economic, and social data are brought together, we can see how closely they are connected. This helps governments, organisations, and communities make better decisions and build stronger, more resilient societies.
+          </p>
+        </div>
+      </section>
 
-      <div className="mt-12 max-w-2xl mx-auto text-[1.15rem] font-medium text-slate-900 leading-relaxed">
-        The central insight is not that individual climate indicators are changing.
-        It is that environmental, economic, and human systems are becoming
-        increasingly connected through climate impacts, making resilience a
-        whole-system challenge rather than a sector-specific one.
-      </div>
-    </div>
+     
   );
 }
