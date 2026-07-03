@@ -251,42 +251,18 @@ export default function ClimateInteractionMatrix({
   return (
     <div className="w-full flex flex-col items-center px-2 sm:px-4">
       {/* ─── STORY SECTION ─── */}
-      <div className="w-full max-w-3xl px-4">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="inline-block px-3 py-0.5 rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 tracking-wider uppercase mb-2">
-            Climate System Dynamics
-          </div>
-          <h2 className="text-xl sm:text-2xl font-light text-slate-800 tracking-tight">
-            Climate Interaction <span className="font-semibold text-slate-900">Pathways</span>
-          </h2>
-          <div className="w-12 h-0.5 bg-slate-300 mx-auto mt-3 mb-3" />
-        </div>
 
-
-
-        {/* Key Insight Callout Cards */}
-        <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {correlationData?.map((item) => (
-            <div 
-              key={item.signal}
-              className="text-center p-2 bg-white rounded border border-slate-200"
-            >
-              <div 
-                className="text-xs font-medium"
-                style={{ color: getBarColor(item.signal) }}
-              >
-                {item.signal.split(" ").slice(0, 2).join(" ")}
-              </div>
-              <div className="text-lg font-bold text-slate-800">
-                {item.impact}%
-              </div>
-              <div className="text-[8px] text-slate-400">
-                impact strength
-              </div>
+        {/* Strongest Interaction Badge */}
+        {strongest && (
+          <div className="mb-6 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-medium text-slate-600">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />
+              Strongest pathway: {strongest.row} → {strongest.col}
+              <span className="text-slate-400">·</span>
+              {Math.min(Math.round(strongest.value * 100), 100)}% interaction
             </div>
-          ))}
-        </div>
+          </div>
+        )}
 
         {/* ─── FIG 7: CORRELATION ─── */}
         <div className="pt-4 border-t border-slate-200">
