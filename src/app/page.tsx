@@ -268,32 +268,6 @@ export default function Home() {
       )}
 
       {/* ========================================================= */}
-      {/* ONE PATTERN EMERGES */}
-      {/* ========================================================= */}
-
-      <section className="min-h-[60vh] flex items-center justify-center">
-        <div className="max-w-4xl text-center">
-          <div className="text-sm uppercase tracking-[0.3em] text-slate-400">
-            One Pattern Emerges
-          </div>
-        
-          <p className="mt-8 text-lg text-slate-600 leading-relaxed">
-            Climate signals intensify.
-            <br />
-            <br />
-            Economic losses accumulate.
-            <br />
-            <br />
-            Human exposure grows.
-            <br />
-            <br />
-            Across the Pacific, environmental change is increasingly translating into social and economic consequences. This means climate impacts are not a future cost.
-            They are already part of everyday economic reality.
-          </p>
-        </div>
-      </section>
-
-      {/* ========================================================= */}
       {/* CONCLUSION */}
       {/* ========================================================= */}
 
