@@ -331,11 +331,9 @@ export default function ClimateInteractionMatrix({
 
         {/* ─── CLIMATE INSIGHT ─── */}
         {storyText && (
-          <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <p className="mt-1 text-sm text-slate-700 leading-relaxed">
                   {storyText}
                 </p>
-          </div>
         )}
       </div>
     </div>
