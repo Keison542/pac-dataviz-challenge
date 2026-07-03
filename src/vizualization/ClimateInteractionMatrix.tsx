@@ -263,23 +263,6 @@ export default function ClimateInteractionMatrix({
           <div className="w-12 h-0.5 bg-slate-300 mx-auto mt-3 mb-3" />
         </div>
 
-        {/* Narrative Story */}
-        {storyText && (
-          <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="flex items-start gap-3">
-              <span className="text-lg text-slate-400 mt-0.5">📖</span>
-              <div>
-                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-                  Climate Insight
-                </span>
-                <p className="mt-1 text-sm text-slate-700 leading-relaxed">
-                  {storyText}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Strongest Interaction Badge */}
         {strongest && (
           <div className="mb-6 text-center">
@@ -292,7 +275,7 @@ export default function ClimateInteractionMatrix({
           </div>
         )}
 
-        {/* Key Insight Callout */}
+        {/* Key Insight Callout Cards */}
         <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-2">
           {correlationData?.map((item) => (
             <div 
@@ -314,6 +297,23 @@ export default function ClimateInteractionMatrix({
             </div>
           ))}
         </div>
+
+        {/* ─── CLIMATE INSIGHT (Now above Fig 7) ─── */}
+        {storyText && (
+          <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="flex items-start gap-3">
+              <span className="text-lg text-slate-400 mt-0.5">📖</span>
+              <div>
+                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+                  Climate Insight
+                </span>
+                <p className="mt-1 text-sm text-slate-700 leading-relaxed">
+                  {storyText}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ─── FIG 7: CORRELATION ─── */}
         <div className="pt-4 border-t border-slate-200">
