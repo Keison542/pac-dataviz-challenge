@@ -298,23 +298,6 @@ export default function ClimateInteractionMatrix({
           ))}
         </div>
 
-        {/* ─── CLIMATE INSIGHT (Now above Fig 7) ─── */}
-        {storyText && (
-          <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="flex items-start gap-3">
-              <span className="text-lg text-slate-400 mt-0.5">📖</span>
-              <div>
-                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-                  Climate Insight
-                </span>
-                <p className="mt-1 text-sm text-slate-700 leading-relaxed">
-                  {storyText}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ─── FIG 7: CORRELATION ─── */}
         <div className="pt-4 border-t border-slate-200">
           <div className="flex items-center justify-between mb-4">
@@ -379,10 +362,28 @@ export default function ClimateInteractionMatrix({
             <span>← High impact</span>
           </div>
 
+          {/* ─── FIG 7 DESCRIPTION ─── */}
           <p className="mt-3 text-[10px] sm:text-xs text-slate-500 leading-relaxed">
             Hover over any bar to see the consequences of each climate signal. 
             The correlation shows how climate drivers translate into impacts across environmental, economic, human, and disaster risk systems.
           </p>
+
+          {/* ─── CLIMATE INSIGHT (Now below Fig 7 description) ─── */}
+          {storyText && (
+            <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="flex items-start gap-3">
+                <span className="text-lg text-slate-400 mt-0.5">📖</span>
+                <div>
+                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+                    Climate Insight
+                  </span>
+                  <p className="mt-1 text-sm text-slate-700 leading-relaxed">
+                    {storyText}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
