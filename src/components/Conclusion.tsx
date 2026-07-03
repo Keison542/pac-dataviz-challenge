@@ -16,21 +16,6 @@ export function Conclusion({
         What the Data Reveals
       </div>
 
-      <div className="max-w-3xl mx-auto text-slate-600 leading-relaxed space-y-5">
-        
-        <p>
-         The evidence shows that environmental pressures are translating into
-          real-world consequences. Agricultural productivity becomes less stable,
-          livelihood assets face increasing stress, economic losses accumulate,
-          and communities experience growing exposure to climate-related risks.
-          While each country experiences climate impacts differently, the broader
-          pattern remains consistent across the {countriesCount} Pacific Island
-          nations and territories represented in this analysis: climate change is
-          affecting environmental systems, economic resilience, and human wellbeing
-          at the same time.
-        </p>
-      </div>
-
       <div className="mt-10 flex flex-wrap justify-center gap-2 text-xs">
         <span className="px-3 py-1 rounded-full bg-slate-100">
           Climate Drivers
