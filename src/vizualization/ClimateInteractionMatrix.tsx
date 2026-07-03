@@ -263,17 +263,7 @@ export default function ClimateInteractionMatrix({
           <div className="w-12 h-0.5 bg-slate-300 mx-auto mt-3 mb-3" />
         </div>
 
-        {/* Strongest Interaction Badge */}
-        {strongest && (
-          <div className="mb-6 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-medium text-slate-600">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />
-              Strongest pathway: {strongest.row} → {strongest.col}
-              <span className="text-slate-400">·</span>
-              {Math.min(Math.round(strongest.value * 100), 100)}% interaction
-            </div>
-          </div>
-        )}
+
 
         {/* Key Insight Callout Cards */}
         <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-2">
