@@ -99,6 +99,67 @@ export default function ClimateInteractionMatrix({
     ];
   }, [latest]);
 
+  // ─── Find strongest interaction ───
+  const strongest = useMemo(() => {
+    return [...matrix].sort((a, b) => b.value - a.value)[0];
+  }, [matrix]);
+
+  // ─── Build narrative story ───
+  const buildStory = () => {
+    if (!latest || !strongest) return null;
+
+    const t = Math.abs(latest.temp || 0);
+    const r = Math.abs(latest.rainfall || 0);
+    const s = Math.abs(latest.sea || 0);
+    const ss = Math.abs(latest.sea_surface_temperature || 0);
+
+    const tempImpact = Math.min(Math.round(t * 0.9 * 100), 100);
+    const rainImpact = Math.min(Math.round(r * 100), 100);
+    const seaImpact = Math.min(Math.round(s * 100), 100);
+    const sstImpact = Math.min(Math.round(ss * 100), 100);
+
+    let story = "";
+
+    // Opening
+    story += `In ${selectedCountry}, climate drivers interact across multiple systems, creating complex risk pathways. `;
+
+    // Surface Temperature story
+    if (t > 0.5) {
+      story += `Rising surface temperatures (${tempImpact}% impact) are the dominant force, altering ecosystems and increasing health risks. `;
+    } else if (t > 0.2) {
+      story += `Moderate surface warming (${tempImpact}% impact) is reshaping environmental conditions and human well-being. `;
+    }
+
+    // Sea Surface Temperature story
+    if (ss > 0.5) {
+      story += `Warmer oceans (${sstImpact}% impact) are fueling stronger cyclones and extreme weather events. `;
+    } else if (ss > 0.2) {
+      story += `Sea surface temperatures are rising, contributing to increased storm activity. `;
+    }
+
+    // Sea Level story
+    if (s > 0.5) {
+      story += `Sea-level rise (${seaImpact}% impact) threatens coastal communities and infrastructure. `;
+    } else if (s > 0.2) {
+      story += `Gradual sea-level rise (${seaImpact}% impact) is increasing coastal vulnerability. `;
+    }
+
+    // Rainfall story
+    if (r > 0.5) {
+      story += `Extreme rainfall (${rainImpact}% impact) disrupts agriculture, damages infrastructure, and drives economic losses. `;
+    } else if (r > 0.2) {
+      story += `Changing rainfall patterns (${rainImpact}% impact) are affecting agriculture and increasing flood risk. `;
+    }
+
+    // Strongest interaction highlight
+    const strongestPct = Math.min(Math.round(strongest.value * 100), 100);
+    story += `The strongest interaction is between ${strongest.row} and ${strongest.col} (${strongestPct}% strength), where ${strongest.row.toLowerCase()} drives significant impacts on ${strongest.col.toLowerCase()} systems.`;
+
+    return story;
+  };
+
+  const storyText = buildStory();
+
   // ─── Calculate correlation data for Fig 7 ───
   const correlationData = useMemo(() => {
     if (!latest) return null;
@@ -189,9 +250,80 @@ export default function ClimateInteractionMatrix({
 
   return (
     <div className="w-full flex flex-col items-center px-2 sm:px-4">
-      {/* ─── FIG 7: CORRELATION ─── */}
+      {/* ─── STORY SECTION ─── */}
       <div className="w-full max-w-3xl px-4">
-        <div className="pt-6">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <div className="inline-block px-3 py-0.5 rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 tracking-wider uppercase mb-2">
+            Climate System Dynamics
+          </div>
+          <h2 className="text-xl sm:text-2xl font-light text-slate-800 tracking-tight">
+            Climate Interaction <span className="font-semibold text-slate-900">Pathways</span>
+          </h2>
+          <div className="w-12 h-0.5 bg-slate-300 mx-auto mt-3 mb-3" />
+        </div>
+
+        {/* Narrative Story */}
+        {storyText && (
+          <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="flex items-start gap-3">
+              <span className="text-lg text-slate-400 mt-0.5">📖</span>
+              <div>
+                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+                  Climate Insight
+                </span>
+                <p className="mt-1 text-sm text-slate-700 leading-relaxed">
+                  {storyText}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Strongest Interaction Badge */}
+        {strongest && (
+          <div className="mb-6 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-medium text-slate-600">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />
+              Strongest pathway: {strongest.row} → {strongest.col}
+              <span className="text-slate-400">·</span>
+              {Math.min(Math.round(strongest.value * 100), 100)}% interaction
+            </div>
+          </div>
+        )}
+
+        {/* Key Insight Callout */}
+        <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {correlationData?.map((item) => (
+            <div 
+              key={item.signal}
+              className="text-center p-2 bg-white rounded border border-slate-200"
+            >
+              <div 
+                className="text-xs font-medium"
+                style={{ color: getBarColor(item.signal) }}
+              >
+                {item.signal.split(" ").slice(0, 2).join(" ")}
+              </div>
+              <div className="text-lg font-bold text-slate-800">
+                {item.impact}%
+              </div>
+              <div className="text-[8px] text-slate-400">
+                impact strength
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ─── FIG 7: CORRELATION ─── */}
+        <div className="pt-4 border-t border-slate-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-slate-800 tracking-tight">
+              Fig 7: Correlation of impact size against climate signals
+            </h3>
+            <span className="text-[10px] text-slate-400">{selectedCountry}</span>
+          </div>
+
           <div className="space-y-3">
             {correlationData?.map((item, index) => {
               const barColor = getBarColor(item.signal);
@@ -248,7 +380,8 @@ export default function ClimateInteractionMatrix({
           </div>
 
           <p className="mt-3 text-[10px] sm:text-xs text-slate-500 leading-relaxed">
-            Fig 7: Correlation of impact size against climate signals. Hover over any bar to see the consequences of each climate signal.
+            Hover over any bar to see the consequences of each climate signal. 
+            The correlation shows how climate drivers translate into impacts across environmental, economic, human, and disaster risk systems.
           </p>
         </div>
       </div>
