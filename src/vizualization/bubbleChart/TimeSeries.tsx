@@ -224,16 +224,10 @@ export function TimeSeriesDashboard({
         <div className="h-full flex flex-col">
           {/* ─── Header ─── */}
           <div className="flex items-start justify-between mb-1 px-1">
-
             <div className="flex items-center gap-1.5">
-            
-            </div>
-            <div className="text-right">
-           
-              <div className="text-[10px] text-slate-400 leading-tight">{metric.unit}</div>
-
-
-            
+              <h4 className="text-xs font-semibold text-slate-800 leading-tight">
+                {metric.label}
+              </h4>
             </div>
           </div>
 
