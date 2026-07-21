@@ -1,8 +1,7 @@
 "use client";
 
-import { scaleLinear } from "d3-scale";
+import { scaleLinear, scaleBand } from "d3-scale";
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { line, curveMonotoneX } from "d3-shape";
 
 type DataPoint = {
   year: number;
@@ -19,26 +18,23 @@ type Props = {
   className?: string;
 };
 
-const MARGIN = { top: 40, right: 40, bottom: 70, left: 80 }; // Increased left margin for labels
+const MARGIN = { top: 40, right: 40, bottom: 70, left: 80 };
 
 const METRICS = [
   {
     key: "cropYield",
     label: "Food Production",
     color: "#2c3e50",
-    yAxisLabel: "Food Production (tonnes)",
   },
   {
     key: "livestockYield",
     label: "Livelihood Assets",
     color: "#c0392b",
-    yAxisLabel: "Livelihood Assets (value)",
   },
   {
     key: "touristArrivals",
     label: "Income Diversification",
     color: "#27ae60",
-    yAxisLabel: "Tourist Arrivals (count)",
   },
 ];
 
@@ -53,12 +49,14 @@ export function TimeSeriesDashboard({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isMobile, setIsMobile] = useState(false);
 
-  const [hoveredPoint, setHoveredPoint] = useState<{
-    metric: string;
+  const [hoveredBar, setHoveredBar] = useState<{
     year: number;
+    metric: string;
     value: number;
     x: number;
     y: number;
+    width: number;
+    height: number;
   } | null>(null);
 
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(
@@ -128,48 +126,56 @@ export function TimeSeriesDashboard({
     return base;
   }, [width]);
 
+  // Filter data to only visible metrics
+  const visibleMetricsList = useMemo(() => {
+    return METRICS.filter((m) => visibleMetrics.has(m.key));
+  }, [visibleMetrics]);
+
+  // Calculate stacked values for each year
+  const stackedData = useMemo(() => {
+    return data.map((d) => {
+      let cumulative = 0;
+      const stack: Record<string, { value: number; cumulative: number }> = {};
+      
+      visibleMetricsList.forEach((metric) => {
+        const value = d[metric.key as keyof DataPoint] as number || 0;
+        cumulative += value;
+        stack[metric.key] = { value, cumulative };
+      });
+      
+      return {
+        year: d.year,
+        total: cumulative,
+        stack,
+      };
+    });
+  }, [data, visibleMetricsList]);
+
+  // Calculate max value for Y scale
   const maxValue = useMemo(() => {
     let maxVal = 0;
-    data.forEach((d) => {
-      METRICS.forEach((m) => {
-        if (visibleMetrics.has(m.key)) {
-          maxVal = Math.max(maxVal, d[m.key as keyof DataPoint] as number || 0);
-        }
-      });
+    stackedData.forEach((d) => {
+      maxVal = Math.max(maxVal, d.total);
     });
     return maxVal * 1.15 || 1;
-  }, [data, visibleMetrics]);
+  }, [stackedData]);
 
+  // X scale - band for bars
   const xScale = useMemo(() => {
     const years = data.map((d) => d.year);
-    return scaleLinear()
-      .domain([Math.min(...years), Math.max(...years)])
-      .range([0, boundsWidth]);
+    return scaleBand()
+      .domain(years.map(String))
+      .range([0, boundsWidth])
+      .padding(0.2);
   }, [data, boundsWidth]);
 
+  // Y scale
   const yScale = useMemo(() => {
     return scaleLinear()
       .domain([0, maxValue])
       .range([boundsHeight, 0])
       .nice();
   }, [maxValue, boundsHeight]);
-
-  const linePaths = useMemo(() => {
-    const paths: Record<string, string> = {};
-
-    METRICS.forEach((m) => {
-      if (!visibleMetrics.has(m.key)) return;
-
-      const lineGen = line<DataPoint>()
-        .x((d) => xScale(d.year))
-        .y((d) => yScale(d[m.key as keyof DataPoint] as number || 0))
-        .curve(curveMonotoneX);
-
-      paths[m.key] = lineGen(data) || "";
-    });
-
-    return paths;
-  }, [data, xScale, yScale, visibleMetrics]);
 
   const xTicks = useMemo(() => {
     const years = data.map((d) => d.year);
@@ -199,25 +205,6 @@ export function TimeSeriesDashboard({
       ? `${(v / 1_000).toFixed(0)}K`
       : v.toFixed(1);
 
-  // Determine which metric is being hovered or get the first visible one
-  const activeMetricLabel = useMemo(() => {
-    // If hovering, show that metric's label
-    if (hoveredPoint) {
-      const metric = METRICS.find(m => m.label === hoveredPoint.metric);
-      return metric?.yAxisLabel || "Value";
-    }
-    
-    // If only one metric is visible, show its label
-    const visibleKeys = Array.from(visibleMetrics);
-    if (visibleKeys.length === 1) {
-      const metric = METRICS.find(m => m.key === visibleKeys[0]);
-      return metric?.yAxisLabel || "Value";
-    }
-    
-    // Otherwise show "Value"
-    return "Value";
-  }, [hoveredPoint, visibleMetrics]);
-
   if (!data.length || !width || !height) {
     return (
       <div ref={containerRef} className={`w-full ${className}`}>
@@ -229,6 +216,7 @@ export function TimeSeriesDashboard({
   }
 
   const fontSize = getFontSize(12);
+  const barWidth = xScale.bandwidth();
 
   return (
     <div ref={containerRef} className={`w-full flex flex-col items-center ${className}`}>
@@ -293,77 +281,91 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── LINES ─── */}
-              {METRICS.map((m) => {
-                if (!visibleMetrics.has(m.key)) return null;
-                const path = linePaths[m.key];
-                if (!path) return null;
+              {/* ─── STACKED BARS ─── */}
+              {stackedData.map((d) => {
+                const xPos = xScale(String(d.year));
+                if (xPos === undefined) return null;
 
-                const isHovered = hoveredPoint?.metric === m.label;
+                let cumulativeHeight = 0;
+                const bars = visibleMetricsList.map((metric) => {
+                  const stackData = d.stack[metric.key];
+                  if (!stackData) return null;
+                  
+                  const value = stackData.value;
+                  const cumulative = stackData.cumulative;
+                  
+                  const barHeight = yScale(0) - yScale(value);
+                  const yPos = yScale(cumulative);
+                  
+                  const isHovered = hoveredBar?.year === d.year && hoveredBar?.metric === metric.label;
+                  
+                  return {
+                    key: metric.key,
+                    label: metric.label,
+                    color: metric.color,
+                    value,
+                    x: xPos,
+                    y: yPos,
+                    height: barHeight,
+                    width: barWidth,
+                    isHovered,
+                  };
+                }).filter((b) => b !== null) as {
+                  key: string;
+                  label: string;
+                  color: string;
+                  value: number;
+                  x: number;
+                  y: number;
+                  height: number;
+                  width: number;
+                  isHovered: boolean;
+                }[];
 
-                return (
-                  <path
-                    key={`line-${m.key}`}
-                    d={path}
-                    fill="none"
-                    stroke={m.color}
-                    strokeWidth={isHovered ? 3 : 2}
-                    opacity={isHovered ? 1 : 0.7}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    onMouseEnter={() => {
-                      const lastPoint = data[data.length - 1];
-                      setHoveredPoint({
-                        metric: m.label,
-                        year: lastPoint.year,
-                        value: lastPoint[m.key as keyof DataPoint] as number || 0,
-                        x: xScale(lastPoint.year),
-                        y: yScale(lastPoint[m.key as keyof DataPoint] as number || 0),
-                      });
-                    }}
-                    onMouseLeave={() => setHoveredPoint(null)}
-                    className="cursor-pointer"
-                  />
-                );
-              })}
-
-              {/* ─── END LABELS ─── */}
-              {METRICS.map((m) => {
-                if (!visibleMetrics.has(m.key)) return null;
-                const lastPoint = data[data.length - 1];
-                const value = lastPoint[m.key as keyof DataPoint] as number || 0;
-                if (value === 0) return null;
-
-                const x = xScale(lastPoint.year) + 6;
-                const y = yScale(value);
-
-                const isHovered = hoveredPoint?.metric === m.label;
-
-                return (
-                  <text
-                    key={`end-label-${m.key}`}
-                    x={x}
-                    y={y + 3}
-                    fontSize={Math.max(9, fontSize * 0.75)}
-                    fill={m.color}
-                    fontWeight={isHovered ? "600" : "400"}
-                    opacity={isHovered ? 1 : 0.6}
-                    className="transition-opacity duration-200"
-                  >
-                    {format(value)}
-                  </text>
-                );
+                // Render each bar segment
+                return bars.map((bar, i) => {
+                  // Only show bar if height is visible
+                  if (bar.height < 1) return null;
+                  
+                  return (
+                    <rect
+                      key={`${d.year}-${bar.key}`}
+                      x={bar.x}
+                      y={bar.y}
+                      width={bar.width}
+                      height={bar.height}
+                      fill={bar.color}
+                      opacity={bar.isHovered ? 1 : 0.85}
+                      stroke={bar.isHovered ? "#ffffff" : "none"}
+                      strokeWidth={bar.isHovered ? 2 : 0}
+                      rx={1}
+                      onMouseEnter={() => {
+                        setHoveredBar({
+                          year: d.year,
+                          metric: bar.label,
+                          value: bar.value,
+                          x: bar.x + bar.width / 2,
+                          y: bar.y,
+                          width: bar.width,
+                          height: bar.height,
+                        });
+                      }}
+                      onMouseLeave={() => setHoveredBar(null)}
+                      className="cursor-pointer transition-opacity duration-200"
+                    />
+                  );
+                });
               })}
 
               {/* ─── X AXIS ─── */}
               {xTicks.map((x, i) => {
-                const xPos = xScale(x);
-                if (xPos < 5 || xPos > boundsWidth - 5) return null;
+                const xPos = xScale(String(x));
+                if (xPos === undefined || xPos < 5 || xPos > boundsWidth - 5) return null;
                 
                 return (
                   <text
                     key={`x-label-${i}`}
-                    x={xPos}
+                    x={xPos + barWidth / 2}
                     y={boundsHeight + 18}
                     textAnchor="middle"
                     fontSize={Math.max(8, fontSize * 0.7)}
@@ -404,7 +406,6 @@ export function TimeSeriesDashboard({
               })}
 
               {/* ─── Y-AXIS LABEL ─── */}
-              {/* Positioned to the left of the chart with rotation */}
               <text
                 transform={`rotate(-90, ${-(responsiveMargin.left - 20)}, ${boundsHeight / 2})`}
                 x={-(boundsHeight / 2)}
@@ -413,47 +414,29 @@ export function TimeSeriesDashboard({
                 fontSize={Math.max(10, fontSize * 0.75)}
                 fill="#64748b"
                 fontWeight="500"
-                className="transition-opacity duration-300"
-                style={{
-                  opacity: activeMetricLabel !== "Value" ? 1 : 0.6,
-                }}
               >
-                {activeMetricLabel}
+                Combined Value
               </text>
-
-              {/* ─── FALLBACK: Show all metric labels if multiple visible ─── */}
-              {visibleMetrics.size > 1 && !hoveredPoint && (
-                <text
-                  x={-8}
-                  y={boundsHeight + 10}
-                  textAnchor="start"
-                  fontSize={Math.max(7, fontSize * 0.5)}
-                  fill="#94a3b8"
-                  fontStyle="italic"
-                >
-                  (Hover a line for specific units)
-                </text>
-              )}
             </g>
           </svg>
 
           <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed"> 
-            Fig 5: Long-term trends in food production, livelihood assets, and income diversification
+            Fig 5: Stacked trends in food production, livelihood assets, and income diversification
             across the Pacific.
           </p>
 
           {/* ─── TOOLTIP ─── */}
-          {hoveredPoint && !isMobile && (
+          {hoveredBar && !isMobile && (
             <div
               className="absolute rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg pointer-events-none"
               style={{
                 left: Math.min(
-                  hoveredPoint.x + responsiveMargin.left + 12,
-                  width - 140
+                  hoveredBar.x + responsiveMargin.left + 12,
+                  width - 160
                 ),
                 top: Math.min(
-                  hoveredPoint.y + responsiveMargin.top - 40,
-                  height - 80
+                  hoveredBar.y + responsiveMargin.top - 60,
+                  height - 100
                 ),
               }}
             >
@@ -461,37 +444,37 @@ export function TimeSeriesDashboard({
                 <span 
                   className="w-4 h-0.5 rounded-full"
                   style={{ 
-                    background: METRICS.find(m => m.label === hoveredPoint.metric)?.color,
+                    background: METRICS.find(m => m.label === hoveredBar.metric)?.color,
                     height: 2,
                   }}
                 />
                 <span className="font-medium text-slate-800">
-                  {hoveredPoint.metric}
+                  {hoveredBar.metric}
                 </span>
               </div>
-              <div className="text-slate-500 text-[10px]">{hoveredPoint.year}</div>
+              <div className="text-slate-500 text-[10px]">{hoveredBar.year}</div>
               <div className="font-semibold text-slate-800">
-                {format(hoveredPoint.value)}
+                {format(hoveredBar.value)}
               </div>
             </div>
           )}
 
           {/* ─── MOBILE TOOLTIP ─── */}
-          {hoveredPoint && isMobile && (
+          {hoveredBar && isMobile && (
             <div className="mt-3 text-center bg-white border border-slate-200 rounded-lg p-2 mx-2">
               <div className="flex items-center justify-center gap-2">
                 <span 
                   className="w-4 h-0.5 rounded-full"
                   style={{ 
-                    background: METRICS.find(m => m.label === hoveredPoint.metric)?.color,
+                    background: METRICS.find(m => m.label === hoveredBar.metric)?.color,
                     height: 2,
                   }}
                 />
-                <span className="font-medium text-xs text-slate-800">{hoveredPoint.metric}</span>
+                <span className="font-medium text-xs text-slate-800">{hoveredBar.metric}</span>
               </div>
-              <div className="text-xs text-slate-500">{hoveredPoint.year}</div>
+              <div className="text-xs text-slate-500">{hoveredBar.year}</div>
               <div className="text-sm font-semibold text-slate-800">
-                {format(hoveredPoint.value)}
+                {format(hoveredBar.value)}
               </div>
             </div>
           )}
