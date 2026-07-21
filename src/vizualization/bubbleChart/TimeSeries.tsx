@@ -26,16 +26,19 @@ const METRICS = [
     key: "cropYield",
     label: "Food Production",
     color: "#2c3e50",
+    yAxisLabel: "Food Production (tonnes)", // Added
   },
   {
     key: "livestockYield",
-    label: "Livelihood Assets", 
+    label: "Livelihood Assets",
     color: "#c0392b",
+    yAxisLabel: "Livelihood Assets (value)", // Added
   },
   {
     key: "touristArrivals",
     label: "Income Diversification",
     color: "#27ae60",
+    yAxisLabel: "Tourist Arrivals (count)", // Added
   },
 ];
 
@@ -196,6 +199,13 @@ export function TimeSeriesDashboard({
       ? `${(v / 1_000).toFixed(0)}K`
       : v.toFixed(1);
 
+  // Determine which metric is being hovered to show its label
+  const activeMetricLabel = useMemo(() => {
+    if (!hoveredPoint) return "Value";
+    const metric = METRICS.find(m => m.label === hoveredPoint.metric);
+    return metric?.yAxisLabel || "Value";
+  }, [hoveredPoint]);
+
   if (!data.length || !width || !height) {
     return (
       <div ref={containerRef} className={`w-full ${className}`}>
@@ -216,10 +226,6 @@ export function TimeSeriesDashboard({
           <h3 className="text-lg sm:text-xl font-normal text-slate-800">
             Structural system shift
           </h3>
-          {/* <p className="text-xs text-slate-500 max-w-2xl mx-auto mt-1 leading-relaxed">
-            Long-term trends in food production, livelihood assets, and income diversification
-            across the Pacific.
-          </p> */}
         </div>
 
         {/* ─── LEGEND ─── */}
@@ -385,6 +391,7 @@ export function TimeSeriesDashboard({
                 );
               })}
 
+              {/* ─── DYNAMIC Y-AXIS LABEL ─── */}
               <text
                 transform="rotate(-90)"
                 x={-boundsHeight / 2}
@@ -392,20 +399,20 @@ export function TimeSeriesDashboard({
                 textAnchor="middle"
                 fontSize={fontSize * 0.7}
                 fill="#94a3b8"
-                className="uppercase tracking-wider"
+                className="uppercase tracking-wider transition-opacity duration-300"
+                style={{
+                  opacity: hoveredPoint ? 1 : 0.7,
+                }}
               >
-                Value
+                {activeMetricLabel}
               </text>
             </g>
           </svg>
 
-          <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed"> Fig 5: Long-term trends in food production, livelihood assets, and income diversification
-            across the Pacific.</p>
-
-          {/* <p>This sequence demonstrates a causal chain: climate stress → economic loss → human vulnerability → structural transformation. Over the longer term, these pressures begin to reshape national systems. 
-            Trends in food production, livelihood assets, and income diversification reveal how countries gradually adapt to changing environmental conditions. 
-            Some sectors expand, others contract, and communities develop new strategies to manage risk and sustain livelihoods.
-          </p> */}
+          <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed"> 
+            Fig 5: Long-term trends in food production, livelihood assets, and income diversification
+            across the Pacific.
+          </p>
 
           {/* ─── TOOLTIP ─── */}
           {hoveredPoint && !isMobile && (
