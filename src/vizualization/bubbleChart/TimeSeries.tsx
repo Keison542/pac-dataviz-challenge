@@ -25,6 +25,7 @@ const METRICS = [
     label: "Food Production",
     color: "#1a5276",
     unit: "kg/ha",
+    yAxisLabel: "kg/ha",
     description: "Agricultural output",
   },
   {
@@ -32,6 +33,7 @@ const METRICS = [
     label: "Livelihood Assets",
     color: "#e74c3c",
     unit: "kg/animal",
+    yAxisLabel: "kg/animal",
     description: "Household assets",
   },
   {
@@ -39,6 +41,7 @@ const METRICS = [
     label: "Income Diversification (tourism)",
     color: "#27ae60",
     unit: "count",
+    yAxisLabel: "count",
     description: "Tourism revenue",
   },
 ];
@@ -137,7 +140,7 @@ export function TimeSeriesDashboard({
     const values = data.map((d) => d[metric.key as keyof DataPoint] as number || 0);
     const maxVal = Math.max(...values) * 1.15 || 1;
 
-    const margin = { top: 20, right: 8, bottom: 30, left: 42 };
+    const margin = { top: 20, right: 8, bottom: 30, left: 48 };
     const chartWidth = cardWidth - margin.left - margin.right;
     const chartHeight = cardHeight - margin.top - margin.bottom - 40;
 
@@ -292,7 +295,7 @@ export function TimeSeriesDashboard({
                   );
                 })}
 
-                {/* Y-axis labels */}
+                {/* Y-axis labels with units */}
                 {yScale.ticks(4).map((v, i) => {
                   const yPos = yScale(v);
                   if (yPos < 5 || yPos > chartHeight - 5) return null;
@@ -309,6 +312,18 @@ export function TimeSeriesDashboard({
                     </text>
                   );
                 })}
+
+                {/* Y-axis unit label */}
+                <text
+                  x={-10}
+                  y={-6}
+                  textAnchor="end"
+                  fontSize={7}
+                  fill="#94a3b8"
+                  fontWeight="400"
+                >
+                  {metric.yAxisLabel}
+                </text>
 
                 {/* Line */}
                 <path
