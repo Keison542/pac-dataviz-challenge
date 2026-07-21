@@ -144,8 +144,8 @@ export function TimeSeriesDashboard({
   const minYear = Math.min(...years);
   const maxYear = Math.max(...years);
 
-  // ─── Render each metric card ───
-  const renderMetricCard = (metric: typeof METRICS[0], index: number) => {
+  // ─── Render each metric chart ───
+  const renderMetricChart = (metric: typeof METRICS[0], index: number) => {
     const values = data.map((d) => d[metric.key as keyof DataPoint] as number || 0);
     const maxVal = Math.max(...values) * 1.15 || 1;
     const trend = calculateTrend(values);
@@ -227,17 +227,16 @@ export function TimeSeriesDashboard({
     return (
       <div
         key={metric.key}
-        className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200 flex-shrink-0"
+        className="flex-shrink-0"
         style={{
           width: cardWidth,
-          height: cardHeight + 10,
           minWidth: 150,
         }}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="p-3 h-full flex flex-col">
+        <div className="h-full flex flex-col">
           {/* ─── Header ─── */}
-          <div className="flex items-start justify-between mb-1">
+          <div className="flex items-start justify-between mb-1 px-1">
             <div className="flex items-center gap-1.5">
               <span className="text-base">{metric.icon}</span>
               <h4 className="text-xs font-semibold text-slate-800 leading-tight">
@@ -397,7 +396,7 @@ export function TimeSeriesDashboard({
           </div>
 
           {/* Footer */}
-          <div className="flex justify-between text-[10px] text-slate-400 mt-0.5 pt-0.5 border-t border-slate-50">
+          <div className="flex justify-between text-[10px] text-slate-400 mt-0.5 pt-0.5 border-t border-slate-50 px-1">
             <span>{minYear}–{maxYear}</span>
             <span className="text-slate-500">
               {format(Math.min(...values))} – {format(Math.max(...values))}
@@ -421,9 +420,9 @@ export function TimeSeriesDashboard({
           </p>
         </div>
 
-        {/* ─── THREE CARDS IN ONE ROW ─── */}
+        {/* ─── THREE CHARTS IN ONE ROW ─── */}
         <div className="flex gap-4 justify-center items-stretch">
-          {METRICS.map((metric, index) => renderMetricCard(metric, index))}
+          {METRICS.map((metric, index) => renderMetricChart(metric, index))}
         </div>
 
         {/* ─── TOOLTIP ─── */}
