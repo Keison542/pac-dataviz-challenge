@@ -409,9 +409,6 @@ export function TimeSeriesDashboard({
       <div className="w-full max-w-6xl mx-auto px-2 sm:px-4">
         {/* ─── HEADER ─── */}
         <div className="mb-4 text-center">
-          <h3 className="text-lg sm:text-xl font-normal text-slate-800">
-            Individual Trends
-          </h3>
           <p className="text-xs text-slate-500 max-w-2xl mx-auto mt-0.5">
             Food production, livelihood assets, and income diversification across the Pacific
           </p>
