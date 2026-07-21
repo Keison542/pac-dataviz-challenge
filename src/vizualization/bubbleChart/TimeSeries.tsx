@@ -25,7 +25,7 @@ const METRICS = [
     label: "Food Production",
     color: "#1a5276",
     icon: "🌾",
-    unit: "tonnes",
+    unit: "kg/ha",
     description: "Agricultural output",
   },
   {
@@ -33,7 +33,7 @@ const METRICS = [
     label: "Livelihood Assets",
     color: "#e74c3c",
     icon: "🐄",
-    unit: "value",
+    unit: "kg/animal",
     description: "Household assets",
   },
   {
@@ -459,7 +459,7 @@ export function TimeSeriesDashboard({
 
         {/* ─── FOOTNOTE ─── */}
         <p className="text-center text-[10px] text-slate-400 mt-4">
-          Fig 5: Individual trends in food production, livelihood assets, and income diversification
+          Fig 5: Individual trends in food production (kg/ha), livelihood assets (kg/animal), and income diversification
         </p>
       </div>
     </div>
