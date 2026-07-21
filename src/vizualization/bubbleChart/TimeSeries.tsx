@@ -36,7 +36,7 @@ const METRICS = [
   },
   {
     key: "touristArrivals",
-    label: "Income Diversification(tourism)",
+    label: "Income Diversification (tourism)",
     color: "#27ae60",
     unit: "count",
     description: "Tourism revenue",
@@ -99,15 +99,6 @@ export function TimeSeriesDashboard({
       ? `${(v / 1_000).toFixed(0)}K`
       : v.toFixed(1);
 
-  // ─── Calculate trend ───
-  const calculateTrend = useCallback((values: number[]) => {
-    if (values.length < 2) return 0;
-    const first = values[0];
-    const last = values[values.length - 1];
-    if (first === 0) return 0;
-    return ((last - first) / first) * 100;
-  }, []);
-
   // ─── Get x-ticks every 10 years ───
   const getYearTicks = useCallback((years: number[]) => {
     const min = Math.min(...years);
@@ -145,11 +136,10 @@ export function TimeSeriesDashboard({
   const renderMetricChart = (metric: typeof METRICS[0], index: number) => {
     const values = data.map((d) => d[metric.key as keyof DataPoint] as number || 0);
     const maxVal = Math.max(...values) * 1.15 || 1;
-    const trend = calculateTrend(values);
 
-    const margin = { top: 8, right: 8, bottom: 25, left: 32 };
+    const margin = { top: 20, right: 8, bottom: 30, left: 42 };
     const chartWidth = cardWidth - margin.left - margin.right;
-    const chartHeight = cardHeight - margin.top - margin.bottom - 60;
+    const chartHeight = cardHeight - margin.top - margin.bottom - 40;
 
     const xScale = scaleLinear()
       .domain([minYear, maxYear])
@@ -171,9 +161,6 @@ export function TimeSeriesDashboard({
 
     const latestValue = values[values.length - 1] || 0;
     const latestYear = years[years.length - 1];
-
-    const trendColor = trend > 5 ? "#27ae60" : trend < -5 ? "#e74c3c" : "#f39c12";
-    const trendArrow = trend > 5 ? "↑" : trend < -5 ? "↓" : "→";
 
     // ─── Mouse handlers ───
     const handleMouseMove = (e: React.MouseEvent<SVGGElement>) => {
@@ -235,7 +222,6 @@ export function TimeSeriesDashboard({
           {/* ─── Header ─── */}
           <div className="flex items-start justify-between mb-1 px-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-base">{metric.icon}</span>
               <h4 className="text-xs font-semibold text-slate-800 leading-tight">
                 {metric.label}
               </h4>
@@ -252,7 +238,7 @@ export function TimeSeriesDashboard({
           <div className="flex-1 relative" style={{ minHeight: chartHeight + 10 }}>
             <svg
               width={cardWidth}
-              height={chartHeight + 30}
+              height={chartHeight + 40}
               className="block"
               style={{ maxWidth: '100%', height: 'auto' }}
             >
@@ -263,7 +249,7 @@ export function TimeSeriesDashboard({
                 style={{ cursor: 'pointer' }}
               >
                 {/* Grid */}
-                {[0, 0.33, 0.66, 1].map((pos, i) => {
+                {[0, 0.25, 0.5, 0.75, 1].map((pos, i) => {
                   const yPos = pos * chartHeight;
                   return (
                     <line
@@ -295,7 +281,7 @@ export function TimeSeriesDashboard({
                       />
                       <text
                         x={xPos}
-                        y={chartHeight + 13}
+                        y={chartHeight + 14}
                         textAnchor="middle"
                         fontSize={7}
                         fill="#94a3b8"
@@ -303,6 +289,24 @@ export function TimeSeriesDashboard({
                         {year}
                       </text>
                     </g>
+                  );
+                })}
+
+                {/* Y-axis labels */}
+                {yScale.ticks(4).map((v, i) => {
+                  const yPos = yScale(v);
+                  if (yPos < 5 || yPos > chartHeight - 5) return null;
+                  return (
+                    <text
+                      key={`y-tick-${i}`}
+                      x={-6}
+                      y={yPos + 2}
+                      textAnchor="end"
+                      fontSize={7}
+                      fill="#94a3b8"
+                    >
+                      {format(v)}
+                    </text>
                   );
                 })}
 
@@ -332,18 +336,6 @@ export function TimeSeriesDashboard({
                   stroke="white"
                   strokeWidth={1.5}
                 />
-
-                {/* Trend label */}
-                <text
-                  x={chartWidth - 4}
-                  y={-2}
-                  textAnchor="end"
-                  fontSize={9}
-                  fill={trendColor}
-                  fontWeight="600"
-                >
-                  {trendArrow} {Math.abs(trend).toFixed(1)}%
-                </text>
 
                 {/* In-chart tooltip */}
                 {tooltip && tooltip.cardIndex === index && (
@@ -378,7 +370,7 @@ export function TimeSeriesDashboard({
                     </text>
                     <text
                       x={tooltip.x - margin.left}
-                      y={chartHeight + 20}
+                      y={chartHeight + 22}
                       textAnchor="middle"
                       fontSize={7}
                       fill={metric.color}
@@ -390,14 +382,6 @@ export function TimeSeriesDashboard({
                 )}
               </g>
             </svg>
-          </div>
-
-          {/* Footer */}
-          <div className="flex justify-between text-[10px] text-slate-400 mt-0.5 pt-0.5 border-t border-slate-50 px-1">
-            <span>{minYear}–{maxYear}</span>
-            <span className="text-slate-500">
-              {format(Math.min(...values))} – {format(Math.max(...values))}
-            </span>
           </div>
         </div>
       </div>
