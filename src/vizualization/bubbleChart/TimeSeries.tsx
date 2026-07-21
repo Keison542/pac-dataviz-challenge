@@ -19,26 +19,26 @@ type Props = {
   className?: string;
 };
 
-const MARGIN = { top: 40, right: 40, bottom: 70, left: 60 };
+const MARGIN = { top: 40, right: 40, bottom: 70, left: 80 }; // Increased left margin for labels
 
 const METRICS = [
   {
     key: "cropYield",
     label: "Food Production",
     color: "#2c3e50",
-    yAxisLabel: "Food Production (tonnes)", // Added
+    yAxisLabel: "Food Production (tonnes)",
   },
   {
     key: "livestockYield",
     label: "Livelihood Assets",
     color: "#c0392b",
-    yAxisLabel: "Livelihood Assets (value)", // Added
+    yAxisLabel: "Livelihood Assets (value)",
   },
   {
     key: "touristArrivals",
     label: "Income Diversification",
     color: "#27ae60",
-    yAxisLabel: "Tourist Arrivals (count)", // Added
+    yAxisLabel: "Tourist Arrivals (count)",
   },
 ];
 
@@ -98,15 +98,15 @@ export function TimeSeriesDashboard({
 
   const responsiveMargin = useMemo(() => {
     if (width < 400) {
-      return { top: 30, right: 10, bottom: 50, left: 40 };
+      return { top: 30, right: 10, bottom: 50, left: 60 };
     }
     if (width < 600) {
-      return { top: 35, right: 15, bottom: 55, left: 48 };
+      return { top: 35, right: 15, bottom: 55, left: 70 };
     }
     if (width < 768) {
-      return { top: 38, right: 20, bottom: 60, left: 52 };
+      return { top: 38, right: 20, bottom: 60, left: 75 };
     }
-    return MARGIN;
+    return { ...MARGIN, left: 80 };
   }, [width]);
 
   const boundsWidth = width - responsiveMargin.left - responsiveMargin.right;
@@ -199,12 +199,24 @@ export function TimeSeriesDashboard({
       ? `${(v / 1_000).toFixed(0)}K`
       : v.toFixed(1);
 
-  // Determine which metric is being hovered to show its label
+  // Determine which metric is being hovered or get the first visible one
   const activeMetricLabel = useMemo(() => {
-    if (!hoveredPoint) return "Value";
-    const metric = METRICS.find(m => m.label === hoveredPoint.metric);
-    return metric?.yAxisLabel || "Value";
-  }, [hoveredPoint]);
+    // If hovering, show that metric's label
+    if (hoveredPoint) {
+      const metric = METRICS.find(m => m.label === hoveredPoint.metric);
+      return metric?.yAxisLabel || "Value";
+    }
+    
+    // If only one metric is visible, show its label
+    const visibleKeys = Array.from(visibleMetrics);
+    if (visibleKeys.length === 1) {
+      const metric = METRICS.find(m => m.key === visibleKeys[0]);
+      return metric?.yAxisLabel || "Value";
+    }
+    
+    // Otherwise show "Value"
+    return "Value";
+  }, [hoveredPoint, visibleMetrics]);
 
   if (!data.length || !width || !height) {
     return (
@@ -373,14 +385,14 @@ export function TimeSeriesDashboard({
                 Year
               </text>
 
-              {/* ─── Y AXIS ─── */}
+              {/* ─── Y AXIS VALUES ─── */}
               {yTicks.map((v, i) => {
                 const yPos = yScale(v);
                 if (yPos < 5 || yPos > boundsHeight - 5) return null;
                 return (
                   <text
                     key={`y-label-${i}`}
-                    x={-6}
+                    x={-8}
                     y={yPos + 3}
                     textAnchor="end"
                     fontSize={Math.max(7, fontSize * 0.65)}
@@ -391,21 +403,37 @@ export function TimeSeriesDashboard({
                 );
               })}
 
-              {/* ─── DYNAMIC Y-AXIS LABEL ─── */}
+              {/* ─── Y-AXIS LABEL ─── */}
+              {/* Positioned to the left of the chart with rotation */}
               <text
-                transform="rotate(-90)"
-                x={-boundsHeight / 2}
-                y={-(responsiveMargin.left - 12)}
+                transform={`rotate(-90, ${-(responsiveMargin.left - 20)}, ${boundsHeight / 2})`}
+                x={-(boundsHeight / 2)}
+                y={-(responsiveMargin.left - 20)}
                 textAnchor="middle"
-                fontSize={fontSize * 0.7}
-                fill="#94a3b8"
-                className="uppercase tracking-wider transition-opacity duration-300"
+                fontSize={Math.max(10, fontSize * 0.75)}
+                fill="#64748b"
+                fontWeight="500"
+                className="transition-opacity duration-300"
                 style={{
-                  opacity: hoveredPoint ? 1 : 0.7,
+                  opacity: activeMetricLabel !== "Value" ? 1 : 0.6,
                 }}
               >
                 {activeMetricLabel}
               </text>
+
+              {/* ─── FALLBACK: Show all metric labels if multiple visible ─── */}
+              {visibleMetrics.size > 1 && !hoveredPoint && (
+                <text
+                  x={-8}
+                  y={boundsHeight + 10}
+                  textAnchor="start"
+                  fontSize={Math.max(7, fontSize * 0.5)}
+                  fill="#94a3b8"
+                  fontStyle="italic"
+                >
+                  (Hover a line for specific units)
+                </text>
+              )}
             </g>
           </svg>
 
