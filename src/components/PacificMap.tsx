@@ -420,7 +420,14 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
   return (
     <div className={`w-full ${className}`}>
       <div className="mb-6 text-center max-w-4xl mx-auto">
+
         <p className="text-center">
+          To answer that question, we need to step back and compare climate vulnerability across the Pacific. While every nation faces environmental 
+          change, the capacity to absorb and recover from climate shocks differs dramatically.</p>
+        <p className="text-center">
+
+        
+          
           Not all Pacific nations face climate change equally.
           Countries experience similar environmental pressures, yet their ability to absorb and recover from those pressures varies dramatically.
           This uneven capacity creates large differences in vulnerability across the region.
@@ -436,7 +443,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         <g opacity={showInstructions ? 1 : 0} transition={{ duration: 0.5 }}>
           <rect x={WIDTH / 2 - 250} y={20} width={500} height={80} rx={8} fill="white" stroke="#e2e8f0" strokeWidth={1} />
           <text x={WIDTH / 2} y={45} textAnchor="middle" fontSize={13} fontWeight="600" fill="#1a1a2e">
-            🗺️ How to read this map
+             How to read this map
           </text>
           <text x={WIDTH / 2} y={65} textAnchor="middle" fontSize={11} fill="#64748b">
             • Circle size & shade show vulnerability score
