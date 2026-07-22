@@ -197,12 +197,12 @@ export default function Home() {
             But are these pressures unique to {selectedCountry}?
           </h2>
 
-          <p className="mt-10 text-xl text-slate-500">
+          {/* <p className="mt-10 text-xl text-slate-500">
             To answer that question, we need to step back and compare climate
             vulnerability across the Pacific. While every nation faces
             environmental change, the capacity to absorb and recover from
             climate shocks differs dramatically.
-          </p>
+          </p> */}
         </div>
       </section>
 
