@@ -62,7 +62,7 @@ export default function Home() {
     <main className="bg-white text-slate-900 overflow-x-hidden">
 
       {/* ========================================================= */}
-      {/* HERO */}
+      /* HERO */
       {/* ========================================================= */}
 
       <section className="min-h-screen flex flex-col justify-center">
@@ -76,10 +76,10 @@ export default function Home() {
       </section>
 
       {/* ========================================================= */}
-      {/* CLIMATE SIGNAL INTRO */}
+      /* CLIMATE SIGNAL INTRO */
       {/* ========================================================= */}
 
-      <section className="min-h-[70vh] flex items-center justify-center px-6">
+      <section className="min-h-[50vh] flex items-center justify-center px-6">
         <div className="max-w-4xl text-center">
           <h2 className="text-4xl md:text-6xl font-light leading-tight">
             <>
@@ -90,7 +90,7 @@ export default function Home() {
       </section>
 
       {/* ========================================================= */}
-      {/* CLIMATE DASHBOARD */}
+      /* CLIMATE DASHBOARD */
       {/* ========================================================= */}
 
       {hasClimateData && (
@@ -99,7 +99,7 @@ export default function Home() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
-          className="max-w-[1200px] mx-auto px-6 py-24"
+          className="max-w-[1200px] mx-auto px-6 py-12"
         >
           <DoughnutClimateDashboard
             kpis={kpis}
@@ -110,7 +110,7 @@ export default function Home() {
       )}
 
       {/* ========================================================= */}
-      {/* TEMPERATURE + SEA LEVEL */}
+      /* TEMPERATURE + SEA LEVEL */
       {/* ========================================================= */}
 
       {hasClimateData && (
@@ -119,7 +119,7 @@ export default function Home() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
-          className="max-w-[1200px] mx-auto px-6 py-24"
+          className="max-w-[1200px] mx-auto px-6 py-12"
         >
           <ClimateDriversSection
             dataMap={dataMap}
@@ -131,16 +131,16 @@ export default function Home() {
       )}
 
       {/* ========================================================= */}
-      {/* HUMAN IMPACT INTRO */}
+      /* HUMAN IMPACT INTRO */
       {/* ========================================================= */}
 
-      <section className="min-h-[80vh] flex items-center justify-center px-6">
+      <section className="min-h-[50vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
             Climate change is often measured in degrees and centimetres, but its consequences are measured in disrupted lives.
           </h2>
 
-          <p className="mt-10 text-xl text-slate-500">
+          <p className="mt-6 text-xl text-slate-500">
             In other words, the consequences appear when environmental change reaches people,
             livelihoods and economies.
           </p>
@@ -148,23 +148,23 @@ export default function Home() {
       </section>
 
       {/* ========================================================= */}
-      {/* BIG NUMBER */}
+      /* BIG NUMBER */
       {/* ========================================================= */}
 
-      <section className="min-h-screen flex items-center justify-center px-6 border-y border-slate-100">
+      <section className="min-h-[40vh] flex items-center justify-center px-6 border-y border-slate-100">
         <div className="text-center">
           <div className="text-6xl md:text-8xl font-bold">
             {peopleTotal.toLocaleString()} lives disrupted
           </div>
 
-          <div className="mt-6 text-xl text-slate-500">
+          <div className="mt-4 text-xl text-slate-500">
             by climate-related disasters in {selectedCountry}. 
           </div>
         </div>
       </section>
 
       {/* ========================================================= */}
-      {/* HUMAN + ECONOMIC */}
+      /* HUMAN + ECONOMIC */
       {/* ========================================================= */}
 
       {(hasEconomicData || hasHumanData || hasSocioeconomicData) && (
@@ -173,7 +173,7 @@ export default function Home() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
-          className="max-w-[1200px] mx-auto px-6 py-24"
+          className="max-w-[1200px] mx-auto px-6 py-12"
         >
           <HumanEconomicSection
             selectedCountry={selectedCountry}
@@ -188,26 +188,19 @@ export default function Home() {
       )}
 
       {/* ========================================================= */}
-      {/* REGIONAL CONTEXT INTRO */}
+      /* REGIONAL CONTEXT INTRO */
       {/* ========================================================= */}
 
-      <section className="min-h-[80vh] flex items-center justify-center px-6 border-t border-slate-100">
+      <section className="min-h-[50vh] flex items-center justify-center px-6 border-t border-slate-100">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
             But are these pressures unique to {selectedCountry}?
           </h2>
-
-          {/* <p className="mt-10 text-xl text-slate-500">
-            To answer that question, we need to step back and compare climate
-            vulnerability across the Pacific. While every nation faces
-            environmental change, the capacity to absorb and recover from
-            climate shocks differs dramatically.
-          </p> */}
         </div>
       </section>
 
       {/* ========================================================= */}
-      {/* REGIONAL COMPARISON */}
+      /* REGIONAL COMPARISON */
       {/* ========================================================= */}
 
       {hasRegionalData && (
@@ -216,7 +209,7 @@ export default function Home() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
-          className="max-w-[1200px] mx-auto px-6 py-24"
+          className="max-w-[1200px] mx-auto px-6 py-12"
         >
           <RegionalComparisonSection
             selectedCountry={selectedCountry}
@@ -228,16 +221,16 @@ export default function Home() {
       )}
 
       {/* ========================================================= */}
-      {/* SYSTEM INTRO - UPDATED */}
+      /* SYSTEM INTRO - UPDATED */
       {/* ========================================================= */}
 
-      <section className="min-h-[80vh] flex items-center justify-center px-6">
+      <section className="min-h-[50vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
             Why does vulnerability emerge?
           </h2>
 
-          <p className="mt-10 text-xl text-slate-500">
+          <p className="mt-6 text-xl text-slate-500">
             The answer lies in how climate drivers interact. Temperature,
             rainfall, sea-level rise and ocean warming rarely operate in
             isolation. Together they create cascading effects that amplify
@@ -247,7 +240,7 @@ export default function Home() {
       </section>
 
       {/* ========================================================= */}
-      {/* CAUSAL CHAIN */}
+      /* CAUSAL CHAIN */
       {/* ========================================================= */}
 
       {hasCausalData && (
@@ -256,7 +249,7 @@ export default function Home() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
-          className="max-w-[1200px] mx-auto px-6 py-32"
+          className="max-w-[1200px] mx-auto px-6 py-16"
         >
           <CausalChainSection
             climateFlowData={climateFlowData}
@@ -268,7 +261,7 @@ export default function Home() {
       )}
 
       {/* ========================================================= */}
-      {/* CONCLUSION */}
+      /* CONCLUSION */
       {/* ========================================================= */}
 
       {(hasClimateData ||
@@ -278,7 +271,7 @@ export default function Home() {
         hasRegionalData ||
         hasCausalData ||
         hasTimelineData) && (
-        <section className="max-w-[1200px] mx-auto px-6 py-24 border-t">
+        <section className="max-w-[1200px] mx-auto px-6 py-12 border-t">
           <Conclusion
             selectedCountry={selectedCountry}
             seaTrend={seaTrend}
@@ -288,10 +281,10 @@ export default function Home() {
       )}
 
       {/* ========================================================= */}
-      {/* FOOTER */}
+      /* FOOTER */
       {/* ========================================================= */}
 
-      <footer className="text-center py-16 border-t border-slate-200 text-xs text-slate-400">
+      <footer className="text-center py-12 border-t border-slate-200 text-xs text-slate-400">
         <p>
           Pacific Dataviz Challenge 2026 · {countries.length} Pacific Island
           countries analyzed
