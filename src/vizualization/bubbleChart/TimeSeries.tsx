@@ -24,19 +24,25 @@ const METRICS = [
     key: "cropYield",
     label: "Food Production",
     color: "#1a5276",
+    unit: "kg/ha",
     yAxisLabel: "kg/ha",
+    description: "Agricultural output",
   },
   {
     key: "livestockYield",
     label: "Livelihood Assets",
     color: "#e74c3c",
+    unit: "kg/animal",
     yAxisLabel: "kg/animal",
+    description: "Household assets",
   },
   {
     key: "touristArrivals",
-    label: "Income Diversification",
+    label: "Income Diversification (tourism)",
     color: "#27ae60",
+    unit: "count",
     yAxisLabel: "count",
+    description: "Tourism revenue",
   },
 ];
 
@@ -52,6 +58,18 @@ export function TimeSeriesDashboard({
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
 
+  const [tooltip, setTooltip] = useState<{
+    metric: string;
+    year: number;
+    value: number;
+    x: number;
+    y: number;
+    color: string;
+    label: string;
+    cardIndex: number;
+  } | null>(null);
+
+  // ─── Responsive Resize ───
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -88,15 +106,18 @@ export function TimeSeriesDashboard({
       ? `${(v / 1_000).toFixed(0)}K`
       : v.toFixed(1);
 
+  // ─── Get x-ticks dynamically based on screen size ───
   const getYearTicks = useCallback((years: number[]) => {
     const min = Math.min(...years);
     const max = Math.max(...years);
     
+    // Adjust tick count based on screen size
     let tickCount = 5;
     if (isMobile) tickCount = 3;
     else if (isTablet) tickCount = 4;
     
     const step = Math.max(1, Math.floor((max - min) / tickCount));
+    // Round to nearest 5 or 10
     const roundedStep = Math.ceil(step / 5) * 5;
     
     const ticks: number[] = [];
@@ -112,15 +133,17 @@ export function TimeSeriesDashboard({
     return (
       <div ref={containerRef} className={`w-full ${className}`}>
         <div className="flex items-center justify-center h-64">
-          <p className="text-slate-400 text-sm">Loading...</p>
+          <p className="text-slate-400 text-sm">Loading chart...</p>
         </div>
       </div>
     );
   }
 
+  // ─── Calculate card dimensions ───
   const gap = isMobile ? 8 : 16;
   const totalGap = gap * 2;
   
+  // Responsive card width calculation
   let cardsPerRow = 3;
   if (isMobile) cardsPerRow = 1;
   else if (isTablet) cardsPerRow = 2;
@@ -132,10 +155,12 @@ export function TimeSeriesDashboard({
   const minYear = Math.min(...years);
   const maxYear = Math.max(...years);
 
+  // ─── Render each metric chart ───
   const renderMetricChart = (metric: typeof METRICS[0], index: number) => {
     const values = data.map((d) => d[metric.key as keyof DataPoint] as number || 0);
     const maxVal = Math.max(...values) * 1.15 || 1;
 
+    // Responsive margins
     const margin = isMobile 
       ? { top: 12, right: 4, bottom: 25, left: 38 }
       : { top: 20, right: 8, bottom: 30, left: 48 };
@@ -164,6 +189,59 @@ export function TimeSeriesDashboard({
     const latestValue = values[values.length - 1] || 0;
     const latestYear = years[years.length - 1];
 
+    // ─── Mouse handlers ───
+    const handleMouseMove = (e: React.MouseEvent<SVGGElement>) => {
+      if (isMobile) return; // Disable hover on mobile
+      
+      const rect = e.currentTarget.getBoundingClientRect();
+      const svgRect = e.currentTarget.closest('svg')?.getBoundingClientRect();
+      if (!svgRect) return;
+
+      const mouseX = e.clientX - svgRect.left - margin.left;
+      const mouseY = e.clientY - svgRect.top - margin.top;
+
+      let closestYear = years[0];
+      let closestDist = Infinity;
+      years.forEach((year) => {
+        const xPos = xScale(year);
+        const dist = Math.abs(mouseX - xPos);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestYear = year;
+        }
+      });
+
+      const value = data.find((d) => d.year === closestYear)?.[metric.key as keyof DataPoint] as number || 0;
+      const xPos = xScale(closestYear);
+      const yPos = yScale(value);
+
+      if (mouseX >= -10 && mouseX <= chartWidth + 10 && mouseY >= -10 && mouseY <= chartHeight + 10) {
+        setTooltip({
+          metric: metric.label,
+          year: closestYear,
+          value: value,
+          x: xPos + margin.left,
+          y: yPos + margin.top,
+          color: metric.color,
+          label: metric.label,
+          cardIndex: index,
+        });
+      } else {
+        setTooltip(null);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      if (tooltip?.cardIndex === index) {
+        setTooltip(null);
+      }
+    };
+
+    // ─── Font sizes ───
+    const fontSize = isMobile ? 6 : 7;
+    const labelFontSize = isMobile ? 10 : 12;
+    const titleFontSize = isMobile ? 10 : 12;
+
     return (
       <div
         key={metric.key}
@@ -173,16 +251,19 @@ export function TimeSeriesDashboard({
           minWidth: isMobile ? 280 : 150,
           maxWidth: isMobile ? '100%' : undefined,
         }}
+        onMouseLeave={handleMouseLeave}
       >
         <div className="h-full flex flex-col">
+          {/* ─── Header ─── */}
           <div className="flex items-start justify-between mb-1 px-1">
             <div className="flex items-center gap-1.5">
-              <h4 className={`text-${isMobile ? '10' : '12'}px font-semibold text-slate-800 leading-tight`}>
+              <h4 className={`text-${labelFontSize}px font-semibold text-slate-800 leading-tight`}>
                 {metric.label}
               </h4>
             </div>
           </div>
 
+          {/* ─── Chart ─── */}
           <div className="flex-1 relative" style={{ minHeight: chartHeight + 10 }}>
             <svg
               width={cardWidth}
@@ -190,7 +271,12 @@ export function TimeSeriesDashboard({
               className="block"
               style={{ maxWidth: '100%', height: 'auto' }}
             >
-              <g transform={`translate(${margin.left},${margin.top})`}>
+              <g
+                transform={`translate(${margin.left},${margin.top})`}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                style={{ cursor: isMobile ? 'default' : 'pointer' }}
+              >
                 {/* Grid */}
                 {[0, 0.25, 0.5, 0.75, 1].map((pos, i) => {
                   const yPos = pos * chartHeight;
@@ -226,7 +312,7 @@ export function TimeSeriesDashboard({
                         x={xPos}
                         y={chartHeight + (isMobile ? 12 : 14)}
                         textAnchor="middle"
-                        fontSize={isMobile ? 6 : 7}
+                        fontSize={fontSize}
                         fill="#94a3b8"
                       >
                         {year}
@@ -245,7 +331,7 @@ export function TimeSeriesDashboard({
                       x={-6}
                       y={yPos + 2}
                       textAnchor="end"
-                      fontSize={isMobile ? 6 : 7}
+                      fontSize={fontSize}
                       fill="#94a3b8"
                     >
                       {format(v)}
@@ -258,8 +344,9 @@ export function TimeSeriesDashboard({
                   x={-10}
                   y={-6}
                   textAnchor="end"
-                  fontSize={isMobile ? 6 : 7}
+                  fontSize={fontSize}
                   fill="#94a3b8"
+                  fontWeight="400"
                 >
                   {metric.yAxisLabel}
                 </text>
@@ -290,6 +377,50 @@ export function TimeSeriesDashboard({
                   stroke="white"
                   strokeWidth={1.5}
                 />
+
+                {/* In-chart tooltip */}
+                {tooltip && tooltip.cardIndex === index && !isMobile && (
+                  <g>
+                    <line
+                      x1={tooltip.x - margin.left}
+                      y1={0}
+                      x2={tooltip.x - margin.left}
+                      y2={chartHeight}
+                      stroke={metric.color}
+                      strokeWidth={1}
+                      strokeDasharray="4,4"
+                      opacity={0.4}
+                    />
+                    <circle
+                      cx={tooltip.x - margin.left}
+                      cy={tooltip.y - margin.top}
+                      r={4.5}
+                      fill={metric.color}
+                      stroke="white"
+                      strokeWidth={2}
+                    />
+                    <text
+                      x={tooltip.x - margin.left}
+                      y={tooltip.y - margin.top - 7}
+                      textAnchor="middle"
+                      fontSize={fontSize + 1}
+                      fill={metric.color}
+                      fontWeight="600"
+                    >
+                      {format(tooltip.value)}
+                    </text>
+                    <text
+                      x={tooltip.x - margin.left}
+                      y={chartHeight + (isMobile ? 20 : 22)}
+                      textAnchor="middle"
+                      fontSize={fontSize}
+                      fill={metric.color}
+                      fontWeight="600"
+                    >
+                      {tooltip.year}
+                    </text>
+                  </g>
+                )}
               </g>
             </svg>
           </div>
@@ -301,16 +432,67 @@ export function TimeSeriesDashboard({
   return (
     <div ref={containerRef} className={`w-full ${className}`}>
       <div className="w-full max-w-6xl mx-auto px-2 sm:px-4">
+        {/* ─── HEADER ─── */}
         <div className="mb-4 text-center">
-          <p className={`text-${isMobile ? 'xs' : 'sm'} text-slate-500 max-w-2xl mx-auto`}>
+          <p className={`text-${isMobile ? 'xs' : 'sm'} text-slate-500 max-w-2xl mx-auto mt-0.5`}>
             Food production, livelihood assets, and income diversification across the Pacific
           </p>
         </div>
 
+        {/* ─── THREE CHARTS IN ONE ROW ─── */}
         <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-${isMobile ? '2' : '4'} justify-center items-stretch`}>
           {METRICS.map((metric, index) => renderMetricChart(metric, index))}
         </div>
 
+        {/* ─── TOOLTIP ─── */}
+        {tooltip && !isMobile && (
+          <div
+            className="fixed rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-lg pointer-events-none z-50"
+            style={{
+              left: Math.min(
+                tooltip.x + 16,
+                window.innerWidth - 160
+              ),
+              top: Math.min(
+                tooltip.y - 35,
+                window.innerHeight - 80
+              ),
+            }}
+          >
+            <div className="flex items-center gap-1.5">
+              <span
+                className="w-3 h-0.5 rounded-full"
+                style={{ background: tooltip.color, height: 2 }}
+              />
+              <span className="font-medium text-slate-800 text-[11px]">
+                {tooltip.metric}
+              </span>
+            </div>
+            <div className="text-slate-400 text-[9px]">{tooltip.year}</div>
+            <div className="font-semibold text-slate-800 text-sm">
+              {format(tooltip.value)}
+            </div>
+          </div>
+        )}
+
+        {/* ─── MOBILE TOOLTIP ─── */}
+        {tooltip && isMobile && (
+          <div className="mt-3 text-center bg-white border border-slate-200 rounded-lg p-3 mx-2">
+            <div className="flex items-center justify-center gap-2">
+              <span
+                className="w-3 h-0.5 rounded-full"
+                style={{ background: tooltip.color, height: 2 }}
+              />
+              <span className="font-medium text-xs text-slate-800">{tooltip.metric}</span>
+            </div>
+            <div className="text-xs text-slate-500">{tooltip.year}</div>
+            <div className="text-sm font-semibold text-slate-800">
+              {format(tooltip.value)}
+            </div>
+          </div>
+        )}
+
+        {/* ─── FOOTNOTE ─── */}
         <p className="text-center text-[10px] text-slate-400 mt-4">
           Fig 5: Individual trends in food production (kg/ha), livelihood assets (kg/animal), and income diversification
         </p>
