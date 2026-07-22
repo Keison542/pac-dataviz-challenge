@@ -20,15 +20,6 @@ export function RegionalComparisonSection({
       <div className="text-center mb-6">
       </div>
 
-      {/* ─── Ranked Dashboard ─── */}
-      <div className="p-2">
-        <MultiMetricRankedDashboard 
-          width={chartWidth * 2 + 20} 
-          height={520} 
-          data={rankedData} 
-        />
-      </div>
-
       {/* ─── Pacific Map ─── */}
       <div className="mt-12 w-full max-w-7xl mx-auto px-4">
         <PacificClimateStoryMap data={rankedData} />
