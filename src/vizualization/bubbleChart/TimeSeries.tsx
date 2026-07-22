@@ -55,6 +55,8 @@ export function TimeSeriesDashboard({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
 
   const [tooltip, setTooltip] = useState<{
     metric: string;
@@ -75,6 +77,8 @@ export function TimeSeriesDashboard({
         const width = propWidth || rect.width || 900;
         const height = propHeight || Math.min(rect.width * 0.35, 280);
         setDimensions({ width, height });
+        setIsMobile(width < 640);
+        setIsTablet(width >= 640 && width < 1024);
       }
     };
 
@@ -102,18 +106,28 @@ export function TimeSeriesDashboard({
       ? `${(v / 1_000).toFixed(0)}K`
       : v.toFixed(1);
 
-  // ─── Get x-ticks every 10 years ───
+  // ─── Get x-ticks dynamically based on screen size ───
   const getYearTicks = useCallback((years: number[]) => {
     const min = Math.min(...years);
     const max = Math.max(...years);
+    
+    // Adjust tick count based on screen size
+    let tickCount = 5;
+    if (isMobile) tickCount = 3;
+    else if (isTablet) tickCount = 4;
+    
+    const step = Math.max(1, Math.floor((max - min) / tickCount));
+    // Round to nearest 5 or 10
+    const roundedStep = Math.ceil(step / 5) * 5;
+    
     const ticks: number[] = [];
-    for (let y = Math.ceil(min / 10) * 10; y <= max; y += 10) {
+    for (let y = Math.ceil(min / roundedStep) * roundedStep; y <= max; y += roundedStep) {
       ticks.push(y);
     }
     if (!ticks.includes(min)) ticks.unshift(min);
     if (!ticks.includes(max)) ticks.push(max);
     return ticks;
-  }, []);
+  }, [isMobile, isTablet]);
 
   if (!data.length || !width) {
     return (
@@ -126,10 +140,16 @@ export function TimeSeriesDashboard({
   }
 
   // ─── Calculate card dimensions ───
-  const gap = 16;
+  const gap = isMobile ? 8 : 16;
   const totalGap = gap * 2;
-  const cardWidth = Math.max((width - totalGap) / 3, 180);
-  const cardHeight = height > 0 ? height : 220;
+  
+  // Responsive card width calculation
+  let cardsPerRow = 3;
+  if (isMobile) cardsPerRow = 1;
+  else if (isTablet) cardsPerRow = 2;
+  
+  const cardWidth = Math.max((width - totalGap) / cardsPerRow, isMobile ? 280 : 180);
+  const cardHeight = height > 0 ? height : (isMobile ? 250 : 220);
 
   const years = data.map((d) => d.year);
   const minYear = Math.min(...years);
@@ -140,9 +160,13 @@ export function TimeSeriesDashboard({
     const values = data.map((d) => d[metric.key as keyof DataPoint] as number || 0);
     const maxVal = Math.max(...values) * 1.15 || 1;
 
-    const margin = { top: 20, right: 8, bottom: 30, left: 48 };
+    // Responsive margins
+    const margin = isMobile 
+      ? { top: 12, right: 4, bottom: 25, left: 38 }
+      : { top: 20, right: 8, bottom: 30, left: 48 };
+    
     const chartWidth = cardWidth - margin.left - margin.right;
-    const chartHeight = cardHeight - margin.top - margin.bottom - 40;
+    const chartHeight = cardHeight - margin.top - margin.bottom - (isMobile ? 30 : 40);
 
     const xScale = scaleLinear()
       .domain([minYear, maxYear])
@@ -167,6 +191,8 @@ export function TimeSeriesDashboard({
 
     // ─── Mouse handlers ───
     const handleMouseMove = (e: React.MouseEvent<SVGGElement>) => {
+      if (isMobile) return; // Disable hover on mobile
+      
       const rect = e.currentTarget.getBoundingClientRect();
       const svgRect = e.currentTarget.closest('svg')?.getBoundingClientRect();
       if (!svgRect) return;
@@ -211,13 +237,19 @@ export function TimeSeriesDashboard({
       }
     };
 
+    // ─── Font sizes ───
+    const fontSize = isMobile ? 6 : 7;
+    const labelFontSize = isMobile ? 10 : 12;
+    const titleFontSize = isMobile ? 10 : 12;
+
     return (
       <div
         key={metric.key}
         className="flex-shrink-0"
         style={{
           width: cardWidth,
-          minWidth: 150,
+          minWidth: isMobile ? 280 : 150,
+          maxWidth: isMobile ? '100%' : undefined,
         }}
         onMouseLeave={handleMouseLeave}
       >
@@ -225,7 +257,7 @@ export function TimeSeriesDashboard({
           {/* ─── Header ─── */}
           <div className="flex items-start justify-between mb-1 px-1">
             <div className="flex items-center gap-1.5">
-              <h4 className="text-xs font-semibold text-slate-800 leading-tight">
+              <h4 className={`text-${labelFontSize}px font-semibold text-slate-800 leading-tight`}>
                 {metric.label}
               </h4>
             </div>
@@ -235,7 +267,7 @@ export function TimeSeriesDashboard({
           <div className="flex-1 relative" style={{ minHeight: chartHeight + 10 }}>
             <svg
               width={cardWidth}
-              height={chartHeight + 40}
+              height={chartHeight + (isMobile ? 30 : 40)}
               className="block"
               style={{ maxWidth: '100%', height: 'auto' }}
             >
@@ -243,7 +275,7 @@ export function TimeSeriesDashboard({
                 transform={`translate(${margin.left},${margin.top})`}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: isMobile ? 'default' : 'pointer' }}
               >
                 {/* Grid */}
                 {[0, 0.25, 0.5, 0.75, 1].map((pos, i) => {
@@ -262,7 +294,7 @@ export function TimeSeriesDashboard({
                   );
                 })}
 
-                {/* X-axis ticks every 10 years */}
+                {/* X-axis ticks */}
                 {xTicks.map((year, i) => {
                   const xPos = xScale(year);
                   if (xPos < 5 || xPos > chartWidth - 5) return null;
@@ -278,9 +310,9 @@ export function TimeSeriesDashboard({
                       />
                       <text
                         x={xPos}
-                        y={chartHeight + 14}
+                        y={chartHeight + (isMobile ? 12 : 14)}
                         textAnchor="middle"
-                        fontSize={7}
+                        fontSize={fontSize}
                         fill="#94a3b8"
                       >
                         {year}
@@ -289,8 +321,8 @@ export function TimeSeriesDashboard({
                   );
                 })}
 
-                {/* Y-axis labels with units */}
-                {yScale.ticks(4).map((v, i) => {
+                {/* Y-axis labels */}
+                {yScale.ticks(isMobile ? 3 : 4).map((v, i) => {
                   const yPos = yScale(v);
                   if (yPos < 5 || yPos > chartHeight - 5) return null;
                   return (
@@ -299,7 +331,7 @@ export function TimeSeriesDashboard({
                       x={-6}
                       y={yPos + 2}
                       textAnchor="end"
-                      fontSize={7}
+                      fontSize={fontSize}
                       fill="#94a3b8"
                     >
                       {format(v)}
@@ -312,7 +344,7 @@ export function TimeSeriesDashboard({
                   x={-10}
                   y={-6}
                   textAnchor="end"
-                  fontSize={7}
+                  fontSize={fontSize}
                   fill="#94a3b8"
                   fontWeight="400"
                 >
@@ -324,7 +356,7 @@ export function TimeSeriesDashboard({
                   d={path}
                   fill="none"
                   stroke={metric.color}
-                  strokeWidth={2}
+                  strokeWidth={isMobile ? 2.5 : 2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -340,14 +372,14 @@ export function TimeSeriesDashboard({
                 <circle
                   cx={xScale(latestYear)}
                   cy={yScale(latestValue)}
-                  r={3.5}
+                  r={isMobile ? 4 : 3.5}
                   fill={metric.color}
                   stroke="white"
                   strokeWidth={1.5}
                 />
 
                 {/* In-chart tooltip */}
-                {tooltip && tooltip.cardIndex === index && (
+                {tooltip && tooltip.cardIndex === index && !isMobile && (
                   <g>
                     <line
                       x1={tooltip.x - margin.left}
@@ -371,7 +403,7 @@ export function TimeSeriesDashboard({
                       x={tooltip.x - margin.left}
                       y={tooltip.y - margin.top - 7}
                       textAnchor="middle"
-                      fontSize={8}
+                      fontSize={fontSize + 1}
                       fill={metric.color}
                       fontWeight="600"
                     >
@@ -379,9 +411,9 @@ export function TimeSeriesDashboard({
                     </text>
                     <text
                       x={tooltip.x - margin.left}
-                      y={chartHeight + 22}
+                      y={chartHeight + (isMobile ? 20 : 22)}
                       textAnchor="middle"
-                      fontSize={7}
+                      fontSize={fontSize}
                       fill={metric.color}
                       fontWeight="600"
                     >
@@ -402,18 +434,18 @@ export function TimeSeriesDashboard({
       <div className="w-full max-w-6xl mx-auto px-2 sm:px-4">
         {/* ─── HEADER ─── */}
         <div className="mb-4 text-center">
-          <p className="text-xs text-slate-500 max-w-2xl mx-auto mt-0.5">
+          <p className={`text-${isMobile ? 'xs' : 'sm'} text-slate-500 max-w-2xl mx-auto mt-0.5`}>
             Food production, livelihood assets, and income diversification across the Pacific
           </p>
         </div>
 
         {/* ─── THREE CHARTS IN ONE ROW ─── */}
-        <div className="flex gap-4 justify-center items-stretch">
+        <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-${isMobile ? '2' : '4'} justify-center items-stretch`}>
           {METRICS.map((metric, index) => renderMetricChart(metric, index))}
         </div>
 
         {/* ─── TOOLTIP ─── */}
-        {tooltip && (
+        {tooltip && !isMobile && (
           <div
             className="fixed rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-lg pointer-events-none z-50"
             style={{
@@ -438,6 +470,23 @@ export function TimeSeriesDashboard({
             </div>
             <div className="text-slate-400 text-[9px]">{tooltip.year}</div>
             <div className="font-semibold text-slate-800 text-sm">
+              {format(tooltip.value)}
+            </div>
+          </div>
+        )}
+
+        {/* ─── MOBILE TOOLTIP ─── */}
+        {tooltip && isMobile && (
+          <div className="mt-3 text-center bg-white border border-slate-200 rounded-lg p-3 mx-2">
+            <div className="flex items-center justify-center gap-2">
+              <span
+                className="w-3 h-0.5 rounded-full"
+                style={{ background: tooltip.color, height: 2 }}
+              />
+              <span className="font-medium text-xs text-slate-800">{tooltip.metric}</span>
+            </div>
+            <div className="text-xs text-slate-500">{tooltip.year}</div>
+            <div className="text-sm font-semibold text-slate-800">
               {format(tooltip.value)}
             </div>
           </div>
