@@ -90,10 +90,10 @@ const VULNERABILITY_COLORS = {
 
 // ─── Hazard Colors ───
 const HAZARD_COLORS = {
-  cyclone: "#7c3aed",
-  flood: "#2563eb",
-  drought: "#ea580c",
-  seaLevelRise: "#dc2626",
+  naturalDisaster: "#7c3aed",    // People affected by natural disasters
+  drought: "#ea580c",             // Economic loss from drought
+  flooding: "#2563eb",            // Rainfall anomalies (flooding)
+  seaLevelRise: "#dc2626",        // Sea level anomalies
 };
 
 // ─── Projection Functions ───
@@ -193,48 +193,36 @@ function computeCompositeScores(countryData: Map<string, Record<string, number>>
 }
 
 // ─── Build hazard lookup from imported data ───
+// CORRECTED MAPPINGS:
+// - affectedPersons → People affected by natural disasters (general)
+// - disasterEconomicLoss → Economic loss from drought
+// - rainfallAnomalies → Flooding (rainfall anomalies)
+// - seaLevelAnomalies → Sea level rise
 function buildHazardLookup() {
   const lookup = new Map<
     string,
-    { cyclone?: number; flood?: number; drought?: number; seaLevelRise?: number }
+    { 
+      naturalDisaster?: number;  // People affected
+      drought?: number;          // Economic loss
+      flooding?: number;         // Rainfall anomalies
+      seaLevelRise?: number;     
+    }
   >();
 
+  // ─── People affected by natural disasters (general) ───
   if (affectedPersons && affectedPersons.length > 0) {
     affectedPersons.forEach((d) => {
       if (d.value > 0) {
         const existing = lookup.get(d.country) || {};
         lookup.set(d.country, {
           ...existing,
-          cyclone: (existing.cyclone || 0) + d.value,
+          naturalDisaster: (existing.naturalDisaster || 0) + d.value,
         });
       }
     });
   }
 
-  if (rainfallAnomalies && rainfallAnomalies.length > 0) {
-    rainfallAnomalies.forEach((d) => {
-      if (Math.abs(d.value) > 0) {
-        const existing = lookup.get(d.country) || {};
-        lookup.set(d.country, {
-          ...existing,
-          flood: (existing.flood || 0) + Math.abs(d.value),
-        });
-      }
-    });
-  }
-
-  if (seaLevelAnomalies && seaLevelAnomalies.length > 0) {
-    seaLevelAnomalies.forEach((d) => {
-      if (d.value > 0) {
-        const existing = lookup.get(d.country) || {};
-        lookup.set(d.country, {
-          ...existing,
-          seaLevelRise: (existing.seaLevelRise || 0) + d.value,
-        });
-      }
-    });
-  }
-
+  // ─── Economic loss from drought ───
   if (disasterEconomicLoss && disasterEconomicLoss.length > 0) {
     disasterEconomicLoss.forEach((d) => {
       if (d.value > 0) {
@@ -242,6 +230,32 @@ function buildHazardLookup() {
         lookup.set(d.country, {
           ...existing,
           drought: (existing.drought || 0) + d.value,
+        });
+      }
+    });
+  }
+
+  // ─── Flooding (rainfall anomalies) ───
+  if (rainfallAnomalies && rainfallAnomalies.length > 0) {
+    rainfallAnomalies.forEach((d) => {
+      if (Math.abs(d.value) > 0) {
+        const existing = lookup.get(d.country) || {};
+        lookup.set(d.country, {
+          ...existing,
+          flooding: (existing.flooding || 0) + Math.abs(d.value),
+        });
+      }
+    });
+  }
+
+  // ─── Sea level rise ───
+  if (seaLevelAnomalies && seaLevelAnomalies.length > 0) {
+    seaLevelAnomalies.forEach((d) => {
+      if (d.value > 0) {
+        const existing = lookup.get(d.country) || {};
+        lookup.set(d.country, {
+          ...existing,
+          seaLevelRise: (existing.seaLevelRise || 0) + d.value,
         });
       }
     });
@@ -353,9 +367,9 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
     if (impact === 0) return "";
 
     const labels: Record<string, string> = {
-      cyclone: `${Math.round(impact).toLocaleString()} affected`,
-      flood: `${impact.toFixed(1)}mm anomaly`,
+      naturalDisaster: `${Math.round(impact).toLocaleString()} people`,
       drought: `$${impact.toFixed(0)}M loss`,
+      flooding: `${impact.toFixed(1)}mm anomaly`,
       seaLevelRise: `${impact.toFixed(1)}mm rise`,
     };
 
@@ -391,12 +405,11 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
 
     let narrative = `Among ${countryCount} Pacific nations, ${countryName} records the highest composite vulnerability score of ${score}. This is ${gap}% higher than the regional average, highlighting how exposure, economic resilience and human capacity combine to shape climate risk. `;
 
-    // Add context about the hazard if active
     if (activeHazard) {
       const hazardNames: Record<string, string> = {
-        cyclone: "tropical cyclones",
-        flood: "flooding",
-        drought: "drought",
+        naturalDisaster: "people affected by natural disasters",
+        drought: "drought-related economic losses",
+        flooding: "flooding from rainfall anomalies",
         seaLevelRise: "sea-level rise"
       };
       narrative += `When filtered for ${hazardNames[activeHazard] || activeHazard} impacts, the vulnerability patterns shift, revealing which nations are most exposed to specific climate hazards. `;
@@ -420,19 +433,15 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
   return (
     <div className={`w-full ${className}`}>
       <div className="mb-6 text-center max-w-4xl mx-auto">
-
         <p className="text-center">
           To answer that question, we need to step back and compare climate vulnerability across the Pacific. While every nation faces environmental 
-          change, the capacity to absorb and recover from climate shocks differs dramatically.</p>
+          change, the capacity to absorb and recover from climate shocks differs dramatically.
+        </p>
         <p className="text-center">
-
-        
-          
           Not all Pacific nations face climate change equally.
           Countries experience similar environmental pressures, yet their ability to absorb and recover from those pressures varies dramatically.
           This uneven capacity creates large differences in vulnerability across the region.
         </p>
-        
       </div>
 
       {/* ─── MAP ─── */}
@@ -487,7 +496,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
               onMouseLeave={() => setHoveredCountry(null)}
               onClick={() => setShowInstructions(false)}
             >
-              {/* Circle */}
               <motion.circle
                 cx={x}
                 cy={y}
@@ -504,7 +512,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
                 transition={{ duration: 0.2 }}
               />
 
-              {/* Country name */}
               <motion.text
                 x={x + radius + 6}
                 y={y + 3}
@@ -518,7 +525,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
                 {country.name}
               </motion.text>
 
-              {/* Vulnerability score on hover */}
               {isHovered && !activeHazard && showScore && (
                 <motion.g
                   initial={{ opacity: 0 }}
@@ -547,7 +553,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
                 </motion.g>
               )}
 
-              {/* Impact label when hazard is active */}
               {highlighted && impactLabel && (
                 <motion.text
                   x={x + radius + 6}
@@ -603,9 +608,9 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
         {/* ─── HAZARD FILTERS ─── */}
         <g transform={`translate(30, ${hazardFilterY})`}>
           {[
-            { key: "cyclone", label: "Cyclones", color: HAZARD_COLORS.cyclone },
-            { key: "flood", label: "Flooding", color: HAZARD_COLORS.flood },
+            { key: "naturalDisaster", label: "Natural Disasters", color: HAZARD_COLORS.naturalDisaster },
             { key: "drought", label: "Drought", color: HAZARD_COLORS.drought },
+            { key: "flooding", label: "Flooding", color: HAZARD_COLORS.flooding },
             { key: "seaLevelRise", label: "Sea-level rise", color: HAZARD_COLORS.seaLevelRise },
           ].map((item, i) => {
             const xPos = hazardFilterStartX + i * 105;
@@ -630,7 +635,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
                   strokeWidth={1}
                 />
                 
-                {/* Color chip */}
                 <rect
                   x={xPos + 6}
                   y={-4}
@@ -664,7 +668,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
       >
         <rect width={WIDTH} height={TIMELINE_HEIGHT} fill="transparent" />
 
-        {/* Title */}
         <text x={0} y={20} fontSize={12} fontWeight="600" fill="#1a1a2e" letterSpacing="0.02em">
           Surface temperature anomaly across the Pacific
         </text>
@@ -673,7 +676,6 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
           Historical warming trend (1850–2025)
         </text>
 
-        {/* Trend line */}
         <path
           d={path}
           fill="none"
@@ -682,10 +684,8 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
           strokeLinecap="round"
         />
 
-        {/* Baseline */}
         <line x1={0} y1={70} x2={WIDTH} y2={70} stroke="#e2e8f0" strokeWidth={1} strokeDasharray="4 4" />
 
-        {/* Labels */}
         <text x={0} y={105} fontSize={9} fill="#64748b">
           1850
         </text>
@@ -694,26 +694,14 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
           2025
         </text>
 
-        {/* Anomaly indicator */}
         <text x={WIDTH - 45} y={32} fontSize={9} fill="#475569" fontWeight="500">
           +1.2°C
         </text>
       </svg>
 
-      {/* ─── KEY TAKEAWAY ─── */}
-      {/* <div className="mt-4 pt-3 border-t border-slate-100">
-        <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">
-          {topCountry && (
-            <span>
-              <span className="font-medium text-slate-700">{topCountry.country}</span> shows the highest
-              composite vulnerability across the Pacific, with a {stats?.gapPercent.toFixed(0)}% gap
-              between the highest and average scores across {stats?.count} countries.
-            </span>
-          )}
-        </p>
-      </div> */}
-
-     <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">Fig 6: The composite vulnerability level across the Pacific, including impact size of cyclone, flood, drought and rise in sea level</p>
+      <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">
+        Fig 6: The composite vulnerability level across the Pacific, including impact size of natural disasters, drought, flooding and sea level rise
+      </p>
       <br />
       <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">{narrativeText}</p>
       
