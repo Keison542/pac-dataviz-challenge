@@ -403,7 +403,7 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
     const gap = stats.gapPercent.toFixed(0);
     const countryCount = stats.count;
 
-    let narrative = `Among ${countryCount} Pacific nations, ${countryName} records the highest composite vulnerability score of ${score}. This is ${gap}% higher than the regional average, highlighting how exposure, economic resilience and human capacity combine to shape climate risk. `;
+    let narrative = `Although Pacific nations experience many of the same climate pressures, their ability to adapt and recover differs dramatically. This uneven resilience creates large differences in vulnerability across the region. Among ${countryCount} Pacific nations, ${countryName} records the highest composite vulnerability score of ${score}, which is ${gap}% higher than the regional average. This highlights how exposure, economic resilience, and adaptive capacity combine to shape climate risk.`;
 
     if (activeHazard) {
       const hazardNames: Record<string, string> = {
