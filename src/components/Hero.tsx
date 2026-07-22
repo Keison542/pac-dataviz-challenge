@@ -53,7 +53,9 @@ export function Hero({
           TITLE (STRENGTHENED HOOK)
       ========================== */}
       <h1 className="text-[clamp(2.2rem,5vw,3.8rem)] font-bold leading-tight text-slate-900 max-w-4xl mx-auto">
-      Climate change is not experienced equally across the Pacific.
+      {/* Climate change is not experienced equally across the Pacific. */}
+
+        Climate change amplifies inequality because Pacific nations have very different capacities to adapt.
       </h1>
 
       {/* =========================
