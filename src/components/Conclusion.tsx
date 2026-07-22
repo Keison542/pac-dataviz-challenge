@@ -31,8 +31,7 @@ export function Conclusion({
             Human exposure grows.
             <br />
             <br />
-            Climate change is already shaping everyday life across the Pacific. It is affecting crops, fisheries, tourism, coastlines, and the wellbeing of communities. These are no longer future challenges—they are happening now.
-            Understanding these impacts means looking beyond individual climate indicators. When environmental, economic, and social data are brought together, we can see how closely they are connected. This helps governments, organisations, and communities make better decisions and build stronger, more resilient societies.
+            Climate change is already shaping everyday life across the Pacific. It affects crops, fisheries, tourism, coastlines, and the wellbeing of communities. These are no longer future challenges—they are happening now. By connecting environmental, economic, and human systems, this data story shows that climate change is more than a collection of environmental indicators—it is a chain of interconnected impacts. While every Pacific nation faces rising climate pressures, their vulnerability and capacity to adapt are not the same. Understanding these differences is essential for building informed policies, targeted adaptation strategies, and a more resilient Pacific.
           </p>
         </div>
       </section>
