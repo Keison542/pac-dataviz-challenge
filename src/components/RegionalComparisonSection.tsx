@@ -16,10 +16,6 @@ export function RegionalComparisonSection({
 }: RegionalComparisonSectionProps) {
   return (
     <div className="mb-12">
-      {/* ─── Header ─── */}
-      <div className="text-center mb-6">
-      </div>
-
       {/* ─── Pacific Map ─── */}
       <div className="mt-12 w-full max-w-7xl mx-auto px-4">
         <PacificClimateStoryMap data={rankedData} />
