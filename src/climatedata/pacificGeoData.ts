@@ -247,17 +247,17 @@ export const geoData: FeatureCollection = {
     // ============================================================
     // WALLIS AND FUTUNA
     // ============================================================
-    // ...Array.from({ length: 31 }, (_, i): PacificFeature => ({
-    //   type: "Feature",
-    //   properties: { name: "Wallis and Futuna" },
-    //   geometry: {
-    //     type: "MultiPolygon",
-    //     coordinates: [
-    //       [[[-178.1, -13.3], [-178.0, -13.3], [-178.0, -13.4], [-178.1, -13.4], [-178.1, -13.3]]],
-    //     ],
-    //   },
-    //   id: `WLF-${i}`,
-    // })),
+    ...Array.from({ length: 31 }, (_, i): PacificFeature => ({
+      type: "Feature",
+      properties: { name: "Wallis and Futuna" },
+      geometry: {
+        type: "MultiPolygon",
+        coordinates: [
+          [[[-178.1, -13.3], [-178.0, -13.3], [-178.0, -13.4], [-178.1, -13.4], [-178.1, -13.3]]],
+        ],
+      },
+      id: `WLF-${i}`,
+    })),
 
     // ============================================================
     // MARSHALL ISLANDS
