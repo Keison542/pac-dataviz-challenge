@@ -694,21 +694,17 @@ export function PacificClimateStoryMap({ data, selectedCountry, className = "" }
       </svg>
 
       {/* ─── KEY TAKEAWAY ─── */}
-      <div className="mt-4 pt-3 border-t border-slate-100">
+      {/* <div className="mt-4 pt-3 border-t border-slate-100">
         <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">
           {topCountry && (
             <span>
               <span className="font-medium text-slate-700">{topCountry.country}</span> shows the highest
               composite vulnerability across the Pacific, with a {stats?.gapPercent.toFixed(0)}% gap
               between the highest and average scores across {stats?.count} countries.
-
-
-
-              
             </span>
           )}
         </p>
-      </div>
+      </div> */}
 
      <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">Fig 6: The composite vulnerability level across the Pacific, including impact size of cyclone, flood, drought and rise in sea level</p>
       <br />
