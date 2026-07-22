@@ -61,10 +61,6 @@ export default function Home() {
   return (
     <main className="bg-white text-slate-900 overflow-x-hidden">
 
-      {/* ========================================================= */}
-      /* HERO */
-      {/* ========================================================= */}
-
       <section className="min-h-screen flex flex-col justify-center">
         <div className="max-w-[1200px] mx-auto px-6 w-full">
           <Hero
@@ -75,10 +71,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ========================================================= */}
-      /* CLIMATE SIGNAL INTRO */
-      {/* ========================================================= */}
-
+   
       <section className="min-h-[50vh] flex items-center justify-center px-6">
         <div className="max-w-4xl text-center">
           <h2 className="text-4xl md:text-6xl font-light leading-tight">
@@ -89,9 +82,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ========================================================= */}
-      /* CLIMATE DASHBOARD */
-      {/* ========================================================= */}
 
       {hasClimateData && (
         <motion.section
@@ -109,10 +99,7 @@ export default function Home() {
         </motion.section>
       )}
 
-      {/* ========================================================= */}
-      /* TEMPERATURE + SEA LEVEL */
-      {/* ========================================================= */}
-
+  
       {hasClimateData && (
         <motion.section
           variants={fadeUp}
@@ -130,9 +117,7 @@ export default function Home() {
         </motion.section>
       )}
 
-      {/* ========================================================= */}
-      /* HUMAN IMPACT INTRO */
-      {/* ========================================================= */}
+
 
       <section className="min-h-[50vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
@@ -147,9 +132,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ========================================================= */}
-      /* BIG NUMBER */
-      {/* ========================================================= */}
 
       <section className="min-h-[40vh] flex items-center justify-center px-6 border-y border-slate-100">
         <div className="text-center">
@@ -163,9 +145,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ========================================================= */}
-      /* HUMAN + ECONOMIC */
-      {/* ========================================================= */}
+ 
 
       {(hasEconomicData || hasHumanData || hasSocioeconomicData) && (
         <motion.section
@@ -187,9 +167,7 @@ export default function Home() {
         </motion.section>
       )}
 
-      {/* ========================================================= */}
-      /* REGIONAL CONTEXT INTRO */
-      {/* ========================================================= */}
+
 
       <section className="min-h-[50vh] flex items-center justify-center px-6 border-t border-slate-100">
         <div className="max-w-5xl text-center">
@@ -199,9 +177,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ========================================================= */}
-      /* REGIONAL COMPARISON */
-      {/* ========================================================= */}
+   
 
       {hasRegionalData && (
         <motion.section
@@ -220,9 +196,7 @@ export default function Home() {
         </motion.section>
       )}
 
-      {/* ========================================================= */}
-      /* SYSTEM INTRO - UPDATED */
-      {/* ========================================================= */}
+ 
 
       <section className="min-h-[50vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
@@ -239,9 +213,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ========================================================= */}
-      /* CAUSAL CHAIN */
-      {/* ========================================================= */}
+  
 
       {hasCausalData && (
         <motion.section
@@ -260,9 +232,7 @@ export default function Home() {
         </motion.section>
       )}
 
-      {/* ========================================================= */}
-      /* CONCLUSION */
-      {/* ========================================================= */}
+   
 
       {(hasClimateData ||
         hasEconomicData ||
@@ -280,9 +250,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* ========================================================= */}
-      /* FOOTER */
-      {/* ========================================================= */}
+    
 
       <footer className="text-center py-12 border-t border-slate-200 text-xs text-slate-400">
         <p>
