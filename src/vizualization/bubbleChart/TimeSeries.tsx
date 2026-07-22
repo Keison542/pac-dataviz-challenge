@@ -106,18 +106,26 @@ export function TimeSeriesDashboard({
       ? `${(v / 1_000).toFixed(0)}K`
       : v.toFixed(1);
 
+  // ─── Check if metric has data ───
+  const hasDataForMetric = useCallback((metricKey: string) => {
+    return data.some((d) => (d[metricKey as keyof DataPoint] as number || 0) > 0);
+  }, [data]);
+
+  // ─── Get visible metrics (only those with data) ───
+  const visibleMetrics = useMemo(() => {
+    return METRICS.filter((m) => hasDataForMetric(m.key));
+  }, [hasDataForMetric]);
+
   // ─── Get x-ticks dynamically based on screen size ───
   const getYearTicks = useCallback((years: number[]) => {
     const min = Math.min(...years);
     const max = Math.max(...years);
     
-    // Adjust tick count based on screen size
     let tickCount = 5;
     if (isMobile) tickCount = 3;
     else if (isTablet) tickCount = 4;
     
     const step = Math.max(1, Math.floor((max - min) / tickCount));
-    // Round to nearest 5 or 10
     const roundedStep = Math.ceil(step / 5) * 5;
     
     const ticks: number[] = [];
@@ -139,16 +147,26 @@ export function TimeSeriesDashboard({
     );
   }
 
+  // If no metrics have data, show a message
+  if (visibleMetrics.length === 0) {
+    return (
+      <div ref={containerRef} className={`w-full ${className}`}>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-slate-400 text-sm">No data available</p>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Calculate card dimensions ───
   const gap = isMobile ? 8 : 16;
   const totalGap = gap * 2;
   
-  // Responsive card width calculation
-  let cardsPerRow = 3;
+  let cardsPerRow = Math.min(visibleMetrics.length, 3);
   if (isMobile) cardsPerRow = 1;
-  else if (isTablet) cardsPerRow = 2;
+  else if (isTablet && cardsPerRow > 2) cardsPerRow = 2;
   
-  const cardWidth = Math.max((width - totalGap) / cardsPerRow, isMobile ? 280 : 180);
+  const cardWidth = Math.max((width - (cardsPerRow - 1) * gap) / cardsPerRow, isMobile ? 280 : 180);
   const cardHeight = height > 0 ? height : (isMobile ? 250 : 220);
 
   const years = data.map((d) => d.year);
@@ -160,7 +178,6 @@ export function TimeSeriesDashboard({
     const values = data.map((d) => d[metric.key as keyof DataPoint] as number || 0);
     const maxVal = Math.max(...values) * 1.15 || 1;
 
-    // Responsive margins
     const margin = isMobile 
       ? { top: 12, right: 4, bottom: 25, left: 38 }
       : { top: 20, right: 8, bottom: 30, left: 48 };
@@ -191,9 +208,8 @@ export function TimeSeriesDashboard({
 
     // ─── Mouse handlers ───
     const handleMouseMove = (e: React.MouseEvent<SVGGElement>) => {
-      if (isMobile) return; // Disable hover on mobile
+      if (isMobile) return;
       
-      const rect = e.currentTarget.getBoundingClientRect();
       const svgRect = e.currentTarget.closest('svg')?.getBoundingClientRect();
       if (!svgRect) return;
 
@@ -237,10 +253,8 @@ export function TimeSeriesDashboard({
       }
     };
 
-    // ─── Font sizes ───
     const fontSize = isMobile ? 6 : 7;
     const labelFontSize = isMobile ? 10 : 12;
-    const titleFontSize = isMobile ? 10 : 12;
 
     return (
       <div
@@ -439,9 +453,9 @@ export function TimeSeriesDashboard({
           </p>
         </div>
 
-        {/* ─── THREE CHARTS IN ONE ROW ─── */}
+        {/* ─── CHARTS IN ROW (only those with data) ─── */}
         <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-${isMobile ? '2' : '4'} justify-center items-stretch`}>
-          {METRICS.map((metric, index) => renderMetricChart(metric, index))}
+          {visibleMetrics.map((metric, index) => renderMetricChart(metric, index))}
         </div>
 
         {/* ─── TOOLTIP ─── */}
