@@ -136,11 +136,11 @@ export default function Home() {
       <section className="min-h-[40vh] flex items-center justify-center px-6 border-y border-slate-100">
         <div className="text-center">
           <div className="text-6xl md:text-8xl font-bold">
-            {peopleTotal.toLocaleString()} lives disrupted
+            {peopleTotal.toLocaleString()} 
           </div>
 
           <div className="mt-4 text-xl text-slate-500">
-            by climate-related disasters in {selectedCountry}. 
+            lives disrupted by climate-related disasters in {selectedCountry}. 
           </div>
         </div>
       </section>
