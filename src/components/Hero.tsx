@@ -126,7 +126,16 @@ export function Hero({
               Developed using <strong>Next.js, React, TypeScript, and D3.js</strong>, the
               visualization presents interactive charts and maps that highlight climate
               trends, environmental risks, and vulnerability across{" "}
-              <strong>{countries.length} Pacific Island countries</strong>.
+              <strong>{countries.length} Pacific Island countries</strong>. The source code is available on{" "}
+          <a
+            href="https://github.com/Keison542/pac-dataviz-challenge"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-600"
+          >
+            GitHub
+          </a>
+          .
             </p>
            <div className="flex flex-wrap gap-3 justify-center text-[11px]">
             <a
