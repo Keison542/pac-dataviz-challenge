@@ -277,27 +277,21 @@ export default function Home() {
           .
         </p>
       
-        <p className="max-w-4xl mx-auto mt-4 leading-relaxed">
-          The data used in this project comes from the{" "}
-          <strong>Pacific Data Hub</strong> and other public climate and development
-          data sources. The datasets are provided in the captions of each chart and
-          visualization.
-        </p>
-      
         <p className="mt-4">
           <strong>
-            Pacific Dataviz Challenge 2026 · {countries.length} Pacific Island
-            countries analyzed
+            Pacific Interactive Dataviz Challenge 2026 is created by{" "}
+          <a
+            href="https://www.linkedin.com/in/keison-tipiou-7a817a6a/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-600"
+          >
+            <strong>Keison Tipiou</strong>
+          </a>{" "}  for {countries.length} Pacific Island
+            countries.
           </strong>
         </p>
       
-        <p className="mt-4">
-          <strong>Pacific Climate Observatory · Data Story 1850–2025</strong> is a
-          data visualization project created by <strong>Keison Tipiou</strong> for
-          the <strong>Pacific Data Visualization Challenge</strong>. The project
-          shows how climate change, vulnerability, and human impacts have shaped
-          Pacific communities over time.
-        </p>
       </footer>
     </main>
   );
