@@ -254,8 +254,16 @@ export default function Home() {
 
       <footer className="text-center py-12 border-t border-slate-200 text-xs text-slate-400">
         <p>
-          Pacific Dataviz Challenge 2026 · {countries.length} Pacific Island
-          countries analyzed
+          This project is built using **Next.js, React, TypeScript, and D3.js** to create interactive climate data visualizations and tell the story of climate change in the Pacific region. The charts and maps explore climate trends, environmental risks, vulnerability, and their impacts across **{countries.length} Pacific Island countries**.
+
+          The project uses **Tailwind CSS** for styling and reusable React components to create a simple and responsive user experience. The source code is available on **GitHub**.
+          
+          The data used in this project comes from the **Pacific Data Hub** and other public climate and development data sources. The datasets are provided in the captions of each chart and visualization.
+          
+          **Pacific Dataviz Challenge 2026 · {countries.length} Pacific Island countries analyzed**
+          
+          **Pacific Climate Observatory · Data Story 1850–2025** is a data visualization project created by **Keison Tipiou** for the **Pacific Data Visualization Challenge**. The project shows how climate change, vulnerability, and human impacts have shaped Pacific communities over time.
+
         </p>
       </footer>
     </main>
