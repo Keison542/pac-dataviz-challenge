@@ -119,14 +119,14 @@ export function Hero({
 
            <p>
               This project combines open data from the{" "}
-              <strong>Pacific Data Hub</strong> and other sources to explore climate
+              Pacific Data Hub to explore climate
               patterns, economic factors, and the human impacts of climate change in the
               Pacific region.
               
-              Developed using <strong>Next.js, React, TypeScript, and D3.js</strong>, the
+              Developed using Next.js, React, TypeScript, and D3.js, the
               visualization presents interactive charts and maps that highlight climate
               trends, environmental risks, and vulnerability across{" "}
-              <strong>{countries.length} Pacific Island countries</strong>. The source code is available on{" "}
+              {countries.length} Pacific Island countries. The source code is available on{" "}
           <a
             href="https://github.com/Keison542/pac-dataviz-challenge"
             target="_blank"
