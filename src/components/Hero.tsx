@@ -117,11 +117,17 @@ export function Hero({
 
           <div className="mt-4 text-slate-500 leading-relaxed space-y-3">
 
-            <p>
-              This visualization uses open datasets from the Pacific Data Hub,
-              covering climate trends, economic indicators, and population impacts.
+           <p>
+              This project combines open data from the{" "}
+              <strong>Pacific Data Hub</strong> and other sources to explore climate
+              patterns, economic factors, and the human impacts of climate change in the
+              Pacific region.
+              
+              Developed using <strong>Next.js, React, TypeScript, and D3.js</strong>, the
+              visualization presents interactive charts and maps that highlight climate
+              trends, environmental risks, and vulnerability across{" "}
+              <strong>{countries.length} Pacific Island countries</strong>.
             </p>
-
            <div className="flex flex-wrap gap-3 justify-center text-[11px]">
             <a
               href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.SST_ANOM.&pd=,&to[TIME_PERIOD]=false"
