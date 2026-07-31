@@ -71,7 +71,8 @@ export default function Home() {
         </div>
       </section>
 
-   
+      <hr className="border-t border-slate-100" />
+
       <section className="min-h-[50vh] flex items-center justify-center px-6">
         <div className="max-w-4xl text-center">
           <h2 className="text-4xl md:text-6xl font-light leading-tight">
@@ -81,6 +82,8 @@ export default function Home() {
           </h2>
         </div>
       </section>
+
+      <hr className="border-t border-slate-100" />
 
 
       {hasClimateData && (
@@ -99,6 +102,7 @@ export default function Home() {
         </motion.section>
       )}
 
+      <hr className="border-t border-slate-100" />
   
       {hasClimateData && (
         <motion.section
@@ -117,6 +121,7 @@ export default function Home() {
         </motion.section>
       )}
 
+      <hr className="border-t border-slate-100" />
 
 
       <section className="min-h-[50vh] flex items-center justify-center px-6">
@@ -132,6 +137,8 @@ export default function Home() {
         </div>
       </section>
 
+      <hr className="border-t border-slate-100" />
+
 
       <section className="min-h-[40vh] flex items-center justify-center px-6 border-y border-slate-100">
         <div className="text-center">
@@ -145,7 +152,8 @@ export default function Home() {
         </div>
       </section>
 
- 
+      <hr className="border-t border-slate-100" />
+
 
       {(hasEconomicData || hasHumanData || hasSocioeconomicData) && (
         <motion.section
@@ -167,6 +175,7 @@ export default function Home() {
         </motion.section>
       )}
 
+      <hr className="border-t border-slate-100" />
 
 
       <section className="min-h-[50vh] flex items-center justify-center px-6 border-t border-slate-100">
@@ -177,8 +186,9 @@ export default function Home() {
         </div>
       </section>
 
-   
+      <hr className="border-t border-slate-100" />
 
+   
       {hasRegionalData && (
         <motion.section
           variants={fadeUp}
@@ -196,7 +206,8 @@ export default function Home() {
         </motion.section>
       )}
 
- 
+      <hr className="border-t border-slate-100" />
+
 
       <section className="min-h-[50vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
@@ -213,8 +224,9 @@ export default function Home() {
         </div>
       </section>
 
-  
+      <hr className="border-t border-slate-100" />
 
+  
       {hasCausalData && (
         <motion.section
           variants={fadeUp}
@@ -232,8 +244,9 @@ export default function Home() {
         </motion.section>
       )}
 
-   
+      <hr className="border-t border-slate-100" />
 
+   
       {(hasClimateData ||
         hasEconomicData ||
         hasHumanData ||
@@ -250,8 +263,9 @@ export default function Home() {
         </section>
       )}
 
-    
+      <hr className="border-t border-slate-100" />
 
+    
       <footer className="text-center py-12 border-t border-slate-200 text-xs text-slate-400">
         <p className="mt-4">
           <strong>
