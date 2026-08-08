@@ -1,710 +1,1387 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useEffect } from "react";
 import { motion } from "framer-motion";
+
 import { geoData } from "@/climatedata/pacificGeoData";
 import { affectedPersons } from "@/climatedata/human_consequence/number_of_persons_affected";
 import { disasterEconomicLoss } from "@/climatedata/economic_consequence/direct_disaster_economic_loss";
 import { seaLevelAnomalies } from "@/climatedata/climate_drivers/sea_level_anomalies";
 import { rainfallAnomalies } from "@/climatedata/climate_drivers/rainfall_anomalies";
 
+/* -------------------------------------------------------------------------- */
+/*                                CONSTANTS                                   */
+/* -------------------------------------------------------------------------- */
+
 const WIDTH = 1400;
 const HEIGHT = 700;
-const TIMELINE_HEIGHT = 120;
 
-// ─── Types ───
+const MAP_PADDING = {
+  top: 80,
+  right: 300,
+  bottom: 110,
+  left: 40,
+};
+
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
+
 type RecordType = {
   country: string;
   value: number;
+  year?: number;
 };
 
 type Props = {
   data?: {
-    economicLoss: RecordType[];
-    cropYield: RecordType[];
-    touristArrivals: RecordType[];
-    livestockYield: RecordType[];
-    climateAlteringLand: RecordType[];
-    populationGrowth: RecordType[];
-    affectedPersons: RecordType[];
+    economicLoss?: RecordType[];
+    cropYield?: RecordType[];
+    touristArrivals?: RecordType[];
+    livestockYield?: RecordType[];
+    climateAlteringLand?: RecordType[];
+    populationGrowth?: RecordType[];
+    affectedPersons?: RecordType[];
+
+    /*
+     * Optional climate-driver datasets.
+     *
+     * The component does not require these to compile.
+     * If your parent already has these datasets, pass them here.
+     */
+    surfaceTempAnomaly?: RecordType[];
+    seaSurfaceTempAnomaly?: RecordType[];
+    precipitationAnomaly?: RecordType[];
+    seaLevelAnomaly?: RecordType[];
   };
+
   selectedCountry?: string;
   className?: string;
 };
 
-// ─── Metric Configs ───
-const METRIC_CONFIGS = {
-  economicLoss: {
-    label: "Economic Loss",
-    unit: "USD",
-    format: (v: number) => {
-      const absV = Math.abs(v);
-      if (absV >= 1_000_000_000) return `$${(absV / 1_000_000_000).toFixed(1)}B`;
-      if (absV >= 1_000_000) return `$${(absV / 1_000_000).toFixed(1)}M`;
-      if (absV >= 1_000) return `$${(absV / 1_000).toFixed(1)}K`;
-      return `$${absV}`;
-    }
-  },
-  cropYield: {
-    label: "Crop Yield",
-    unit: "t/ha",
-    format: (v: number) => `${Math.abs(v).toFixed(1)} t/ha`
-  },
-  touristArrivals: {
-    label: "Tourist Arrivals",
-    unit: "visitors",
-    format: (v: number) => `${Math.abs(v).toLocaleString()} visitors`
-  },
-  livestockYield: {
-    label: "Livestock Yield",
-    unit: "tons",
-    format: (v: number) => `${Math.abs(v).toLocaleString()} tons`
-  },
-  climateAlteringLand: {
-    label: "Climate-Altering Land",
-    unit: "ha",
-    format: (v: number) => `${Math.abs(v).toLocaleString()} ha`
-  },
-  populationGrowth: {
-    label: "Population Growth",
-    unit: "%",
-    format: (v: number) => `${Math.abs(v).toFixed(1)}%`
-  },
-  affectedPersons: {
-    label: "People Affected",
+/* -------------------------------------------------------------------------- */
+/*                             INDICATOR TYPES                                */
+/* -------------------------------------------------------------------------- */
+
+type IndicatorKey =
+  | "peopleAffected"
+  | "economicLoss"
+  | "rainfallAnomaly"
+  | "seaLevelAnomaly"
+  | "surfaceTemperature"
+  | "seaSurfaceTemperature";
+
+type IndicatorConfig = {
+  label: string;
+  shortLabel: string;
+  description: string;
+  unit: string;
+  color: string;
+  direction: "higher" | "signed";
+};
+
+const INDICATORS: Record<IndicatorKey, IndicatorConfig> = {
+  peopleAffected: {
+    label: "People affected",
+    shortLabel: "People",
+    description:
+      "Recorded people affected by natural disasters during the period represented in the dataset.",
     unit: "people",
-    format: (v: number) => `${Math.abs(v).toLocaleString()} people`
-  }
+    color: "#7c3aed",
+    direction: "higher",
+  },
+
+  economicLoss: {
+    label: "Disaster-related economic losses",
+    shortLabel: "Economic loss",
+    description:
+      "Recorded direct economic losses associated with disasters. This indicator is not treated as drought-specific.",
+    unit: "USD",
+    color: "#ea580c",
+    direction: "higher",
+  },
+
+  rainfallAnomaly: {
+    label: "Rainfall anomaly",
+    shortLabel: "Rainfall",
+    description:
+      "Departure from the rainfall reference period represented in the source data. A rainfall anomaly is not itself a measure of flooding.",
+    unit: "mm",
+    color: "#2563eb",
+    direction: "signed",
+  },
+
+  seaLevelAnomaly: {
+    label: "Sea-level anomaly",
+    shortLabel: "Sea level",
+    description:
+      "Sea-level departure from the reference level represented in the source data. This is reported as an anomaly rather than cumulative sea-level rise.",
+    unit: "m",
+    color: "#dc2626",
+    direction: "signed",
+  },
+
+  surfaceTemperature: {
+    label: "Surface temperature anomaly",
+    shortLabel: "Surface temperature",
+    description:
+      "Surface temperature anomaly relative to the reference period represented in the source data.",
+    unit: "°C",
+    color: "#be123c",
+    direction: "signed",
+  },
+
+  seaSurfaceTemperature: {
+    label: "Sea-surface temperature anomaly",
+    shortLabel: "Sea-surface temperature",
+    description:
+      "Sea-surface temperature anomaly relative to the reference period represented in the source data.",
+    unit: "°C",
+    color: "#0891b2",
+    direction: "signed",
+  },
 };
 
-const METRIC_KEYS = Object.keys(METRIC_CONFIGS);
+/* -------------------------------------------------------------------------- */
+/*                              GEO FUNCTIONS                                 */
+/* -------------------------------------------------------------------------- */
 
-// ─── Color Scale for Vulnerability ───
-const VULNERABILITY_COLORS = {
-  high: "#1a1a2e",
-  medium: "#4a4a6a",
-  low: "#94a3b8",
-  none: "#e2e8f0"
-};
-
-// ─── Hazard Colors ───
-const HAZARD_COLORS = {
-  naturalDisaster: "#7c3aed",    // People affected by natural disasters
-  drought: "#ea580c",             // Economic loss from drought
-  flooding: "#2563eb",            // Rainfall anomalies (flooding)
-  seaLevelRise: "#dc2626",        // Sea level anomalies
-};
-
-// ─── Projection Functions ───
 const projectLon = (lon: number) => {
-  let x = lon;
-  if (x < 120) x += 360;
-  return ((x - 120) / 120) * WIDTH;
+  /*
+   * Pacific-centered longitude projection.
+   *
+   * 120°E → left edge
+   * 240°E / 120°W → right edge
+   */
+  let normalizedLon = lon;
+
+  if (normalizedLon < 120) {
+    normalizedLon += 360;
+  }
+
+  return (
+    MAP_PADDING.left +
+    ((normalizedLon - 120) / 120) *
+      (WIDTH - MAP_PADDING.left - MAP_PADDING.right)
+  );
 };
 
 const projectLat = (lat: number) => {
-  return HEIGHT - ((lat + 35) / 60) * HEIGHT;
+  return (
+    HEIGHT -
+    MAP_PADDING.bottom -
+    ((lat + 35) / 60) *
+      (HEIGHT - MAP_PADDING.top - MAP_PADDING.bottom)
+  );
 };
 
-function flattenCoordinates(geometry: any, result: number[][] = []): number[][] {
+function flattenCoordinates(
+  geometry: any,
+  result: number[][] = []
+): number[][] {
   if (!geometry) return result;
+
   if (geometry.type === "Polygon") {
-    geometry.coordinates.forEach((ring: number[][]) =>
-      ring.forEach((c) => result.push(c))
-    );
+    geometry.coordinates.forEach((ring: number[][]) => {
+      ring.forEach((coordinate) => result.push(coordinate));
+    });
   }
+
   if (geometry.type === "MultiPolygon") {
-    geometry.coordinates.forEach((poly: number[][][]) =>
-      poly.forEach((ring: number[][]) =>
-        ring.forEach((c) => result.push(c))
-      )
-    );
+    geometry.coordinates.forEach((polygon: number[][][]) => {
+      polygon.forEach((ring: number[][]) => {
+        ring.forEach((coordinate) => result.push(coordinate));
+      });
+    });
   }
+
   return result;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                          COUNTRY CENTROIDS                                 */
+/* -------------------------------------------------------------------------- */
+
 function buildCentroids() {
   const grouped = new Map<string, number[][]>();
+
   geoData.features.forEach((feature: any) => {
     const name = feature.properties?.name;
+
     if (!name) return;
+
     const existing = grouped.get(name) || [];
-    grouped.set(name, existing.concat(flattenCoordinates(feature.geometry)));
-  });
-  return Array.from(grouped.entries()).map(([name, coords]) => ({
-    name,
-    lon: coords.reduce((s, c) => s + c[0], 0) / coords.length,
-    lat: coords.reduce((s, c) => s + c[1], 0) / coords.length,
-  }));
-}
 
-// ─── Normalize function ───
-const normalize = (value: number, max: number) => {
-  if (max === 0) return 0;
-  return Math.min(value / max, 1);
-};
-
-// ─── Build country data from props ───
-function buildCountryData(data: Props['data']) {
-  const map = new Map<string, Record<string, number>>();
-
-  if (!data) return map;
-
-  METRIC_KEYS.forEach((key) => {
-    const records = data[key as keyof Props['data']] || [];
-    records.forEach((d) => {
-      if (!map.has(d.country)) {
-        map.set(d.country, {});
-      }
-      const entry = map.get(d.country)!;
-      entry[key] = (entry[key] || 0) + d.value;
-    });
+    grouped.set(
+      name,
+      existing.concat(flattenCoordinates(feature.geometry))
+    );
   });
 
-  return map;
+  return Array.from(grouped.entries())
+    .map(([name, coordinates]) => {
+      if (!coordinates.length) {
+        return {
+          name,
+          lon: 0,
+          lat: 0,
+        };
+      }
+
+      return {
+        name,
+        lon:
+          coordinates.reduce(
+            (sum, coordinate) => sum + Number(coordinate[0]),
+            0
+          ) / coordinates.length,
+        lat:
+          coordinates.reduce(
+            (sum, coordinate) => sum + Number(coordinate[1]),
+            0
+          ) / coordinates.length,
+      };
+    })
+    .filter(
+      (country) =>
+        Number.isFinite(country.lon) &&
+        Number.isFinite(country.lat)
+    );
 }
 
-// ─── Compute composite scores ───
-function computeCompositeScores(countryData: Map<string, Record<string, number>>) {
-  if (countryData.size === 0) return [];
+/* -------------------------------------------------------------------------- */
+/*                              DATA HELPERS                                  */
+/* -------------------------------------------------------------------------- */
 
-  const maxValues: Record<string, number> = {};
-  METRIC_KEYS.forEach((key) => {
-    let max = 0;
-    for (const [_, values] of countryData) {
-      const val = values[key] || 0;
-      if (val > max) max = val;
-    }
-    maxValues[key] = max || 1;
+/**
+ * Sum values.
+ *
+ * Used for:
+ * - people affected
+ * - economic losses
+ */
+function sumValues(records: RecordType[] = []) {
+  return records.reduce((sum, record) => {
+    const value = Number(record.value);
+
+    return Number.isFinite(value) ? sum + value : sum;
+  }, 0);
+}
+
+/**
+ * Mean values.
+ *
+ * Used for:
+ * - rainfall anomaly
+ * - sea-level anomaly
+ * - temperature anomalies
+ *
+ * We deliberately do NOT sum anomalies across years because
+ * doing so would make the resulting value difficult to interpret.
+ */
+function meanValues(records: RecordType[] = []) {
+  const values = records
+    .map((record) => Number(record.value))
+    .filter((value) => Number.isFinite(value));
+
+  if (!values.length) return 0;
+
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+/**
+ * Latest observation.
+ *
+ * Useful when a climate dataset represents an evolving physical
+ * measurement and the most recent value is more meaningful than
+ * averaging the whole historical period.
+ */
+function latestValue(records: RecordType[] = []) {
+  if (!records.length) return 0;
+
+  const sorted = [...records].sort((a, b) => {
+    const yearA = a.year ?? -Infinity;
+    const yearB = b.year ?? -Infinity;
+
+    return yearA - yearB;
   });
 
-  const results: Array<{ country: string; values: Record<string, number>; compositeScore: number }> = [];
-  for (const [country, values] of countryData) {
-    let composite = 0;
-    METRIC_KEYS.forEach((key) => {
-      const raw = values[key] || 0;
-      composite += normalize(raw, maxValues[key]);
-    });
-    results.push({ country, values, compositeScore: composite });
-  }
+  const latest = sorted[sorted.length - 1];
 
-  return results.sort((a, b) => b.compositeScore - a.compositeScore);
+  return Number.isFinite(Number(latest.value))
+    ? Number(latest.value)
+    : 0;
 }
 
-// ─── Build hazard lookup from imported data ───
-// CORRECTED MAPPINGS:
-// - affectedPersons → People affected by natural disasters (general)
-// - disasterEconomicLoss → Economic loss from drought
-// - rainfallAnomalies → Flooding (rainfall anomalies)
-// - seaLevelAnomalies → Sea level rise
-function buildHazardLookup() {
-  const lookup = new Map<
-    string,
-    { 
-      naturalDisaster?: number;  // People affected
-      drought?: number;          // Economic loss
-      flooding?: number;         // Rainfall anomalies
-      seaLevelRise?: number;     
-    }
-  >();
+/**
+ * Create country lookup from a dataset.
+ */
+function groupByCountry(records: RecordType[] = []) {
+  const lookup = new Map<string, RecordType[]>();
 
-  // ─── People affected by natural disasters (general) ───
-  if (affectedPersons && affectedPersons.length > 0) {
-    affectedPersons.forEach((d) => {
-      if (d.value > 0) {
-        const existing = lookup.get(d.country) || {};
-        lookup.set(d.country, {
-          ...existing,
-          naturalDisaster: (existing.naturalDisaster || 0) + d.value,
-        });
-      }
-    });
-  }
+  records.forEach((record) => {
+    if (!record?.country) return;
 
-  // ─── Economic loss from drought ───
-  if (disasterEconomicLoss && disasterEconomicLoss.length > 0) {
-    disasterEconomicLoss.forEach((d) => {
-      if (d.value > 0) {
-        const existing = lookup.get(d.country) || {};
-        lookup.set(d.country, {
-          ...existing,
-          drought: (existing.drought || 0) + d.value,
-        });
-      }
-    });
-  }
+    const existing = lookup.get(record.country) || [];
 
-  // ─── Flooding (rainfall anomalies) ───
-  if (rainfallAnomalies && rainfallAnomalies.length > 0) {
-    rainfallAnomalies.forEach((d) => {
-      if (Math.abs(d.value) > 0) {
-        const existing = lookup.get(d.country) || {};
-        lookup.set(d.country, {
-          ...existing,
-          flooding: (existing.flooding || 0) + Math.abs(d.value),
-        });
-      }
-    });
-  }
+    existing.push(record);
 
-  // ─── Sea level rise ───
-  if (seaLevelAnomalies && seaLevelAnomalies.length > 0) {
-    seaLevelAnomalies.forEach((d) => {
-      if (d.value > 0) {
-        const existing = lookup.get(d.country) || {};
-        lookup.set(d.country, {
-          ...existing,
-          seaLevelRise: (existing.seaLevelRise || 0) + d.value,
-        });
-      }
-    });
-  }
+    lookup.set(record.country, existing);
+  });
 
   return lookup;
 }
 
-function getMaxImpact(hazardLookup: Map<string, any>, hazardKey: string): number {
-  let max = 0;
-  for (const [_, data] of hazardLookup) {
-    const val = data[hazardKey] || 0;
-    if (val > max) max = val;
+/* -------------------------------------------------------------------------- */
+/*                          INDICATOR VALUE MAP                               */
+/* -------------------------------------------------------------------------- */
+
+type CountryIndicatorValues = {
+  peopleAffected: number;
+  economicLoss: number;
+  rainfallAnomaly: number;
+  seaLevelAnomaly: number;
+  surfaceTemperature: number;
+  seaSurfaceTemperature: number;
+};
+
+function buildIndicatorData(
+  data: Props["data"]
+): Map<string, CountryIndicatorValues> {
+  const result = new Map<string, CountryIndicatorValues>();
+
+  const datasets: Array<{
+    key: keyof CountryIndicatorValues;
+    records: RecordType[];
+    method: "sum" | "mean" | "latest";
+  }> = [
+    {
+      key: "peopleAffected",
+      records:
+        data?.affectedPersons && data.affectedPersons.length
+          ? data.affectedPersons
+          : affectedPersons,
+      method: "sum",
+    },
+
+    {
+      key: "economicLoss",
+      records:
+        data?.economicLoss && data.economicLoss.length
+          ? data.economicLoss
+          : disasterEconomicLoss,
+      method: "sum",
+    },
+
+    {
+      key: "rainfallAnomaly",
+      records:
+        data?.precipitationAnomaly && data.precipitationAnomaly.length
+          ? data.precipitationAnomaly
+          : rainfallAnomalies,
+      method: "mean",
+    },
+
+    {
+      key: "seaLevelAnomaly",
+      records:
+        data?.seaLevelAnomaly && data.seaLevelAnomaly.length
+          ? data.seaLevelAnomaly
+          : seaLevelAnomalies,
+      method: "latest",
+    },
+
+    {
+      key: "surfaceTemperature",
+      records: data?.surfaceTempAnomaly || [],
+      method: "mean",
+    },
+
+    {
+      key: "seaSurfaceTemperature",
+      records: data?.seaSurfaceTempAnomaly || [],
+      method: "mean",
+    },
+  ];
+
+  datasets.forEach(({ key, records, method }) => {
+    const grouped = groupByCountry(records);
+
+    grouped.forEach((countryRecords, country) => {
+      const current = result.get(country) || {
+        peopleAffected: 0,
+        economicLoss: 0,
+        rainfallAnomaly: 0,
+        seaLevelAnomaly: 0,
+        surfaceTemperature: 0,
+        seaSurfaceTemperature: 0,
+      };
+
+      let value = 0;
+
+      if (method === "sum") {
+        value = sumValues(countryRecords);
+      }
+
+      if (method === "mean") {
+        value = meanValues(countryRecords);
+      }
+
+      if (method === "latest") {
+        value = latestValue(countryRecords);
+      }
+
+      current[key] = value;
+
+      result.set(country, current);
+    });
+  });
+
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                         FORMATTING FUNCTIONS                              */
+/* -------------------------------------------------------------------------- */
+
+function formatNumber(value: number) {
+  return Math.round(value).toLocaleString();
+}
+
+function formatEconomicLoss(value: number) {
+  const absolute = Math.abs(value);
+
+  if (absolute >= 1_000_000_000) {
+    return `$${(absolute / 1_000_000_000).toFixed(1)}B`;
   }
-  return max || 1;
+
+  if (absolute >= 1_000_000) {
+    return `$${(absolute / 1_000_000).toFixed(1)}M`;
+  }
+
+  if (absolute >= 1_000) {
+    return `$${(absolute / 1_000).toFixed(1)}K`;
+  }
+
+  return `$${absolute.toFixed(0)}`;
 }
 
-// ─── Get vulnerability level ───
-function getVulnerabilityLevel(score: number, maxScore: number): 'high' | 'medium' | 'low' | 'none' {
-  if (score === 0) return 'none';
-  const percentage = score / maxScore;
-  if (percentage >= 0.7) return 'high';
-  if (percentage >= 0.4) return 'medium';
-  return 'low';
-}
+function formatIndicatorValue(
+  value: number,
+  indicator: IndicatorKey
+) {
+  switch (indicator) {
+    case "peopleAffected":
+      return `${formatNumber(value)} people`;
 
-function getColorForScore(score: number, maxScore: number): string {
-  const level = getVulnerabilityLevel(score, maxScore);
-  switch (level) {
-    case 'high': return VULNERABILITY_COLORS.high;
-    case 'medium': return VULNERABILITY_COLORS.medium;
-    case 'low': return VULNERABILITY_COLORS.low;
-    default: return VULNERABILITY_COLORS.none;
+    case "economicLoss":
+      return formatEconomicLoss(value);
+
+    case "rainfallAnomaly":
+      return `${value >= 0 ? "+" : ""}${value.toFixed(1)} mm`;
+
+    case "seaLevelAnomaly":
+      return `${value >= 0 ? "+" : ""}${value.toFixed(3)} m`;
+
+    case "surfaceTemperature":
+      return `${value >= 0 ? "+" : ""}${value.toFixed(2)} °C`;
+
+    case "seaSurfaceTemperature":
+      return `${value >= 0 ? "+" : ""}${value.toFixed(2)} °C`;
+
+    default:
+      return value.toFixed(2);
   }
 }
 
-export function PacificClimateStoryMap({ data, selectedCountry, className = "" }: Props) {
-  const [activeHazard, setActiveHazard] = useState<string | null>(null);
-  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
-  const [showInstructions, setShowInstructions] = useState(true);
+/* -------------------------------------------------------------------------- */
+/*                         MAIN COMPONENT                                     */
+/* -------------------------------------------------------------------------- */
+
+export function PacificClimateStoryMap({
+  data,
+  selectedCountry,
+  className = "",
+}: Props) {
+  const [activeIndicator, setActiveIndicator] =
+    useState<IndicatorKey>("peopleAffected");
+
+  const [hoveredCountry, setHoveredCountry] =
+    useState<string | null>(null);
+
+  const [showInstructions, setShowInstructions] =
+    useState(true);
+
+  /* ------------------------------------------------------------------------ */
+  /*                              DATA                                        */
+  /* ------------------------------------------------------------------------ */
 
   const countries = useMemo(() => buildCentroids(), []);
-  const hazardLookup = useMemo(() => buildHazardLookup(), []);
-  const countryData = useMemo(() => buildCountryData(data), [data]);
-  const ranked = useMemo(() => computeCompositeScores(countryData), [countryData]);
 
-  const topCountry = ranked.length > 0 ? ranked[0] : null;
-  const bottomCountry = ranked.length > 0 ? ranked[ranked.length - 1] : null;
-  const maxScore = ranked.length > 0 ? ranked[0].compositeScore : 1;
+  const indicatorData = useMemo(
+    () => buildIndicatorData(data),
+    [data]
+  );
 
-  const stats = useMemo(() => {
-    if (ranked.length === 0) return null;
-    const scores = ranked.map(d => d.compositeScore);
-    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-    const max = Math.max(...scores);
-    const min = Math.min(...scores);
-    const gapPercent = ((max - min) / avg) * 100;
-    return { avg, max, min, gapPercent, count: ranked.length };
-  }, [ranked]);
+  /*
+   * Only countries with an actual value for the selected indicator
+   * participate in the ranking.
+   */
+  const rankedCountries = useMemo(() => {
+    return countries
+      .map((country) => {
+        const values = indicatorData.get(country.name);
 
-  const temperatureLine = Array.from({ length: 175 }, (_, i) => ({
-    x: (i / 174) * WIDTH,
-    y: 70 - i * 0.35 + Math.sin(i / 10) * 12,
-  }));
+        const value =
+          values?.[activeIndicator] ?? 0;
 
-  const path = temperatureLine
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-    .join(" ");
+        return {
+          ...country,
+          value,
+        };
+      })
+      .filter((country) => Number.isFinite(country.value))
+      .sort((a, b) => b.value - a.value);
+  }, [countries, indicatorData, activeIndicator]);
 
-  const getCountryColor = (countryName: string) => {
-    if (activeHazard) {
-      const hazardData = hazardLookup.get(countryName);
-      return hazardData?.[activeHazard as keyof typeof hazardData]
-        ? HAZARD_COLORS[activeHazard as keyof typeof HAZARD_COLORS]
-        : "#dbe4ee";
-    }
-    const score = getCompositeScore(countryName);
-    return getColorForScore(score, maxScore);
+  const countriesWithData = useMemo(() => {
+    return rankedCountries.filter(
+      (country) => Math.abs(country.value) > 0
+    );
+  }, [rankedCountries]);
+
+  const maximumAbsoluteValue = useMemo(() => {
+    if (!countriesWithData.length) return 1;
+
+    return Math.max(
+      ...countriesWithData.map((country) =>
+        Math.abs(country.value)
+      )
+    );
+  }, [countriesWithData]);
+
+  const regionalMean = useMemo(() => {
+    if (!countriesWithData.length) return 0;
+
+    return (
+      countriesWithData.reduce(
+        (sum, country) => sum + country.value,
+        0
+      ) / countriesWithData.length
+    );
+  }, [countriesWithData]);
+
+  const highestCountry = countriesWithData[0] || null;
+
+  /* ------------------------------------------------------------------------ */
+  /*                         SELECTED COUNTRY                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const selectedCountryValue = useMemo(() => {
+    if (!selectedCountry) return null;
+
+    const values = indicatorData.get(selectedCountry);
+
+    if (!values) return null;
+
+    return values[activeIndicator] ?? null;
+  }, [
+    selectedCountry,
+    indicatorData,
+    activeIndicator,
+  ]);
+
+  /* ------------------------------------------------------------------------ */
+  /*                           MAP FUNCTIONS                                  */
+  /* ------------------------------------------------------------------------ */
+
+  const getCountryValue = (countryName: string) => {
+    const values = indicatorData.get(countryName);
+
+    return values?.[activeIndicator] ?? 0;
   };
 
-  const getImpactValue = (countryName: string, hazardKey: string): number => {
-    const data = hazardLookup.get(countryName);
-    return data?.[hazardKey as keyof typeof data] || 0;
-  };
+  const getCountryRadius = (countryName: string) => {
+    const value = getCountryValue(countryName);
 
-  const getCircleRadius = (countryName: string): number => {
-    if (activeHazard) {
-      const impact = getImpactValue(countryName, activeHazard);
-      if (impact === 0) return 3;
-      const maxImpact = getMaxImpact(hazardLookup, activeHazard);
-      const normalized = Math.min(impact / maxImpact, 1);
-      return 4 + normalized * 14;
-    }
-
-    const score = getCompositeScore(countryName);
-    if (score === 0) return 3;
-    const normalized = Math.min(score / maxScore, 1);
-    return 4 + normalized * 14;
-  };
-
-  const isHighlighted = (countryName: string) => {
-    if (!activeHazard) return false;
-    return getImpactValue(countryName, activeHazard) > 0;
-  };
-
-  const getImpactLabel = (countryName: string): string => {
-    if (!activeHazard) return "";
-    const impact = getImpactValue(countryName, activeHazard);
-    if (impact === 0) return "";
-
-    const labels: Record<string, string> = {
-      naturalDisaster: `${Math.round(impact).toLocaleString()} people`,
-      drought: `$${impact.toFixed(0)}M loss`,
-      flooding: `${impact.toFixed(1)}mm anomaly`,
-      seaLevelRise: `${impact.toFixed(1)}mm rise`,
-    };
-
-    return labels[activeHazard] || `${impact}`;
-  };
-
-  const getCompositeScore = (countryName: string): number => {
-    const found = ranked.find(d => d.country === countryName);
-    return found?.compositeScore || 0;
-  };
-
-  const getVulnerabilityLabel = (score: number): string => {
-    const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
-    if (percentage >= 70) return 'High';
-    if (percentage >= 40) return 'Medium';
-    if (percentage > 0) return 'Low';
-    return 'None';
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(() => { setShowInstructions(false); }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // ─── Build narrative story ───
-  const buildNarrative = () => {
-    if (!topCountry || !stats) return null;
-
-    const countryName = topCountry.country;
-    const score = topCountry.compositeScore.toFixed(2);
-    const gap = stats.gapPercent.toFixed(0);
-    const countryCount = stats.count;
-
-    let narrative = `Although Pacific nations experience many of the same climate pressures, their ability to adapt and recover differs dramatically. This uneven resilience creates large differences in vulnerability across the region. Among ${countryCount} Pacific nations, ${countryName} records the highest composite vulnerability score of ${score}, which is ${gap}% higher than the regional average. This highlights how exposure, economic resilience, and adaptive capacity combine to shape climate risk.`;
-
-    if (activeHazard) {
-      const hazardNames: Record<string, string> = {
-        naturalDisaster: "people affected by natural disasters",
-        drought: "drought-related economic losses",
-        flooding: "flooding from rainfall anomalies",
-        seaLevelRise: "sea-level rise"
-      };
-      narrative += `When filtered for ${hazardNames[activeHazard] || activeHazard} impacts, the vulnerability patterns shift, revealing which nations are most exposed to specific climate hazards. `;
+    if (!Number.isFinite(value) || value === 0) {
+      return 3;
     }
 
-    narrative += `This uneven distribution of risk highlights the need for targeted adaptation strategies that address the unique climate challenges facing each Pacific nation.`;
+    const normalized =
+      Math.abs(value) / maximumAbsoluteValue;
 
-    return narrative;
+    return 4 + Math.sqrt(Math.min(normalized, 1)) * 18;
   };
 
-  const narrativeText = buildNarrative();
+  const getCountryOpacity = (countryName: string) => {
+    const value = getCountryValue(countryName);
 
-  // ─── Compact annotation position ───
-  const annotationX = WIDTH - 220;
-  const annotationStartY = 60;
+    if (!Number.isFinite(value) || value === 0) {
+      return 0.25;
+    }
 
-  // ─── Hazard filter positions ───
-  const hazardFilterStartX = 140;
-  const hazardFilterY = HEIGHT - 60;
+    return 0.95;
+  };
+
+  const getCountryColor = () => {
+    return INDICATORS[activeIndicator].color;
+  };
+
+  /* ------------------------------------------------------------------------ */
+  /*                             NARRATIVE                                    */
+  /* ------------------------------------------------------------------------ */
+
+  const narrative = useMemo(() => {
+    const config = INDICATORS[activeIndicator];
+
+    if (!highestCountry || !countriesWithData.length) {
+      return `No ${config.label.toLowerCase()} data are currently available for the countries shown on the map.`;
+    }
+
+    const highestValue = formatIndicatorValue(
+      highestCountry.value,
+      activeIndicator
+    );
+
+    const averageValue = formatIndicatorValue(
+      regionalMean,
+      activeIndicator
+    );
+
+    if (activeIndicator === "peopleAffected") {
+      return `${highestCountry.name} records the largest number of people affected among the countries represented in this dataset, at ${highestValue}. Across countries with recorded values, the mean is ${averageValue}. The map shows the scale of observed human impacts rather than a composite vulnerability score.`;
+    }
+
+    if (activeIndicator === "economicLoss") {
+      return `${highestCountry.name} records the largest total direct disaster-related economic loss among the countries represented in this dataset, at ${highestValue}. The regional mean is ${averageValue}. These figures describe recorded economic losses and do not by themselves establish causation or adaptive capacity.`;
+    }
+
+    if (activeIndicator === "rainfallAnomaly") {
+      return `${highestCountry.name} has the largest positive mean rainfall anomaly among the countries represented in this dataset, at ${highestValue}. The regional mean is ${averageValue}. Rainfall anomaly describes departure from the reference period; it should not automatically be interpreted as flooding or drought damage.`;
+    }
+
+    if (activeIndicator === "seaLevelAnomaly") {
+      return `${highestCountry.name} has the largest recorded latest sea-level anomaly among the countries represented in this dataset, at ${highestValue}. The regional mean is ${averageValue}. This measure describes an anomaly relative to its reference level rather than cumulative sea-level rise.`;
+    }
+
+    if (activeIndicator === "surfaceTemperature") {
+      return `${highestCountry.name} has the largest mean surface-temperature anomaly among countries for which this dataset is available, at ${highestValue}. The regional mean is ${averageValue}.`;
+    }
+
+    return `${highestCountry.name} has the largest mean sea-surface-temperature anomaly among countries for which this dataset is available, at ${highestValue}. The regional mean is ${averageValue}.`;
+  }, [
+    activeIndicator,
+    highestCountry,
+    countriesWithData.length,
+    regionalMean,
+  ]);
+
+  /* ------------------------------------------------------------------------ */
+  /*                              EARLY STATE                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const selectedConfig = INDICATORS[activeIndicator];
+
+  /* ------------------------------------------------------------------------ */
+  /*                                RENDER                                    */
+  /* ------------------------------------------------------------------------ */
 
   return (
     <div className={`w-full ${className}`}>
-      <div className="mb-6 text-center max-w-4xl mx-auto">
-        <p className="text-center">
-          To answer that question, we need to step back and compare climate vulnerability across the Pacific. While every nation faces environmental 
-          change, the capacity to absorb and recover from climate shocks differs dramatically.
+
+      {/* ------------------------------------------------------------------ */}
+      {/* SECTION INTRO                                                      */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div className="mx-auto max-w-4xl text-center mb-8">
+
+        <div className="text-xs uppercase tracking-[0.18em] text-slate-400 mb-3">
+          Regional comparison
+        </div>
+
+        <h2 className="text-2xl md:text-3xl font-semibold text-slate-900">
+          The Pacific does not experience climate impacts equally
+        </h2>
+
+        <p className="mt-4 text-slate-600 leading-relaxed">
+          Climate pressures are regional, but their observed impacts
+          vary considerably between countries. Explore the indicators
+          below to see how the scale and direction of these measurements
+          differ across the Pacific.
         </p>
-        <p className="text-center">
-          Not all Pacific nations face climate change equally.
-          Countries experience similar environmental pressures, yet their ability to absorb and recover from those pressures varies dramatically.
-          This uneven capacity creates large differences in vulnerability across the region.
-        </p>
+
       </div>
 
-      {/* ─── MAP ─── */}
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-auto" style={{ background: "transparent" }}>
-        <rect width={WIDTH} height={HEIGHT} fill="transparent" />
+      {/* ------------------------------------------------------------------ */}
+      {/* INDICATOR SELECTOR                                                 */}
+      {/* ------------------------------------------------------------------ */}
 
-        {/* ─── INSTRUCTIONS PANEL ─── */}
-        <g opacity={showInstructions ? 1 : 0} transition={{ duration: 0.5 }}>
-          <rect x={WIDTH / 2 - 250} y={20} width={500} height={80} rx={8} fill="white" stroke="#e2e8f0" strokeWidth={1} />
-          <text x={WIDTH / 2} y={45} textAnchor="middle" fontSize={13} fontWeight="600" fill="#1a1a2e">
-             How to read this map
-          </text>
-          <text x={WIDTH / 2} y={65} textAnchor="middle" fontSize={11} fill="#64748b">
-            • Circle size & shade show vulnerability score
-          </text>
-          <text x={WIDTH / 2} y={82} textAnchor="middle" fontSize={11} fill="#64748b">
-            • Hover a country for details · Hover hazards below to explore impacts
-          </text>
-        </g>
+      <div className="flex flex-wrap justify-center gap-2 mb-6">
 
-        {/* ─── OCEAN LABEL ─── */}
-        <text
-          x={WIDTH / 2}
-          y={HEIGHT / 2}
-          textAnchor="middle"
-          fontSize={32}
-          fill="#cbd5e1"
-          opacity={0.08}
-          fontWeight="300"
-          letterSpacing="0.15em"
-        >
-          PACIFIC OCEAN
-        </text>
+        {(Object.keys(INDICATORS) as IndicatorKey[]).map(
+          (indicator) => {
+            const config = INDICATORS[indicator];
+            const active = activeIndicator === indicator;
 
-        {/* ─── COUNTRIES ─── */}
-        {countries.map((country) => {
-          const x = projectLon(country.lon);
-          const y = projectLat(country.lat);
-          const highlighted = isHighlighted(country.name);
-          const radius = getCircleRadius(country.name);
-          const impactLabel = getImpactLabel(country.name);
-          const isHovered = hoveredCountry === country.name;
-          const compositeScore = getCompositeScore(country.name);
-          const isTopCountry = topCountry?.country === country.name;
-          const color = getCountryColor(country.name);
-          const showScore = compositeScore > 0;
+            /*
+             * Temperature indicators are only shown when the parent
+             * supplies corresponding data.
+             */
+            const hasData =
+              indicator === "surfaceTemperature"
+                ? Boolean(data?.surfaceTempAnomaly?.length)
+                : indicator === "seaSurfaceTemperature"
+                ? Boolean(
+                    data?.seaSurfaceTempAnomaly?.length
+                  )
+                : true;
 
-          return (
-            <g 
-              key={country.name}
-              onMouseEnter={() => setHoveredCountry(country.name)}
-              onMouseLeave={() => setHoveredCountry(null)}
-              onClick={() => setShowInstructions(false)}
-            >
-              <motion.circle
-                cx={x}
-                cy={y}
-                r={radius}
-                fill={color}
-                stroke="white"
-                strokeWidth={1.5}
-                animate={{
-                  scale: highlighted || isHovered ? 1.25 : 1,
-                  opacity: activeHazard && !highlighted ? 0.18 : 1,
-                  strokeWidth: isTopCountry ? 2.5 : 1.5,
-                  stroke: isTopCountry ? "#1a1a2e" : "white",
+            if (!hasData) return null;
+
+            return (
+              <button
+                key={indicator}
+                type="button"
+                onClick={() => {
+                  setActiveIndicator(indicator);
+                  setShowInstructions(false);
                 }}
-                transition={{ duration: 0.2 }}
-              />
-
-              <motion.text
-                x={x + radius + 6}
-                y={y + 3}
-                fontSize={10}
-                fontWeight={isTopCountry ? "600" : "400"}
-                fill={color === VULNERABILITY_COLORS.none ? "#94a3b8" : color}
-                animate={{
-                  opacity: activeHazard && !highlighted ? 0.18 : 1
-                }}
+                className={`
+                  rounded-full
+                  border
+                  px-4
+                  py-2
+                  text-xs
+                  font-medium
+                  transition-all
+                  ${
+                    active
+                      ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-slate-400 hover:text-slate-900"
+                  }
+                `}
               >
-                {country.name}
-              </motion.text>
-
-              {isHovered && !activeHazard && showScore && (
-                <motion.g
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <rect
-                    x={x + radius + 4}
-                    y={y + 12}
-                    width={60}
-                    height={20}
-                    rx={3}
-                    fill="white"
-                    stroke="#e2e8f0"
-                    strokeWidth={0.5}
-                  />
-                  <text
-                    x={x + radius + 9}
-                    y={y + 26}
-                    fontSize={8}
-                    fontWeight="500"
-                    fill="#1a1a2e"
-                  >
-                    Score: {compositeScore.toFixed(2)}
-                  </text>
-                </motion.g>
-              )}
-
-              {highlighted && impactLabel && (
-                <motion.text
-                  x={x + radius + 6}
-                  y={y + 16}
-                  fontSize={8}
-                  fill="#334155"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {impactLabel}
-                </motion.text>
-              )}
-            </g>
-          );
-        })}
-
-        {/* ─── COMPACT ANNOTATIONS ─── */}
-        {stats && topCountry && (
-          <g transform={`translate(${annotationX}, ${annotationStartY})`}>
-            <text x={0} y={0} fontSize={8} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
-              HIGHEST VULNERABILITY
-            </text>
-            <text x={0} y={16} fontSize={13} fontWeight="600" fill="#1a1a2e">
-              {topCountry.country}
-            </text>
-            <text x={0} y={30} fontSize={9} fill="#64748b">
-              Score {topCountry.compositeScore.toFixed(2)}
-            </text>
-
-            <text x={0} y={52} fontSize={8} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
-              REGIONAL GAP
-            </text>
-            <text x={0} y={68} fontSize={13} fontWeight="600" fill="#1a1a2e">
-              {stats.gapPercent.toFixed(0)}%
-            </text>
-            <text x={0} y={82} fontSize={9} fill="#64748b">
-              between highest and average
-            </text>
-
-            <text x={0} y={104} fontSize={8} fontWeight="600" fill="#1a1a2e" letterSpacing="0.05em">
-              COUNTRIES
-            </text>
-            <text x={0} y={120} fontSize={13} fontWeight="600" fill="#1a1a2e">
-              {stats.count}
-            </text>
-            <text x={0} y={134} fontSize={9} fill="#64748b">
-              across the Pacific region
-            </text>
-          </g>
+                {config.shortLabel}
+              </button>
+            );
+          }
         )}
 
-        {/* ─── HAZARD FILTERS ─── */}
-        <g transform={`translate(30, ${hazardFilterY})`}>
-          {[
-            { key: "naturalDisaster", label: "Natural Disasters", color: HAZARD_COLORS.naturalDisaster },
-            { key: "drought", label: "Drought", color: HAZARD_COLORS.drought },
-            { key: "flooding", label: "Flooding", color: HAZARD_COLORS.flooding },
-            { key: "seaLevelRise", label: "Sea-level rise", color: HAZARD_COLORS.seaLevelRise },
-          ].map((item, i) => {
-            const xPos = hazardFilterStartX + i * 105;
-            const isActive = activeHazard === item.key;
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* CURRENT INDICATOR DESCRIPTION                                     */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div className="mx-auto max-w-3xl text-center mb-6">
+
+        <h3 className="text-lg font-semibold text-slate-900">
+          {selectedConfig.label}
+        </h3>
+
+        <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+          {selectedConfig.description}
+        </p>
+
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* SUMMARY CARDS                                                      */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto mb-8">
+
+        <div className="rounded-xl border border-slate-200 bg-white p-5 text-center">
+          <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+            Highest recorded value
+          </div>
+
+          <div className="mt-2 text-2xl font-semibold text-slate-900">
+            {highestCountry
+              ? formatIndicatorValue(
+                  highestCountry.value,
+                  activeIndicator
+                )
+              : "—"}
+          </div>
+
+          <div className="mt-1 text-sm text-slate-500">
+            {highestCountry?.name || "No country data"}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-5 text-center">
+          <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+            Regional mean
+          </div>
+
+          <div className="mt-2 text-2xl font-semibold text-slate-900">
+            {countriesWithData.length
+              ? formatIndicatorValue(
+                  regionalMean,
+                  activeIndicator
+                )
+              : "—"}
+          </div>
+
+          <div className="mt-1 text-sm text-slate-500">
+            Across {countriesWithData.length} countries with data
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-5 text-center">
+          <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+            Indicator
+          </div>
+
+          <div className="mt-2 text-xl font-semibold text-slate-900">
+            {selectedConfig.shortLabel}
+          </div>
+
+          <div className="mt-1 text-sm text-slate-500">
+            {selectedConfig.unit}
+          </div>
+        </div>
+
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* MAP                                                                */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div className="relative w-full overflow-hidden">
+
+        <svg
+          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+          className="w-full h-auto"
+          role="img"
+          aria-label={`${selectedConfig.label} across Pacific countries`}
+        >
+
+          <rect
+            width={WIDTH}
+            height={HEIGHT}
+            fill="transparent"
+          />
+
+          {/* ------------------------------------------------------------ */}
+          {/* MAP TITLE                                                     */}
+          {/* ------------------------------------------------------------ */}
+
+          <text
+            x={MAP_PADDING.left}
+            y={35}
+            fontSize={15}
+            fontWeight="600"
+            fill="#0f172a"
+          >
+            {selectedConfig.label} across the Pacific
+          </text>
+
+          <text
+            x={MAP_PADDING.left}
+            y={55}
+            fontSize={10}
+            fill="#94a3b8"
+          >
+            Circle size represents relative magnitude among countries
+            with recorded values
+          </text>
+
+          {/* ------------------------------------------------------------ */}
+          {/* INSTRUCTIONS                                                  */}
+          {/* ------------------------------------------------------------ */}
+
+          {showInstructions && (
+            <motion.g
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
+            >
+              <rect
+                x={WIDTH / 2 - 230}
+                y={20}
+                width={460}
+                height={65}
+                rx={8}
+                fill="white"
+                stroke="#e2e8f0"
+              />
+
+              <text
+                x={WIDTH / 2}
+                y={43}
+                textAnchor="middle"
+                fontSize={11}
+                fontWeight="600"
+                fill="#1e293b"
+              >
+                Explore the map
+              </text>
+
+              <text
+                x={WIDTH / 2}
+                y={62}
+                textAnchor="middle"
+                fontSize={9}
+                fill="#64748b"
+              >
+                Hover over a country to see its recorded value
+              </text>
+
+              <text
+                x={WIDTH / 2}
+                y={76}
+                textAnchor="middle"
+                fontSize={9}
+                fill="#64748b"
+              >
+                Select another indicator above to change the map
+              </text>
+            </motion.g>
+          )}
+
+          {/* ------------------------------------------------------------ */}
+          {/* PACIFIC OCEAN LABEL                                          */}
+          {/* ------------------------------------------------------------ */}
+
+          <text
+            x={WIDTH / 2 - 80}
+            y={HEIGHT / 2}
+            textAnchor="middle"
+            fontSize={34}
+            fill="#cbd5e1"
+            opacity={0.16}
+            fontWeight="300"
+            letterSpacing="0.15em"
+          >
+            PACIFIC OCEAN
+          </text>
+
+          {/* ------------------------------------------------------------ */}
+          {/* COUNTRIES                                                    */}
+          {/* ------------------------------------------------------------ */}
+
+          {countries.map((country) => {
+            const x = projectLon(country.lon);
+            const y = projectLat(country.lat);
+
+            const value = getCountryValue(country.name);
+
+            const hasValue =
+              Number.isFinite(value) &&
+              Math.abs(value) > 0;
+
+            const radius = getCountryRadius(country.name);
+
+            const isHovered =
+              hoveredCountry === country.name;
+
+            const isSelected =
+              selectedCountry === country.name;
 
             return (
               <g
-                key={item.key}
-                onMouseEnter={() => setActiveHazard(item.key)}
-                onMouseLeave={() => setActiveHazard(null)}
-                onClick={() => setShowInstructions(false)}
+                key={country.name}
+                onMouseEnter={() => {
+                  setHoveredCountry(country.name);
+                }}
+                onMouseLeave={() => {
+                  setHoveredCountry(null);
+                }}
+                onClick={() => {
+                  setShowInstructions(false);
+                }}
                 style={{ cursor: "pointer" }}
               >
-                <rect
-                  x={xPos}
-                  y={-12}
-                  width={95}
-                  height={26}
-                  rx={4}
-                  fill={isActive ? "#f1f5f9" : "transparent"}
-                  stroke={isActive ? "#cbd5e1" : "transparent"}
-                  strokeWidth={1}
-                />
-                
-                <rect
-                  x={xPos + 6}
-                  y={-4}
-                  width={12}
-                  height={12}
-                  rx={2}
-                  fill={item.color}
-                  opacity={isActive ? 1 : 0.5}
+
+                {/* ---------------------------------------------------- */}
+                {/* COUNTRY CIRCLE                                       */}
+                {/* ---------------------------------------------------- */}
+
+                <motion.circle
+                  cx={x}
+                  cy={y}
+                  r={radius}
+                  fill={getCountryColor()}
+                  stroke={
+                    isSelected
+                      ? "#0f172a"
+                      : "#ffffff"
+                  }
+                  strokeWidth={
+                    isSelected ? 3 : 1.5
+                  }
+                  opacity={
+                    hasValue
+                      ? getCountryOpacity(country.name)
+                      : 0.2
+                  }
+                  animate={{
+                    scale: isHovered
+                      ? 1.25
+                      : 1,
+                  }}
+                  transition={{
+                    duration: 0.18,
+                  }}
                 />
 
+                {/* ---------------------------------------------------- */}
+                {/* COUNTRY NAME                                         */}
+                {/* ---------------------------------------------------- */}
+
                 <text
-                  x={xPos + 24}
-                  y={4}
-                  fontSize={10}
-                  fill={isActive ? "#1a1a2e" : "#94a3b8"}
-                  fontWeight={isActive ? "500" : "400"}
+                  x={x + radius + 6}
+                  y={y + 3}
+                  fontSize={9}
+                  fontWeight={
+                    isSelected || isHovered
+                      ? "600"
+                      : "400"
+                  }
+                  fill={
+                    isSelected || isHovered
+                      ? "#0f172a"
+                      : "#64748b"
+                  }
                 >
-                  {item.label}
+                  {country.name}
                 </text>
+
+                {/* ---------------------------------------------------- */}
+                {/* HOVER DETAIL                                         */}
+                {/* ---------------------------------------------------- */}
+
+                {isHovered && (
+                  <motion.g
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+
+                    <rect
+                      x={x + radius + 5}
+                      y={y + 10}
+                      width={175}
+                      height={48}
+                      rx={5}
+                      fill="white"
+                      stroke="#e2e8f0"
+                      strokeWidth={1}
+                    />
+
+                    <text
+                      x={x + radius + 14}
+                      y={y + 27}
+                      fontSize={9}
+                      fontWeight="600"
+                      fill="#0f172a"
+                    >
+                      {country.name}
+                    </text>
+
+                    <text
+                      x={x + radius + 14}
+                      y={y + 42}
+                      fontSize={9}
+                      fill="#64748b"
+                    >
+                      {hasValue
+                        ? formatIndicatorValue(
+                            value,
+                            activeIndicator
+                          )
+                        : "No recorded value"}
+                    </text>
+
+                  </motion.g>
+                )}
+
               </g>
             );
           })}
-        </g>
-      </svg>
 
-      {/* ─── TEMPERATURE TIMELINE ─── */}
-      <svg
-        viewBox={`0 0 ${WIDTH} ${TIMELINE_HEIGHT}`}
-        className="w-full h-auto mt-8"
-        style={{ background: "transparent" }}
-      >
-        <rect width={WIDTH} height={TIMELINE_HEIGHT} fill="transparent" />
+          {/* ------------------------------------------------------------ */}
+          {/* SELECTED COUNTRY ANNOTATION                                 */}
+          {/* ------------------------------------------------------------ */}
 
-        <text x={0} y={20} fontSize={12} fontWeight="600" fill="#1a1a2e" letterSpacing="0.02em">
-          Surface temperature anomaly across the Pacific
-        </text>
+          {selectedCountry && (
+            <g
+              transform={`translate(${WIDTH - 270}, 125)`}
+            >
 
-        <text x={0} y={36} fontSize={9} fill="#94a3b8">
-          Historical warming trend (1850–2025)
-        </text>
+              <text
+                x={0}
+                y={0}
+                fontSize={8}
+                fontWeight="600"
+                fill="#94a3b8"
+                letterSpacing="0.12em"
+              >
+                SELECTED COUNTRY
+              </text>
 
-        <path
-          d={path}
-          fill="none"
-          stroke="#475569"
-          strokeWidth={2}
-          strokeLinecap="round"
-        />
+              <text
+                x={0}
+                y={23}
+                fontSize={17}
+                fontWeight="600"
+                fill="#0f172a"
+              >
+                {selectedCountry}
+              </text>
 
-        <line x1={0} y1={70} x2={WIDTH} y2={70} stroke="#e2e8f0" strokeWidth={1} strokeDasharray="4 4" />
+              <text
+                x={0}
+                y={45}
+                fontSize={10}
+                fill="#64748b"
+              >
+                {selectedConfig.shortLabel}
+              </text>
 
-        <text x={0} y={105} fontSize={9} fill="#64748b">
-          1850
-        </text>
+              <text
+                x={0}
+                y={68}
+                fontSize={20}
+                fontWeight="600"
+                fill={selectedConfig.color}
+              >
+                {selectedCountryValue !== null
+                  ? formatIndicatorValue(
+                      selectedCountryValue,
+                      activeIndicator
+                    )
+                  : "No data"}
+              </text>
 
-        <text x={WIDTH - 45} y={105} fontSize={9} fill="#64748b">
-          2025
-        </text>
+            </g>
+          )}
 
-        <text x={WIDTH - 45} y={32} fontSize={9} fill="#475569" fontWeight="500">
-          +1.2°C
-        </text>
-      </svg>
+          {/* ------------------------------------------------------------ */}
+          {/* HIGHEST COUNTRY ANNOTATION                                  */}
+          {/* ------------------------------------------------------------ */}
 
-      <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">
-        Fig 6: The composite vulnerability level across the Pacific, including impact size of natural disasters, drought, flooding and sea level rise
+          {highestCountry && (
+            <g
+              transform={`translate(${WIDTH - 270}, 285)`}
+            >
+
+              <text
+                x={0}
+                y={0}
+                fontSize={8}
+                fontWeight="600"
+                fill="#94a3b8"
+                letterSpacing="0.12em"
+              >
+                HIGHEST RECORDED VALUE
+              </text>
+
+              <text
+                x={0}
+                y={23}
+                fontSize={16}
+                fontWeight="600"
+                fill="#0f172a"
+              >
+                {highestCountry.name}
+              </text>
+
+              <text
+                x={0}
+                y={46}
+                fontSize={18}
+                fontWeight="600"
+                fill={selectedConfig.color}
+              >
+                {formatIndicatorValue(
+                  highestCountry.value,
+                  activeIndicator
+                )}
+              </text>
+
+            </g>
+          )}
+
+          {/* ------------------------------------------------------------ */}
+          {/* LEGEND                                                       */}
+          {/* ------------------------------------------------------------ */}
+
+          <g
+            transform={`translate(${WIDTH - 270}, 420)`}
+          >
+
+            <text
+              x={0}
+              y={0}
+              fontSize={8}
+              fontWeight="600"
+              fill="#94a3b8"
+              letterSpacing="0.12em"
+            >
+              MAP SCALE
+            </text>
+
+            <circle
+              cx={8}
+              cy={28}
+              r={5}
+              fill={selectedConfig.color}
+              opacity={0.85}
+            />
+
+            <text
+              x={23}
+              y={32}
+              fontSize={9}
+              fill="#64748b"
+            >
+              Smaller recorded value
+            </text>
+
+            <circle
+              cx={8}
+              cy={57}
+              r={12}
+              fill={selectedConfig.color}
+              opacity={0.85}
+            />
+
+            <text
+              x={28}
+              y={61}
+              fontSize={9}
+              fill="#64748b"
+            >
+              Larger recorded value
+            </text>
+
+            <circle
+              cx={8}
+              cy={91}
+              r={4}
+              fill={selectedConfig.color}
+              opacity={0.2}
+            />
+
+            <text
+              x={20}
+              y={95}
+              fontSize={9}
+              fill="#94a3b8"
+            >
+              No recorded value
+            </text>
+
+          </g>
+
+          {/* ------------------------------------------------------------ */}
+          {/* MAP FOOTER                                                  */}
+          {/* ------------------------------------------------------------ */}
+
+          <text
+            x={MAP_PADDING.left}
+            y={HEIGHT - 35}
+            fontSize={9}
+            fill="#94a3b8"
+          >
+            Values are displayed using the aggregation appropriate to
+            each indicator.
+          </text>
+
+        </svg>
+
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* INTERPRETATION                                                    */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div className="mx-auto max-w-4xl mt-8">
+
+        <div className="border-l-2 border-slate-200 pl-5">
+
+          <div className="text-xs uppercase tracking-[0.14em] text-slate-400 mb-2">
+            What the map shows
+          </div>
+
+          <p className="text-slate-600 leading-relaxed">
+            {narrative}
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* METHODOLOGY                                                       */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div className="mx-auto max-w-4xl mt-8">
+
+        <details className="group border border-slate-200 rounded-xl bg-slate-50">
+
+          <summary className="cursor-pointer list-none px-5 py-4 flex items-center justify-between">
+
+            <span className="text-sm font-semibold text-slate-700">
+              How to read this comparison
+            </span>
+
+            <span className="text-slate-400 group-open:rotate-180 transition-transform">
+              ↓
+            </span>
+
+          </summary>
+
+          <div className="px-5 pb-5 text-sm text-slate-600 leading-relaxed">
+
+            <p>
+              The map compares individual indicators rather than
+              combining unrelated variables into a single vulnerability
+              score. This avoids interpreting population size, tourism,
+              agricultural production or economic scale as direct
+              measures of climate vulnerability.
+            </p>
+
+            <p className="mt-3">
+              People affected and disaster-related economic losses are
+              summed across the records available for each country.
+              Climate anomalies are treated differently: rainfall and
+              temperature anomalies are averaged, while the sea-level
+              anomaly uses the latest available observation.
+            </p>
+
+            <p className="mt-3">
+              Circle size represents relative magnitude within the
+              selected indicator. It does not represent percentage
+              vulnerability, probability of disaster, adaptive capacity,
+              or causal effect.
+            </p>
+
+            <p className="mt-3">
+              Climate indicators describe environmental conditions.
+              They should not automatically be interpreted as evidence
+              that a particular disaster or economic loss was caused by
+              that indicator.
+            </p>
+
+          </div>
+
+        </details>
+
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* FIGURE CAPTION                                                     */}
+      /* ------------------------------------------------------------------ */
+
+      <p className="mx-auto max-w-3xl text-center text-sm text-slate-500 mt-6 leading-relaxed">
+        Fig. 6: Observed climate-related indicators and impacts across
+        Pacific countries. Select an indicator to compare the relative
+        magnitude of recorded values between countries.
       </p>
-      <br />
-      <p className="mx-auto max-w-3xl text-center text-slate-600 leading-relaxed">{narrativeText}</p>
-      
+
     </div>
   );
 }
