@@ -1,60 +1,61 @@
 
-interface ConclusionProps {
-  selectedCountry: string;
-  seaTrend: number;
-  countriesCount: number;
-}
+"use client";
 
-export function Conclusion({
-  selectedCountry,
-  seaTrend,
-  countriesCount,
-}: ConclusionProps) {
+export function Conclusion() {
   return (
-    <div>
-      <p className="mt-8 text-lg text-slate-600 leading-relaxed">
-        <span className="font-semibold text-slate-800">
-          Climate signals intensify.
-        </span>
-        <br />
-        <br />
+    <section className="w-full py-12">
+      <div className="w-full flex justify-center px-4">
+        <p className="w-full max-w-3xl mx-auto text-center text-lg text-slate-600 leading-relaxed">
+          <span className="font-semibold text-slate-800">
+            Climate signals intensify.
+          </span>
 
-        <span className="font-semibold text-slate-800">
-          Environmental changes persist.
-        </span>
-        <br />
-        <br />
+          <br />
+          <br />
 
-        <span className="font-semibold text-slate-800">
-          Economic losses accumulate.
-        </span>
-        <br />
-        <br />
+          <span className="font-semibold text-slate-800">
+            Environmental changes persist.
+          </span>
 
-        <span className="font-semibold text-slate-800">
-          Human exposure grows.
-        </span>
-        <br />
-        <br />
+          <br />
+          <br />
 
-        These impacts do not occur in isolation. Across the Pacific, changes
-        in temperature, rainfall, ocean conditions and sea level can cascade
-        through economies, livelihoods and communities. The evidence shows
-        that climate risk is not determined by exposure alone: countries
-        differ in the scale of their impacts and in their capacity to absorb
-        and recover from repeated shocks.
-        <br />
-        <br />
+          <span className="font-semibold text-slate-800">
+            Economic losses accumulate.
+          </span>
 
-        The Pacific climate story is therefore not simply a story of a
-        warming environment. It is a story of{" "}
-        <span className="font-semibold text-slate-800">
-          interconnected impacts and unequal consequences
-        </span>
-        . Understanding these differences can help identify where adaptation,
-        resilience investment and support are needed most.
-      </p>
-    </div>
+          <br />
+          <br />
+
+          <span className="font-semibold text-slate-800">
+            Human exposure grows.
+          </span>
+
+          <br />
+          <br />
+
+          These impacts do not occur in isolation. Across the Pacific, changes
+          in temperature, rainfall, ocean conditions and sea level can cascade
+          through economies, livelihoods and communities. The evidence shows
+          that climate risk is not determined by exposure alone: countries
+          differ in the scale of their impacts and in their capacity to absorb
+          and recover from repeated shocks.
+
+          <br />
+          <br />
+
+          The Pacific climate story is therefore not simply a story of a
+          warming environment. It is a story of{" "}
+          <span className="font-semibold text-slate-800">
+            interconnected impacts and unequal consequences
+          </span>
+          . Understanding these differences can help identify where adaptation,
+          resilience investment and support are needed most.
+        </p>
+      </div>
+    </section>
   );
 }
+
+export default Conclusion;
 
