@@ -196,7 +196,7 @@ export default function Home() {
       <section className="min-h-[50vh] flex items-center justify-center px-6 border-t border-slate-100">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
-            But are these pressures unique to {selectedCountry}?
+            But does every Pacific country experience these consequences in the same way?
           </h2>
         </div>
       </section>
