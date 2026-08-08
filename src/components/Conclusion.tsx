@@ -11,30 +11,48 @@ export function Conclusion({
 }: ConclusionProps) {
   return (
 
-       <section className="min-h-[60vh] flex items-center justify-center">
-        <div className="max-w-4xl text-center">
-          <div className="text-sm uppercase tracking-[0.3em] text-slate-400">
-            From the data, one Pattern Emerges
-          </div>
-        
-          <p className="mt-8 text-lg text-slate-600 leading-relaxed">
-            Climate signals intensify.
-            <br />
-            <br />
-            Environmental changes persist.
-            <br />
-            <br />
+   
+<p className="mt-8 text-lg text-slate-600 leading-relaxed">
+  <span className="font-semibold text-slate-800">
+    Climate signals intensify.
+  </span>
+  <br />
+  <br />
 
-             Economic losses accumulate.
-            <br />
-            <br />
-            Human exposure grows.
-            <br />
-            <br />
-            Climate change is already shaping everyday life across the Pacific. It affects crops, fisheries, tourism, coastlines, and the wellbeing of communities. These are no longer future challenges—they are happening now. By connecting environmental, economic, and human systems, this data story shows that climate change is more than a collection of environmental indicators—it is a chain of interconnected impacts. While every Pacific nation faces rising climate pressures, their vulnerability and capacity to adapt are not the same. Understanding these differences is essential for building informed policies, targeted adaptation strategies, and a more resilient Pacific.
-          </p>
-        </div>
-      </section>
+  <span className="font-semibold text-slate-800">
+    Environmental changes persist.
+  </span>
+  <br />
+  <br />
+
+  <span className="font-semibold text-slate-800">
+    Economic losses accumulate.
+  </span>
+  <br />
+  <br />
+
+  <span className="font-semibold text-slate-800">
+    Human exposure grows.
+  </span>
+  <br />
+  <br />
+
+  These impacts do not occur in isolation. Across the Pacific, changes in
+  temperature, rainfall, ocean conditions and sea level can cascade through
+  economies, livelihoods and communities. The evidence shows that climate
+  risk is not determined by exposure alone: countries differ in the scale of
+  their impacts and in their capacity to absorb and recover from repeated
+  shocks.
+  <br />
+  <br />
+
+  The Pacific climate story is therefore not simply a story of a warming
+  environment. It is a story of <span className="font-semibold text-slate-800">
+  interconnected impacts and unequal consequences</span>.
+  Understanding these differences can help identify where adaptation,
+  resilience investment and support are needed most.
+</p>
+
 
      
   );
