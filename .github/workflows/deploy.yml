@@ -11,7 +11,11 @@ permissions:
   id-token: write
 
 jobs:
-  build:
+
+  # ==========================================
+  # BUILD FOR GITHUB PAGES
+  # ==========================================
+  build-github:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,23 +34,71 @@ jobs:
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4
 
-      - name: Build Next.js static site
+      - name: Build for GitHub Pages
         run: npm run build
 
-      - name: Verify export output
+      - name: Verify GitHub Pages output
         run: |
-          echo "Build directory:"
+          echo "GitHub Pages build:"
           ls -la
-          echo "Export directory:"
           test -d out
           ls -la out
 
-      - name: Upload static files to GitHub Pages
+      - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: out
 
-      - name: Upload static files to InfinityFree
+
+  # ==========================================
+  # DEPLOY TO GITHUB PAGES
+  # ==========================================
+  deploy-github:
+    needs: build-github
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+
+  # ==========================================
+  # BUILD FOR INFINITYFREE
+  # ==========================================
+  build-infinityfree:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for InfinityFree
+        env:
+          DEPLOY_TARGET: infinityfree
+        run: npm run build
+
+      - name: Verify InfinityFree output
+        run: |
+          echo "InfinityFree build:"
+          ls -la
+          test -d out
+          ls -la out
+
+      - name: Upload to InfinityFree
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
