@@ -72,16 +72,26 @@ export default function Home() {
       </section>
 
       <hr className="border-t border-slate-100" />
-
-      <section className="min-h-[50vh] flex items-center justify-center px-6">
-        <div className="max-w-4xl text-center">
-          <h2 className="text-4xl md:text-6xl font-light leading-tight">
-            <>
-              The Pacific helped create little of the climate crisis. Yet its nations stand on the front line of its consequences. 
-            </>
-          </h2>
-        </div>
-      </section>
+        <section className="min-h-[65vh] flex items-center justify-center px-6">
+          <div className="max-w-5xl text-center">
+            <div className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-6">
+              The Pacific Climate Paradox
+            </div>
+        
+            <h2 className="text-4xl md:text-6xl font-light leading-tight">
+              The Pacific contributed little to the climate crisis.
+              <span className="block mt-4">
+                Yet its nations stand on the front line of its consequences.
+              </span>
+            </h2>
+        
+            <p className="mt-8 text-lg md:text-xl text-slate-300 leading-relaxed max-w-3xl mx-auto">
+              Climate pressures are shared across the region, but their consequences
+              are not. Differences in exposure, economic resilience, and capacity to
+              adapt create unequal climate risks across Pacific nations.
+            </p>
+          </div>
+        </section>
 
       <hr className="border-t border-slate-100" />
 
