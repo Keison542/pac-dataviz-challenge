@@ -1372,10 +1372,6 @@ export function PacificClimateStoryMap({
 
       </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* FIGURE CAPTION                                                     */}
-      /* ------------------------------------------------------------------ */
-
       <p className="mx-auto max-w-3xl text-center text-sm text-slate-500 mt-6 leading-relaxed">
         Fig. 6: Observed climate-related indicators and impacts across
         Pacific countries. Select an indicator to compare the relative
