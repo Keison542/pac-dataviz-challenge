@@ -1,4 +1,4 @@
-name: Deploy Next.js to GitHub Pages
+name: Deploy Next.js to GitHub Pages and InfinityFree
 
 on:
   push:
@@ -35,23 +35,28 @@ jobs:
 
       - name: Verify export output
         run: |
+          echo "Build directory:"
           ls -la
-          test -d out && ls -la out || echo "❌ out folder missing"
+          echo "Export directory:"
+          test -d out
+          ls -la out
 
-      - name: Upload static files
+      - name: Upload static files to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: out
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Upload static files to InfinityFree
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          local-dir: ./out/
+          server-dir: /htdocs/pac-dataviz/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
