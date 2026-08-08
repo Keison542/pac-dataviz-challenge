@@ -7,289 +7,464 @@ type Props = {
   selectedCountry: string;
 };
 
-type MatrixCell = {
-  row: string;
-  col: string;
+type DriverKey =
+  | "Surface Temperature"
+  | "Sea Surface Temperature"
+  | "Sea Level"
+  | "Rainfall";
+
+type ImpactPathway = {
+  driver: DriverKey;
+  system: string;
   value: number;
+  impact: number;
+  raw: number;
   narrative: string;
+  consequences: string[];
 };
 
-const ROWS = [
+const DRIVER_CONFIG: Record<
+  DriverKey,
+  {
+    system: string;
+    label: string;
+    color: string;
+    consequences: string[];
+  }
+> = {
+  "Surface Temperature": {
+    system: "Environmental / Human",
+    label: "Surface temperature",
+    color: "#334155",
+    consequences: [
+      "Ecosystem disruption",
+      "Reduced agricultural productivity",
+      "Increased heat and health risks",
+    ],
+  },
+
+  "Sea Surface Temperature": {
+    system: "Disaster Risk",
+    label: "Sea surface temperature",
+    color: "#475569",
+    consequences: [
+      "Stronger tropical cyclones",
+      "Coral bleaching",
+      "Disrupted fisheries",
+    ],
+  },
+
+  "Sea Level": {
+    system: "Human / Coastal",
+    label: "Sea level",
+    color: "#64748b",
+    consequences: [
+      "Coastal flooding",
+      "Community displacement",
+      "Saltwater intrusion",
+    ],
+  },
+
+  Rainfall: {
+    system: "Economic / Disaster Risk",
+    label: "Rainfall",
+    color: "#7c8798",
+    consequences: [
+      "Flooding and landslides",
+      "Agricultural damage",
+      "Infrastructure disruption",
+    ],
+  },
+};
+
+const DRIVER_ORDER: DriverKey[] = [
   "Surface Temperature",
   "Sea Surface Temperature",
   "Sea Level",
   "Rainfall",
 ];
 
-const COLS = [
-  "Environmental",
-  "Economic",
-  "Human",
-  "Disaster Risk",
-];
+function clamp(value: number, min = 0, max = 1) {
+  return Math.max(min, Math.min(max, value));
+}
 
-function clamp(n: number, min = 0, max = 1) {
-  return Math.max(min, Math.min(max, n));
+/*
+ * Converts the magnitude of each climate signal into a simple
+ * impact-strength index between 0 and 100.
+ *
+ * IMPORTANT:
+ * This is an index for visual comparison.
+ * It is NOT a statistical correlation coefficient.
+ */
+function calculateImpact(value: number, driver: DriverKey): number {
+  const magnitude = Math.abs(value);
+
+  let scaled = 0;
+
+  switch (driver) {
+    case "Surface Temperature":
+      scaled = magnitude / 1.5;
+      break;
+
+    case "Sea Surface Temperature":
+      scaled = magnitude / 1.5;
+      break;
+
+    case "Sea Level":
+      scaled = magnitude / 0.5;
+      break;
+
+    case "Rainfall":
+      scaled = magnitude / 100;
+      break;
+
+    default:
+      scaled = magnitude;
+  }
+
+  return Math.round(clamp(scaled) * 100);
 }
 
 export default function ClimateInteractionMatrix({
   data,
   selectedCountry,
 }: Props) {
-  const [hoveredSignal, setHoveredSignal] = useState<string | null>(null);
+  const [hoveredDriver, setHoveredDriver] = useState<DriverKey | null>(null);
 
-  const filtered = useMemo(
-    () => data.filter((d) => d.country === selectedCountry),
-    [data, selectedCountry]
-  );
+  /*
+   * Filter records for selected country.
+   */
+  const filtered = useMemo(() => {
+    if (!Array.isArray(data)) return [];
 
-  const latest = filtered.at(-1);
+    return data.filter(
+      (d) =>
+        d &&
+        typeof d.country === "string" &&
+        d.country === selectedCountry
+    );
+  }, [data, selectedCountry]);
 
-  const matrix: MatrixCell[] = useMemo(() => {
-    if (!latest) return [];
+  /*
+   * Rather than relying on the final array item,
+   * identify the latest record by year when possible.
+   */
+  const latest = useMemo(() => {
+    if (!filtered.length) return null;
 
-    const t = Math.abs(latest.temp || 0);
-    const r = Math.abs(latest.rainfall || 0);
-    const s = Math.abs(latest.sea || 0);
-    const ss = Math.abs(latest.sea_surface_temperature || 0);
+    const sorted = [...filtered].sort((a, b) => {
+      const yearA = Number(a.year ?? a.Year ?? 0);
+      const yearB = Number(b.year ?? b.Year ?? 0);
 
-    return [
-      {
-        row: "Surface Temperature",
-        col: "Environmental",
-        value: clamp(t * 0.9),
-        narrative:
-          "Rising temperatures alter ecosystems, biodiversity and agricultural productivity.",
-      },
-      {
-        row: "Surface Temperature",
-        col: "Human",
-        value: clamp(t * 0.85),
-        narrative:
-          "Heat exposure increases health risks and can contribute to displacement.",
-      },
-      {
-        row: "Sea Surface Temperature",
-        col: "Disaster Risk",
-        value: clamp(ss),
-        narrative:
-          "Warmer oceans fuel stronger tropical cyclones and extreme weather.",
-      },
-      {
-        row: "Sea Level",
-        col: "Human",
-        value: clamp(s),
-        narrative:
-          "Sea-level rise threatens homes, infrastructure and coastal communities.",
-      },
-      {
-        row: "Rainfall",
-        col: "Economic",
-        value: clamp(r * 0.75),
-        narrative:
-          "Extreme rainfall disrupts transport, agriculture and economic activity.",
-      },
-      {
-        row: "Rainfall",
-        col: "Disaster Risk",
-        value: clamp(r),
-        narrative:
-          "Heavy rainfall significantly increases flooding and landslide risk.",
-      },
-    ];
-  }, [latest]);
+      return yearA - yearB;
+    });
 
-  const strongest = useMemo(() => {
-    return [...matrix].sort((a, b) => b.value - a.value)[0];
-  }, [matrix]);
+    return sorted[sorted.length - 1];
+  }, [filtered]);
 
-  const buildStory = () => {
-    if (!latest || !strongest) return null;
-
-    const t = Math.abs(latest.temp || 0);
-    const r = Math.abs(latest.rainfall || 0);
-    const s = Math.abs(latest.sea || 0);
-    const ss = Math.abs(latest.sea_surface_temperature || 0);
-
-    const tempImpact = Math.min(Math.round(t * 0.9 * 100), 100);
-    const rainImpact = Math.min(Math.round(r * 100), 100);
-    const seaImpact = Math.min(Math.round(s * 100), 100);
-    const sstImpact = Math.min(Math.round(ss * 100), 100);
-
-    let story = "";
-
-    story += `In ${selectedCountry}, climate drivers interact across multiple systems. `;
-
-    if (t > 0.5) {
-      story += `Rising surface temperatures (${tempImpact}% impact) are the dominant force, altering ecosystems and increasing health risks. `;
-    } else if (t > 0.2) {
-      story += `Moderate surface warming (${tempImpact}% impact) is reshaping environmental conditions and human well-being. `;
-    }
-
-    if (ss > 0.5) {
-      story += `Warmer oceans (${sstImpact}% impact) are fueling stronger cyclones and extreme weather. `;
-    } else if (ss > 0.2) {
-      story += `Sea surface temperatures are rising, contributing to increased storm activity. `;
-    }
-
-    if (s > 0.5) {
-      story += `Sea-level rise (${seaImpact}% impact) threatens coastal communities and infrastructure. `;
-    } else if (s > 0.2) {
-      story += `Gradual sea-level rise (${seaImpact}% impact) is increasing coastal vulnerability. `;
-    }
-
-    if (r > 0.5) {
-      story += `Extreme rainfall (${rainImpact}% impact) disrupts agriculture and drives economic losses. `;
-    } else if (r > 0.2) {
-      story += `Changing rainfall patterns (${rainImpact}% impact) are affecting agriculture and increasing flood risk. `;
-    }
-
-    const strongestPct = Math.min(Math.round(strongest.value * 100), 100);
-    story += `The strongest interaction is between ${strongest.row} and ${strongest.col} (${strongestPct}%).`;
-
-    return story;
-  };
-
-  const storyText = buildStory();
-
-  const correlationData = useMemo(() => {
+  /*
+   * Extract the latest climate-driver values.
+   */
+  const climateValues = useMemo(() => {
     if (!latest) return null;
 
-    const t = Math.abs(latest.temp || 0);
-    const r = Math.abs(latest.rainfall || 0);
-    const s = Math.abs(latest.sea || 0);
-    const ss = Math.abs(latest.sea_surface_temperature || 0);
+    return {
+      temperature: Number(latest.temp ?? 0),
+      seaSurfaceTemperature: Number(
+        latest.sea_surface_temperature ?? latest.sst ?? 0
+      ),
+      seaLevel: Number(latest.sea ?? latest.sea_level ?? 0),
+      rainfall: Number(latest.rainfall ?? 0),
+    };
+  }, [latest]);
 
-    const tempImpacts = matrix
-      .filter(m => m.row === "Surface Temperature")
-      .reduce((sum, m) => sum + m.value, 0) / 2;
+  /*
+   * Build the four driver impact pathways.
+   */
+  const pathways = useMemo<ImpactPathway[]>(() => {
+    if (!climateValues) return [];
 
-    const sstImpacts = matrix
-      .filter(m => m.row === "Sea Surface Temperature")
-      .reduce((sum, m) => sum + m.value, 0) / 1;
+    const values: Record<DriverKey, number> = {
+      "Surface Temperature": climateValues.temperature,
+      "Sea Surface Temperature": climateValues.seaSurfaceTemperature,
+      "Sea Level": climateValues.seaLevel,
+      Rainfall: climateValues.rainfall,
+    };
 
-    const seaImpacts = matrix
-      .filter(m => m.row === "Sea Level")
-      .reduce((sum, m) => sum + m.value, 0) / 1;
+    const systems: Record<DriverKey, string> = {
+      "Surface Temperature": "Environmental / Human",
+      "Sea Surface Temperature": "Disaster Risk",
+      "Sea Level": "Human / Coastal",
+      Rainfall: "Economic / Disaster Risk",
+    };
 
-    const rainImpacts = matrix
-      .filter(m => m.row === "Rainfall")
-      .reduce((sum, m) => sum + m.value, 0) / 2;
+    const narratives: Record<DriverKey, string> = {
+      "Surface Temperature":
+        "Rising temperatures can place pressure on ecosystems, agriculture and human health.",
 
-    return [
-      { 
-        signal: "Surface Temperature", 
-        impact: Math.min(Math.round(tempImpacts * 100), 100), 
-        raw: t,
-        consequences: [
-          "Ecosystem disruption",
-          "Reduced agricultural productivity",
-          "Increased health risks"
-        ]
-      },
-      { 
-        signal: "Sea Surface Temperature", 
-        impact: Math.min(Math.round(sstImpacts * 100), 100), 
-        raw: ss,
-        consequences: [
-          "Stronger cyclones",
-          "Coral bleaching",
-          "Disrupted fisheries"
-        ]
-      },
-      { 
-        signal: "Sea Level", 
-        impact: Math.min(Math.round(seaImpacts * 100), 100), 
-        raw: s,
-        consequences: [
-          "Coastal flooding",
-          "Community displacement",
-          "Saltwater intrusion"
-        ]
-      },
-      { 
-        signal: "Rainfall", 
-        impact: Math.min(Math.round(rainImpacts * 100), 100), 
-        raw: r,
-        consequences: [
-          "Flooding and landslides",
-          "Agricultural damage",
-          "Infrastructure destruction"
-        ]
-      },
-    ];
-  }, [latest, matrix]);
+      "Sea Surface Temperature":
+        "Warmer ocean conditions can contribute to stronger tropical cyclones and marine ecosystem stress.",
 
-  if (!latest) {
+      "Sea Level":
+        "Rising sea levels increase exposure of coastal communities, infrastructure and freshwater resources.",
+
+      Rainfall:
+        "Changing rainfall patterns can increase flooding, landslides and disruption to agriculture and infrastructure.",
+    };
+
+    return DRIVER_ORDER.map((driver) => {
+      const raw = values[driver];
+      const impact = calculateImpact(raw, driver);
+
+      return {
+        driver,
+        system: systems[driver],
+        value: raw,
+        impact,
+        raw,
+        narrative: narratives[driver],
+        consequences: DRIVER_CONFIG[driver].consequences,
+      };
+    });
+  }, [climateValues]);
+
+  /*
+   * Find strongest climate signal.
+   */
+  const strongest = useMemo(() => {
+    if (!pathways.length) return null;
+
+    return [...pathways].sort((a, b) => b.impact - a.impact)[0];
+  }, [pathways]);
+
+  /*
+   * Calculate an overall index.
+   *
+   * This is the average strength of the four visual indicators,
+   * not a statistical vulnerability score.
+   */
+  const overallImpact = useMemo(() => {
+    if (!pathways.length) return 0;
+
+    const total = pathways.reduce(
+      (sum, pathway) => sum + pathway.impact,
+      0
+    );
+
+    return Math.round(total / pathways.length);
+  }, [pathways]);
+
+  /*
+   * Identify whether several drivers are simultaneously elevated.
+   */
+  const elevatedDrivers = useMemo(() => {
+    return pathways.filter((p) => p.impact >= 50);
+  }, [pathways]);
+
+  /*
+   * Build concise narrative.
+   */
+  const storyText = useMemo(() => {
+    if (!strongest || !pathways.length) return null;
+
+    const strongName = strongest.driver.toLowerCase();
+
+    let story = `${selectedCountry} is experiencing climate pressure across several interacting systems. `;
+
+    if (elevatedDrivers.length >= 3) {
+      story +=
+        `Three or more climate drivers show elevated impact strength, indicating that climate risks are occurring across multiple environmental and human systems. `;
+    } else if (elevatedDrivers.length === 2) {
+      story +=
+        `Two climate drivers show elevated impact strength, indicating that climate pressures extend across more than one system. `;
+    } else if (elevatedDrivers.length === 1) {
+      story +=
+        `One climate driver currently stands out more strongly than the others in the available data. `;
+    } else {
+      story +=
+        `The available indicators show relatively lower impact strength across the four climate drivers. `;
+    }
+
+    story += `The strongest signal is ${strongName}, with an impact-strength index of ${strongest.impact}%. `;
+
+    story += strongest.narrative;
+
+    return story;
+  }, [
+    selectedCountry,
+    strongest,
+    pathways,
+    elevatedDrivers,
+  ]);
+
+  /*
+   * Format raw values for display.
+   */
+  const formatRawValue = (driver: DriverKey, value: number) => {
+    switch (driver) {
+      case "Surface Temperature":
+      case "Sea Surface Temperature":
+        return `${value.toFixed(2)} °C`;
+
+      case "Sea Level":
+        return `${value.toFixed(2)} m`;
+
+      case "Rainfall":
+        return `${value.toFixed(1)} mm`;
+
+      default:
+        return value.toFixed(2);
+    }
+  };
+
+  if (!latest || !climateValues) {
     return (
-      <div className="border border-slate-200 bg-white p-6 text-center text-slate-500">
-        No climate interaction data available.
+      <div className="py-8 text-center text-sm text-slate-500">
+        No climate interaction data available for {selectedCountry}.
       </div>
     );
   }
 
-  const getBarColor = (signal: string) => {
-    const colors: Record<string, string> = {
-      "Surface Temperature": "#334155",
-      "Sea Surface Temperature": "#334155",
-      "Sea Level": "#334155",
-      "Rainfall": "#334155",
-    };
-    return colors[signal] || "#94a3b8";
-  };
-
   return (
-    <div className="w-full max-w-3xl mx-auto px-4">
-      {/* Strongest interaction */}
+    <div className="w-full">
+      {/* ─────────────────────────────────────────────
+          HEADER
+      ───────────────────────────────────────────── */}
+      <div className="mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div>
+            <h3 className="text-sm sm:text-base font-semibold text-slate-800">
+              Climate drivers and impact pathways
+            </h3>
+
+            <p className="mt-1 text-xs text-slate-500">
+              {selectedCountry} · Latest available climate indicators
+            </p>
+          </div>
+
+          <div className="text-left sm:text-right">
+            <div className="text-[9px] uppercase tracking-wider text-slate-400">
+              Combined indicator
+            </div>
+
+            <div className="text-xl font-semibold text-slate-800">
+              {overallImpact}%
+            </div>
+
+            <div className="text-[9px] text-slate-400">
+              average impact strength
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────
+          STRONGEST PATHWAY
+      ───────────────────────────────────────────── */}
       {strongest && (
-        <div className="mb-4 text-center text-xs text-slate-500">
-          Strongest pathway: {strongest.row} → {strongest.col} ({Math.min(Math.round(strongest.value * 100), 100)}%)
+        <div className="mb-5 border-l-4 border-slate-700 bg-slate-50 px-4 py-3">
+          <div className="text-[9px] uppercase tracking-wider font-semibold text-slate-500">
+            Strongest climate signal
+          </div>
+
+          <div className="mt-1 flex flex-wrap items-baseline gap-2">
+            <span className="text-sm font-semibold text-slate-800">
+              {strongest.driver}
+            </span>
+
+            <span className="text-slate-400">→</span>
+
+            <span className="text-sm text-slate-600">
+              {strongest.system}
+            </span>
+
+            <span className="text-sm font-semibold text-slate-800">
+              ({strongest.impact}%)
+            </span>
+          </div>
+
+          <p className="mt-1 text-xs leading-relaxed text-slate-500">
+            {strongest.narrative}
+          </p>
         </div>
       )}
 
-      {/* Correlation bars */}
-      <div className="space-y-2">
-        {correlationData?.map((item, index) => {
-          const barColor = getBarColor(item.signal);
-          const isHovered = hoveredSignal === item.signal;
+      {/* ─────────────────────────────────────────────
+          DRIVER BARS
+      ───────────────────────────────────────────── */}
+      <div className="space-y-4">
+        {pathways.map((item) => {
+          const isHovered = hoveredDriver === item.driver;
+          const config = DRIVER_CONFIG[item.driver];
 
           return (
-            <div key={index} className="relative">
-              <div 
-                className="flex items-center gap-3 cursor-pointer"
-                onMouseEnter={() => setHoveredSignal(item.signal)}
-                onMouseLeave={() => setHoveredSignal(null)}
-              >
-                <div className="w-28 sm:w-36 text-right">
-                  <span className="text-[10px] sm:text-xs text-slate-600">{item.signal}</span>
-                </div>
-                <div className="flex-1">
-                  <div className="relative h-5 w-full bg-slate-100">
-                    <div
-                      className="absolute left-0 top-0 h-full transition-all duration-500"
-                      style={{ width: `${Math.min(item.impact, 100)}%`, backgroundColor: barColor }}
+            <div
+              key={item.driver}
+              className="relative"
+              onMouseEnter={() => setHoveredDriver(item.driver)}
+              onMouseLeave={() => setHoveredDriver(null)}
+            >
+              {/* Driver heading */}
+              <div className="mb-1.5 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{
+                        backgroundColor: config.color,
+                      }}
                     />
-                    <span className="absolute inset-0 flex items-center px-2 text-[9px] sm:text-xs font-medium text-white">
-                      {Math.min(item.impact, 100)}%
+
+                    <span className="text-xs font-medium text-slate-700">
+                      {item.driver}
                     </span>
                   </div>
+
+                  <div className="ml-[18px] text-[9px] text-slate-400">
+                    {item.system}
+                  </div>
                 </div>
-                <div className="w-10 text-right">
-                  <span className="text-[9px] sm:text-xs text-slate-400">{item.raw.toFixed(2)}</span>
+
+                <div className="shrink-0 text-right">
+                  <div className="text-xs font-semibold text-slate-700">
+                    {item.impact}%
+                  </div>
+
+                  <div className="text-[9px] text-slate-400">
+                    {formatRawValue(item.driver, item.raw)}
+                  </div>
                 </div>
               </div>
 
-              {/* Tooltip */}
-              {isHovered && item.consequences && (
-                <div className="absolute z-10 left-0 right-0 mt-1 p-3 bg-white border border-slate-200 shadow-sm">
-                  <div className="text-xs font-medium text-slate-800 mb-1">
-                    {item.signal} — {Math.min(item.impact, 100)}% impact
-                  </div>
-                  <ul className="text-[10px] text-slate-600 space-y-0.5 list-disc list-inside">
-                    {item.consequences.map((consequence, idx) => (
-                      <li key={idx}>{consequence}</li>
+              {/* Impact bar */}
+              <div className="ml-[18px] h-3 w-[calc(100%-18px)] overflow-hidden bg-slate-100">
+                <div
+                  className="h-full transition-all duration-500 ease-out"
+                  style={{
+                    width: `${item.impact}%`,
+                    backgroundColor: config.color,
+                    opacity: isHovered ? 1 : 0.75,
+                  }}
+                />
+              </div>
+
+              {/* Hover explanation */}
+              {isHovered && (
+                <div className="ml-[18px] mt-2 border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                  <p className="text-[10px] leading-relaxed text-slate-600">
+                    {item.narrative}
+                  </p>
+
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                    {item.consequences.map((consequence) => (
+                      <span
+                        key={consequence}
+                        className="text-[9px] text-slate-500"
+                      >
+                        • {consequence}
+                      </span>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
             </div>
@@ -297,21 +472,72 @@ export default function ClimateInteractionMatrix({
         })}
       </div>
 
-      {/* Labels */}
-      <div className="mt-2 flex justify-between text-[8px] sm:text-[9px] text-slate-400">
-        <span>Low</span>
-        <span>Impact strength (%)</span>
-        <span>High</span>
+      {/* ─────────────────────────────────────────────
+          SCALE
+      ───────────────────────────────────────────── */}
+      <div className="ml-[18px] mt-3 flex items-center justify-between text-[8px] text-slate-400">
+        <span>Lower</span>
+
+        <span>
+          Impact-strength index
+        </span>
+
+        <span>Higher</span>
       </div>
 
-      {/* Fig 7 caption */}
-      <p className="mt-4 text-[10px] sm:text-xs text-slate-500">
-        Fig 7: Climate drivers and their impacts on environmental, economic, human, and disaster risk systems in {selectedCountry}.
+      {/* ─────────────────────────────────────────────
+          PATHWAY EXPLANATION
+      ───────────────────────────────────────────── */}
+      <div className="mt-6 border-t border-slate-100 pt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+          <div>
+            <div className="text-[9px] uppercase tracking-wider text-slate-400">
+              Climate drivers
+            </div>
+
+            <div className="mt-1 text-xs font-medium text-slate-700">
+              Temperature · Ocean · Rainfall
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[9px] uppercase tracking-wider text-slate-400">
+              Systems affected
+            </div>
+
+            <div className="mt-1 text-xs font-medium text-slate-700">
+              Environment · Economy · People
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[9px] uppercase tracking-wider text-slate-400">
+              Resulting risks
+            </div>
+
+            <div className="mt-1 text-xs font-medium text-slate-700">
+              Flooding · Disasters · Displacement
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────
+          FIGURE CAPTION
+      ───────────────────────────────────────────── */}
+      <p className="mt-5 text-[10px] sm:text-xs text-slate-500 leading-relaxed">
+        Fig. 7: Climate drivers and their potential impact pathways across
+        environmental, economic, human and disaster-risk systems in{" "}
+        {selectedCountry}. Impact strength is a visual index derived from the
+        magnitude of each available climate indicator; it should not be
+        interpreted as a statistical correlation coefficient.
       </p>
 
-      {/* Story */}
+      {/* ─────────────────────────────────────────────
+          NARRATIVE
+      ───────────────────────────────────────────── */}
       {storyText && (
-        <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
+        <p className="mt-3 border-t border-slate-100 pt-3 text-xs sm:text-sm leading-relaxed text-slate-600">
           {storyText}
         </p>
       )}
