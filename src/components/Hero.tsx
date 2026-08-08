@@ -41,47 +41,25 @@ export function Hero({
 }: HeroProps) {
   return (
     <div className="relative text-center mb-16 z-10">
-
-      {/* =========================
-          CONTEXT LABEL (UNCHANGED)
-      ========================== */}
       <div className="text-[0.7rem] tracking-[0.2em] uppercase text-cyan-600 mb-6">
         Pacific Climate Observatory · Data Story 1850–2025
       </div>
 
-      {/* =========================
-          TITLE (STRENGTHENED HOOK)
-      ========================== */}
       <h1 className="text-[clamp(2.2rem,5vw,3.8rem)] font-bold leading-tight text-slate-900 max-w-4xl mx-auto">
-      {/* Climate change is not experienced equally across the Pacific. */}
 
         Climate change amplifies inequality because Pacific nations have very different capacities to adapt.
       </h1>
 
-      {/* =========================
-          WINNING THESIS (KEY FIX)
-      ========================== */}
       <p className="text-lg text-slate-600 max-w-2xl mx-auto mt-6 leading-relaxed">
         The region contributes little to global emissions, yet faces some of the world's highest climate risks.
       </p>
-
-      {/* =========================
-          STORY DIRECTION (NEW — IMPORTANT)
-      ========================== */}
+      
       <div className="mt-6 text-sm text-slate-500 max-w-xl mx-auto">
       This story follows how climate pressures become economic losses, human disruption, and unequal vulnerability across Pacific Island nations.
       </div>
-
-      {/* =========================
-          SCROLL CUE (REFINED)
-      ========================== */}
       <div className="mt-8 text-sm text-slate-400 animate-pulse">
         Follow the system: climate → economy → inequality → impact ↓
       </div>
-
-      {/* =========================
-          COUNTRY SELECTION
-      ========================== */}
       <div className="mt-10">
         <div className="text-xs uppercase tracking-wide text-slate-400 mb-3">
           Select a country
@@ -98,17 +76,11 @@ export function Hero({
           ))}
         </div>
       </div>
-
-      {/* =========================
-          MAP - NO WRAPPER, NO CARD STYLING
-      ========================== */}
+      
       {/* <div className="mt-12 w-full">
         <PacificClimateStoryMap />
       </div> */}
 
-      {/* =========================
-          DATA SOURCES (SIMPLIFIED = BETTER FOR JUDGES)
-      ========================== */}
       <div className="mt-12">
         <details className="text-xs text-slate-400 max-w-3xl mx-auto">
           <summary className="cursor-pointer hover:text-slate-600 transition">
