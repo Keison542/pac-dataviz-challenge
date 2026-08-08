@@ -90,25 +90,22 @@ export function Hero({
           <div className="mt-4 text-slate-500 leading-relaxed space-y-3">
 
            <p>
-              This project combines open data from the{" "}
-              Pacific Data Hub to explore climate
-              patterns, economic factors, and the human impacts of climate change in the
-              Pacific region.
-              
-              Developed using Next.js, React, TypeScript, and D3.js, the
-              visualization presents interactive charts and maps that highlight climate
-              trends, environmental risks, and vulnerability across{" "}
-              {countries.length} Pacific Island countries. The source code is available on{" "}
-          <a
-            href="https://github.com/Keison542/pac-dataviz-challenge"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-slate-600"
-          >
-            GitHub
-          </a>
-          .
-            </p>
+            This project combines open data from the Pacific Data Hub to explore climate
+            patterns, economic factors, and the human impacts of climate change in the
+            Pacific region. Developed using Next.js, React, TypeScript, and D3.js, the
+            visualization presents interactive charts and maps that highlight climate
+            trends, environmental risks, and vulnerability across{" "}
+            {countries.length} Pacific Island countries. The source code is available on{" "}
+            <a
+              href="https://github.com/Keison542/pac-dataviz-challenge"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-slate-600"
+            >
+              GitHub
+            </a>
+            .
+          </p>
            <div className="flex flex-wrap gap-3 justify-center text-[11px]">
             <a
               href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.SST_ANOM.&pd=,&to[TIME_PERIOD]=false"
