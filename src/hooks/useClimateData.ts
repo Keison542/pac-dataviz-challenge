@@ -20,9 +20,15 @@ export function useClimateData() {
   
   // Define countries to exclude from the list
   const EXCLUDED_COUNTRIES = new Set([
-    "Tonga",
-    "Samoa", 
-    "Vanuatu"
+    "Wallis and Futuna",
+    "Northern Mariana Islands", 
+    "Niue",
+    "Tokelau",
+    "Guam",
+    "French Polynesia",
+    "Micronesia, Federated State of",
+    "Pitcairn",
+    "Micronesia (Federated States of)"
   ]);
   
   const countries = useMemo(() => {
