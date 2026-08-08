@@ -58,7 +58,7 @@ export function Hero({
       This story follows how climate pressures become economic losses, human disruption, and unequal vulnerability across Pacific Island nations.
       </div>
         <div className="mt-8 text-sm text-slate-400 animate-pulse">
-          Follow the system: climate → economy → inequality → impact ↓
+          Follow the system: climate → economy → human impact → inequality ↓
         </div>
         
         <div className="mt-10">
