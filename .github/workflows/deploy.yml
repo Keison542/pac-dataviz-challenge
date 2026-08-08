@@ -107,7 +107,7 @@ jobs:
           protocol: ftp
           port: 21
           local-dir: ./out/
-          server-dir: /htdocs/pac-dataviz/
+          server-dir: /ktdatanalytics.com/htdocs/pac-dataviz/
           exclude: |
             **/.git*
             **/.git*/**
