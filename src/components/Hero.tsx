@@ -57,25 +57,35 @@ export function Hero({
       <div className="mt-6 text-sm text-slate-500 max-w-xl mx-auto">
       This story follows how climate pressures become economic losses, human disruption, and unequal vulnerability across Pacific Island nations.
       </div>
-      <div className="mt-8 text-sm text-slate-400 animate-pulse">
-        Follow the system: climate → economy → inequality → impact ↓
-      </div>
-      <div className="mt-10">
-        <div className="text-xs uppercase tracking-wide text-slate-400 mb-3">
-          Select a country
+        <div className="mt-8 text-sm text-slate-400 animate-pulse">
+          Follow the system: climate → economy → inequality → impact ↓
         </div>
-
-        <div className="flex flex-wrap gap-2 justify-center max-h-[140px] overflow-y-auto px-2">
-          {countries.map((c) => (
-            <CountryPill
-              key={c}
-              label={c}
-              active={c === selectedCountry}
-              onClick={() => onSelectCountry(c)}
-            />
-          ))}
+        
+        <div className="mt-10">
+          <div className="text-xs uppercase tracking-wide text-slate-400 mb-3">
+            Explore a Pacific country
+          </div>
+        
+          <h2 className="text-2xl md:text-3xl font-semibold text-white">
+            Climate pressures are regional—but their consequences are not.
+          </h2>
+        
+          <p className="mt-3 text-slate-300 max-w-2xl mx-auto">
+            Select a country to see how changing climate conditions become economic
+            losses, human disruption, and unequal vulnerability.
+          </p>
+        
+          <div className="mt-6 flex flex-wrap gap-2 justify-center max-h-[140px] overflow-y-auto px-2">
+            {countries.map((c) => (
+              <CountryPill
+                key={c}
+                label={c}
+                active={c === selectedCountry}
+                onClick={() => onSelectCountry(c)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
       
       {/* <div className="mt-12 w-full">
         <PacificClimateStoryMap />
