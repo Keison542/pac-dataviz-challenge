@@ -18,6 +18,13 @@ interface TimeSeriesPoint { country: string; year: number; value: number; }
 export function useClimateData() {
   const [selectedCountry, setSelectedCountry] = useState("Fiji");
   
+  // Define countries to exclude from the list
+  const EXCLUDED_COUNTRIES = new Set([
+    "Tonga",
+    "Samoa", 
+    "Vanuatu"
+  ]);
+  
   const countries = useMemo(() => {
     const all = new Set<string>();
     surfaceTempAnomalies.forEach(d => all.add(d.country));
@@ -31,7 +38,10 @@ export function useClimateData() {
     climate_altering_land.forEach(d => all.add(d.country));
     lifestock_yield.forEach(d => all.add(d.country));
     population_growth.forEach(d => all.add(d.country));
-    return Array.from(all).sort();
+    
+    return Array.from(all)
+      .filter(country => !EXCLUDED_COUNTRIES.has(country))
+      .sort();
   }, []);
   
   const mapTimeSeries = useCallback((data: TimeSeriesPoint[]) => 
