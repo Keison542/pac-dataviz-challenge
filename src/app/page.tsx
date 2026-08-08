@@ -52,6 +52,9 @@ export default function Home() {
     hasRegionalData,
     hasCausalData,
     hasTimelineData,
+    climateIndex,
+    climateSignal,
+    anomalyScores,
   } = useClimateData();
 
   const chartWidth = 520;
@@ -106,8 +109,10 @@ export default function Home() {
         >
           <DoughnutClimateDashboard
             kpis={kpis}
-            deltas={deltas}
             selectedCountry={selectedCountry}
+            climateIndex={climateIndex}
+            climateSignal={climateSignal}
+            anomalyScores={anomalyScores}
           />
         </motion.section>
       )}
