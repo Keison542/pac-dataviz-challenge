@@ -108,27 +108,48 @@ export function HumanEconomicSection({
           <motion.div
             style={{ opacity: economicOpacity, y: economicY }}
             className="sticky top-20 mb-20 flex justify-center">
-            <div className="text-center w-full max-w-5xl px-4">
-              <p className="text-center">
-                Climate shocks first place strain on national economies.  Between 2010 to 2020, {selectedCountry}, recorded approximately {formatLoss(lossTotal)} in disaster-related losses.
-                Damage to infrastructure, agriculture and public assets increased recovery costs and reduced economic resilience.
-                 The peak of economic disruption occurred in {economicPeakYear}, 
-                  when losses reached their highest recorded level, straining national 
-                  recovery capacity and exposing critical infrastructure gaps.
-                
-              </p>
+            <div className="text-center">
 
-              <div className="flex justify-center mt-4">
-                <TrendLine
-                  width={Math.min(chartWidth * 1.3, 1100)}
-                  height={240}
-                  data={dataMap.loss}
-                  dataType="loss"
-                  setSelectedCountry={setSelectedCountry}
-                  className="w-full max-w-4xl"
-                />
+            {/* ECONOMIC LOSS KPI */}
+            <div className="text-4xl md:text-5xl font-bold text-slate-900">
+              {formatLoss(lossTotal)}
+            </div>
+          
+            <div className="mt-2 text-sm md:text-base font-semibold text-slate-600">
+              Recorded disaster-related losses, 2010–2020
+            </div>
+          
+            {/* PEAK YEAR */}
+            <div className="mt-5">
+              <div className="text-2xl md:text-3xl font-bold text-red-600">
+                {economicPeakYear}
+              </div>
+          
+              <div className="text-sm font-medium text-slate-500">
+                Peak year of economic disruption
               </div>
             </div>
+          
+            {/* EXISTING LOSS TREND CHART */}
+            <div className="flex justify-center mt-6">
+              <TrendLine
+                width={Math.min(chartWidth * 1.3, 1100)}
+                height={240}
+                data={dataMap.loss}
+                dataType="loss"
+                setSelectedCountry={setSelectedCountry}
+                className="w-full max-w-4xl"
+              />
+            </div>
+          
+            {/* SHORT INTERPRETATION */}
+            <p className="mx-auto mt-6 max-w-3xl text-center text-slate-600 leading-relaxed">
+              Disaster losses can place pressure on infrastructure, household
+              livelihoods and national recovery capacity, particularly when major
+              events occur in successive years.
+            </p>
+          
+          </div>
           </motion.div>
         )}
 
