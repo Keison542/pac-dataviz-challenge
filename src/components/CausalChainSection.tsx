@@ -17,8 +17,8 @@ export function CausalChainSection({
   <>
     <div className="text-center mb-6">
       <p className="text-sm text-slate-500 max-w-2xl mx-auto mt-2">
-        Climate impacts are not linear. Each driver reinforces multiple systems at once —
-        creating feedback loops across environment, economy, and society.
+        Temperature, rainfall, ocean conditions and sea level can affect multiple systems simultaneously. Their combined effects can increase exposure and reduce the ability of communities and economies to recover.
+  
       </p>
     </div>
     
