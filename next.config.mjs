@@ -1,12 +1,19 @@
 /** @type {import('next').NextConfig} */
-const repo = "pac-dataviz-challenge";
+
+const isInfinityFree = process.env.DEPLOY_TARGET === "infinityfree";
+
+const basePath = isInfinityFree
+  ? "/pac-dataviz"
+  : "/pac-dataviz-challenge";
 
 const nextConfig = {
   output: "export",
+
   trailingSlash: true,
 
-  basePath: `/${repo}`,
-  assetPrefix: `/${repo}/`,
+  basePath,
+
+  assetPrefix: `${basePath}/`,
 
   images: {
     unoptimized: true,
