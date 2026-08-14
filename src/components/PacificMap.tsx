@@ -1150,9 +1150,9 @@ export function PacificClimateStoryMap({
 
         <div className="border-l-2 border-slate-200 pl-5">
 
-          <div className="text-xs uppercase tracking-[0.14em] text-slate-400 mb-2">
+          {/* <div className="text-xs uppercase tracking-[0.14em] text-slate-400 mb-2">
             What the map shows
-          </div>
+          </div> */}
 
           <p className="text-slate-600 leading-relaxed">
             {narrative}
