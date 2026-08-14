@@ -1159,63 +1159,6 @@ export function PacificClimateStoryMap({
 
       </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* METHODOLOGY                                                       */}
-      {/* ------------------------------------------------------------------ */}
-
-      <div className="mx-auto max-w-4xl mt-8">
-
-        <details className="group border border-slate-200 rounded-xl bg-slate-50">
-
-          <summary className="cursor-pointer list-none px-5 py-4 flex items-center justify-between">
-
-            <span className="text-sm font-semibold text-slate-700">
-              How to read this comparison
-            </span>
-
-            <span className="text-slate-400 group-open:rotate-180 transition-transform">
-              ↓
-            </span>
-
-          </summary>
-
-          <div className="px-5 pb-5 text-sm text-slate-600 leading-relaxed">
-
-            <p>
-              The map compares individual indicators rather than
-              combining unrelated variables into a single vulnerability
-              score. This avoids interpreting population size, tourism,
-              agricultural production or economic scale as direct
-              measures of climate vulnerability.
-            </p>
-
-            <p className="mt-3">
-              People affected and disaster-related economic losses are
-              summed across the records available for each country.
-              Climate anomalies are treated differently: rainfall and
-              temperature anomalies are averaged, while the sea-level
-              anomaly uses the latest available observation.
-            </p>
-
-            <p className="mt-3">
-              Circle size represents relative magnitude within the
-              selected indicator. It does not represent percentage
-              vulnerability, probability of disaster, adaptive capacity,
-              or causal effect.
-            </p>
-
-            <p className="mt-3">
-              Climate indicators describe environmental conditions.
-              They should not automatically be interpreted as evidence
-              that a particular disaster or economic loss was caused by
-              that indicator.
-            </p>
-
-          </div>
-
-        </details>
-
-      </div>
 
       <p className="mx-auto max-w-3xl text-center text-sm text-slate-500 mt-6 leading-relaxed">
         Fig. 6: Observed climate-related indicators and impacts across
