@@ -695,10 +695,10 @@ export function PacificClimateStoryMap({
       {/* ------------------------------------------------------------------ */}
 
       <div className="mx-auto max-w-4xl text-center mb-8">
-
+{/* 
         <div className="text-xs uppercase tracking-[0.18em] text-slate-400 mb-3">
           Regional comparison
-        </div>
+        </div> */}
 
         <h2 className="text-2xl md:text-3xl font-semibold text-slate-900">
           The Pacific does not experience climate impacts equally
