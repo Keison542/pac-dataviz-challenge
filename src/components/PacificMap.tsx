@@ -1280,7 +1280,7 @@ export function PacificClimateStoryMap({
           {/* MAP FOOTER                                                  */}
           {/* ------------------------------------------------------------ */}
 
-          <text
+          {/* <text
             x={MAP_PADDING.left}
             y={HEIGHT - 35}
             fontSize={9}
@@ -1288,7 +1288,7 @@ export function PacificClimateStoryMap({
           >
             Values are displayed using the aggregation appropriate to
             each indicator.
-          </text>
+          </text> */}
 
         </svg>
 
