@@ -792,7 +792,7 @@ export function PacificClimateStoryMap({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto mb-8">
 
-        {/* <div className="rounded-xl border border-slate-200 bg-white p-5 text-center"> */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 text-center"> 
           <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400"> 
             Highest recorded value
           </div> 
@@ -809,9 +809,9 @@ export function PacificClimateStoryMap({
           <div className="mt-1 text-sm text-slate-500">
             {highestCountry?.name || "No country data"}
           </div>
-        {/* </div> */}
+        </div>
 
-        {/* <div className="rounded-xl border border-slate-200 bg-white p-5 text-center"> */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 text-center">
           <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400"> 
             Regional mean
           </div>
@@ -828,9 +828,9 @@ export function PacificClimateStoryMap({
           <div className="mt-1 text-sm text-slate-500">
             Across {countriesWithData.length} countries with data
           </div>
-        {/* </div> */}
+        </div> 
 
-        {/* <div className="rounded-xl border border-slate-200 bg-white p-5 text-center"> */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 text-center">
           <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
             Indicator
           </div> 
@@ -842,7 +842,7 @@ export function PacificClimateStoryMap({
           <div className="mt-1 text-sm text-slate-500">
             {selectedConfig.unit}
           </div>
-        {/* </div> */}
+        </div>
 
       </div>
 
