@@ -74,7 +74,6 @@ export default function Home() {
         </div>
       </section>
 
-      <hr className="border-t border-slate-100" />
         <section className="min-h-[65vh] flex items-center justify-center px-6">
           <div className="max-w-5xl text-center">
             <div className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-6">
@@ -96,9 +95,6 @@ export default function Home() {
           </div>
         </section>
 
-      <hr className="border-t border-slate-100" />
-
-
       {hasClimateData && (
         <motion.section
           variants={fadeUp}
@@ -116,8 +112,6 @@ export default function Home() {
           />
         </motion.section>
       )}
-
-      <hr className="border-t border-slate-100" />
   
       {hasClimateData && (
         <motion.section
@@ -136,9 +130,6 @@ export default function Home() {
         </motion.section>
       )}
 
-      <hr className="border-t border-slate-100" />
-
-
       <section className="min-h-[50vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
@@ -152,10 +143,7 @@ export default function Home() {
         </div>
       </section>
 
-      <hr className="border-t border-slate-100" />
-
-
-      <section className="min-h-[40vh] flex items-center justify-center px-6 border-y border-slate-100">
+      <section className="min-h-[40vh] flex items-center justify-center px-6">
         <div className="text-center">
           <div className="text-6xl md:text-8xl font-bold">
             {peopleTotal.toLocaleString()} 
@@ -166,9 +154,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <hr className="border-t border-slate-100" />
-
 
       {(hasEconomicData || hasHumanData || hasSocioeconomicData) && (
         <motion.section
@@ -190,10 +175,7 @@ export default function Home() {
         </motion.section>
       )}
 
-      <hr className="border-t border-slate-100" />
-
-
-      <section className="min-h-[50vh] flex items-center justify-center px-6 border-t border-slate-100">
+      <section className="min-h-[50vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
             But does every Pacific country experience these consequences in the same way?
@@ -201,9 +183,7 @@ export default function Home() {
         </div>
       </section>
 
-      <hr className="border-t border-slate-100" />
-
-   
+     
       {hasRegionalData && (
         <motion.section
           variants={fadeUp}
@@ -221,9 +201,6 @@ export default function Home() {
         </motion.section>
       )}
 
-      <hr className="border-t border-slate-100" />
-
-
       <section className="min-h-[50vh] flex items-center justify-center px-6">
         <div className="max-w-5xl text-center">
           <h2 className="text-5xl md:text-7xl font-light leading-tight">
@@ -239,9 +216,6 @@ export default function Home() {
         </div>
       </section>
 
-      <hr className="border-t border-slate-100" />
-
-  
       {hasCausalData && (
         <motion.section
           variants={fadeUp}
@@ -259,9 +233,6 @@ export default function Home() {
         </motion.section>
       )}
 
-      <hr className="border-t border-slate-100" />
-
-   
       {(hasClimateData ||
         hasEconomicData ||
         hasHumanData ||
@@ -269,7 +240,7 @@ export default function Home() {
         hasRegionalData ||
         hasCausalData ||
         hasTimelineData) && (
-        <section className="max-w-[1200px] mx-auto px-6 py-12 border-t">
+        <section className="max-w-[1200px] mx-auto px-6 py-12">
           <Conclusion
             selectedCountry={selectedCountry}
             seaTrend={seaTrend}
@@ -278,10 +249,8 @@ export default function Home() {
         </section>
       )}
 
-      <hr className="border-t border-slate-100" />
-
-    
-      <footer className="text-center py-12 border-t border-slate-200 text-xs text-slate-400">
+      
+      <footer className="text-center py-12 text-xs text-slate-400">
         <p className="mt-4">
           <strong>
             Pacific Interactive Dataviz Challenge 2026 is created by{" "}
