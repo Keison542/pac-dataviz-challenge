@@ -34,7 +34,7 @@ export const TrendLine = ({
   highlightMode,
   className = "",
   title = "Livelihood Pressure Curve",
-  subtitle = "Aggregated impact trend across years",
+  // subtitle = "Aggregated impact trend across years",
 }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -180,7 +180,7 @@ export const TrendLine = ({
           style={{ fontSize: titleFontSize }}
         >
           {title}
-        </div>
+        {/* </div>
         {subtitle && (
           <p 
             className="text-slate-600 mt-0.5 sm:mt-1"
@@ -189,7 +189,7 @@ export const TrendLine = ({
             {subtitle}
           </p>
         )}
-      </div>
+      </div> */}
 
       {/* ─── CHART ─── */}
       <div className="relative w-full overflow-hidden">
