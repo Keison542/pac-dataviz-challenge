@@ -34,7 +34,7 @@ export const TrendLine = ({
   highlightMode,
   className = "",
   title = "Livelihood Pressure Curve",
-  // subtitle = "Aggregated impact trend across years",
+  subtitle = "Aggregated impact trend across years",
 }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
