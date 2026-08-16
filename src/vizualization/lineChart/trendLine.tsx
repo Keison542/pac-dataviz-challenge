@@ -22,7 +22,6 @@ type Props = {
   highlightMode?: "economic" | "human" | "system";
   className?: string;
   title?: string;
-  subtitle?: string;
 };
 
 export const TrendLine = ({
@@ -34,7 +33,6 @@ export const TrendLine = ({
   highlightMode,
   className = "",
   title = "Livelihood Pressure Curve",
-  subtitle = "Aggregated impact trend across years",
 }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -147,7 +145,6 @@ export const TrendLine = ({
 
   const fontSize = getFontSize(11);
   const titleFontSize = getFontSize(14);
-  const subtitleFontSize = getFontSize(12);
 
   if (!trendData.length || !width || !height) {
     return (
@@ -181,14 +178,6 @@ export const TrendLine = ({
         >
           {title}
         </div>
-        {subtitle && (
-          // <p 
-          //   className="text-slate-600 mt-0.5 sm:mt-1"
-          //   style={{ fontSize: subtitleFontSize }}
-          // >
-          //   {subtitle}
-          // </p>
-        )}
       </div> 
 
       {/* ─── CHART ─── */}
