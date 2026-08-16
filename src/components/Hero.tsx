@@ -171,14 +171,14 @@ export function Hero({
               Economic Loss
             </a>
           
-            <a
+            {/* <a
               href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.ALT_LAND_COVER.&pd=,&to[TIME_PERIOD]=false"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-cyan-600"
             >
               Land Cover
-            </a>
+            </a> */}
           
             <a
               href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.LVST_YIELD.&pd=,&to[TIME_PERIOD]=false"
