@@ -21,7 +21,6 @@ type Props = {
   setSelectedCountry?: (c: string) => void;
   highlightMode?: "economic" | "human" | "system";
   className?: string;
-  title?: string;
 };
 
 export const TrendLine = ({
@@ -32,7 +31,6 @@ export const TrendLine = ({
   setSelectedCountry,
   highlightMode,
   className = "",
-  title = "Livelihood Pressure Curve",
 }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -144,7 +142,6 @@ export const TrendLine = ({
   }, [trendData, xScale, yScale]);
 
   const fontSize = getFontSize(11);
-  const titleFontSize = getFontSize(14);
 
   if (!trendData.length || !width || !height) {
     return (
@@ -170,16 +167,6 @@ export const TrendLine = ({
 
   return (
     <div ref={containerRef} className={`w-full font-sans flex flex-col items-center ${className}`}>
-      {/* ─── HEADER ─── */}
-      <div className="mb-3 sm:mb-4 text-center max-w-xl mx-auto px-2 sm:px-4">
-        <div 
-          className="font-semibold text-slate-900"
-          style={{ fontSize: titleFontSize }}
-        >
-          {title}
-        </div>
-      </div> 
-
       {/* ─── CHART ─── */}
       <div className="relative w-full overflow-hidden">
         <svg 
