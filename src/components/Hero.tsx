@@ -198,14 +198,14 @@ export function Hero({
               Crop Yield
             </a>
           
-            <a
+            {/* <a
               href="https://stats.pacificdata.org/vis?tm=population%20growth&pg=0&snb=11&df[ds]=ds%3ASPC2&df[id]=DF_NMDI_POP&df[ag]=SPC&df[vs]=1.0&dq=A..NMDI0002._T._T._T..&pd=,&to[TIME_PERIOD]=false"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-cyan-600"
             >
               Population
-            </a>
+            </a> */}
           
             <a
               href="https://stats.pacificdata.org/vis?lc=en&df[ds]=SPC2&df[id]=DF_CLIMATE_CHANGE&df[ag]=SPC&df[vs]=1.0&av=true&dq=A.TRSM_ARR.&pd=,&to[TIME_PERIOD]=false"
