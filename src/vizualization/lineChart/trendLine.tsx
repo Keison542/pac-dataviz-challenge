@@ -180,16 +180,16 @@ export const TrendLine = ({
           style={{ fontSize: titleFontSize }}
         >
           {title}
-        {/* </div>
+        </div>
         {subtitle && (
-          <p 
-            className="text-slate-600 mt-0.5 sm:mt-1"
-            style={{ fontSize: subtitleFontSize }}
-          >
-            {subtitle}
-          </p>
+          // <p 
+          //   className="text-slate-600 mt-0.5 sm:mt-1"
+          //   style={{ fontSize: subtitleFontSize }}
+          // >
+          //   {subtitle}
+          // </p>
         )}
-      </div> */}
+      </div> 
 
       {/* ─── CHART ─── */}
       <div className="relative w-full overflow-hidden">
